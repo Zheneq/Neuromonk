@@ -37,8 +37,18 @@ def give_damage_phase(grid, phase):
                                 damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': cell.tile}
                                 cell.neighbours[ind].tile.taken_damage.append(damage_to_unit)
                     if damage['range'] > 0:
-                        # TODO range damage
-                        pass
+                        neighbour = cell.neighbours[ind]
+                        while neighbour is not None:
+                            if neighbour.tile is not None and neighbour.tile.army_id != cell.tile.army_id:
+                                range_damage = damage['range'] - neighbour.tile.get_armor(ind - neighbour.turn)
+                                if range_damage > 0:
+                                    damage_to_unit = {'value': range_damage,
+                                                      'type': 'range',
+                                                      'instigator': cell.tile}
+                                    neighbour.tile.taken_damage.append(damage_to_unit)
+                                if not cell.tile.row_attack:
+                                    break
+                            neighbour = neighbour.neighbours[ind]
 
 
 def take_damage_phase(grid):
@@ -57,18 +67,18 @@ def take_damage_phase(grid):
 if __name__ == "__main__":
     playground = Grid(1)
 
-    borgo_mutant1 = Unit(0, (2, 1, 0, 0, 0, 1), 1, 2)
-    borgo_mutant2 = Unit(0, (2, 1, 0, 0, 0, 1), 1, 2)
-    borgo_killer1 = Unit(0, (3, 0, 0, 0, 0, 0), 2, 2)
-    moloch_hunter1 = Unit(1, (1, 1, 1, 1, 1, 1), 1, 3)
+    outpost_shiper = Unit(0, (0,0,0,0,0,0), (2,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
+    outpost_shooter = Unit(0, (0,0,0,0,0,0), (1,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
+    outpost_kicker = Unit(0, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
+    moloch_fat = Unit(1, (0,0,0,0,0,0), (0,0,0,0,0,0), (1,1,0,0,0,1), 3, 2)
 
-    playground.cells[0].tile = moloch_hunter1
-    playground.cells[0].turn = 0
-    playground.cells[1].tile = borgo_mutant1
-    playground.cells[1].turn = 3
-    playground.cells[4].tile = borgo_mutant2
-    playground.cells[4].turn = 0
-    playground.cells[5].tile = borgo_killer1
+    playground.cells[0].tile = outpost_kicker
+    playground.cells[0].turn = 1
+    playground.cells[1].tile = outpost_shooter
+    playground.cells[1].turn = 2
+    playground.cells[2].tile = moloch_fat
+    playground.cells[2].turn = 4
+    playground.cells[5].tile = outpost_shiper
     playground.cells[5].turn = 1
 
     battle(playground)
