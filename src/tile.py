@@ -10,7 +10,7 @@ class Tile(object):
 
 
 class Unit(Tile):
-    def __init__(self, id, melee, range, armor, hp, initiative, row_attack=False, melee_buff=True):
+    def __init__(self, id, hp, melee, range, armor, initiative, row_attack=False, melee_buff=True):
         Tile.__init__(self, id, hp)
         self.initiative = initiative
         self.melee = melee
@@ -33,8 +33,22 @@ class Base(Tile):
 
 
 class Module(Tile):
-    def __init__(self, id, hp, buff):
+    def __init__(self, id, hp, buff, debuff):
         Tile.__init__(self, id, hp)
+        self.buff = buff
+        self.debuff = debuff
+
+    def get_buffs(self, direction):
+        result = {}
+        for bufftype in self.buff:
+            result[bufftype] = self.buff[bufftype][(direction + 3) % 6]
+        return result
+
+    def get_debuffs(self, direction):
+        result = {}
+        for debufftype in self.debuff:
+            result[debufftype] = self.debuff[debufftype][(direction + 3) % 6]
+        return result
 
 
 if __name__ == "__main__":

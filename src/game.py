@@ -4,16 +4,31 @@ from grid import Grid
 from tile import *
 
 
+def compute_initiative(cell):
+    initiative_mod = 0
+    for ind in xrange(len(cell.neighbours)):
+        if cell.neighbours[ind] is not None and cell.neighbours[ind].tile is not None:
+            if type(cell.neighbours[ind].tile) == Module:
+                # TODO add buffs from allies
+                if cell.neighbours[ind].tile.army_id == cell.tile.army_id:  # it can buff
+                    buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)
+                    if 'initiative' in buffs:
+                        initiative_mod += buffs['initiative']
+                else:  # it can debuff
+                    debuffs = cell.neighbours[ind].tile.get_debuffs(ind - cell.neighbours[ind].turn)
+                    if 'initiative' in debuffs:
+                        initiative_mod -= debuffs['initiative']
+    return initiative_mod
+
+
 def battle(grid):
     # find max initiative
     max_initiative = 0
     for cell in grid.cells:
         if cell.tile is not None and type(cell.tile) == Unit:
-            # TODO get buffs and debuffs of initiative
-            # for neighbour in cell.neighbours:
-            # if neighbour is not None and neighbour.tile is not None and type(neighbour)
-            if cell.tile.initiative > max_initiative:
-                max_initiative = cell.tile.initiative
+            initiative_modificator = compute_initiative(cell)
+            if cell.tile.initiative + initiative_modificator > max_initiative:
+                max_initiative = cell.tile.initiative + initiative_modificator
     # battle
     for phase in range(max_initiative + 1)[::-1]:
         # phase of giving damage
@@ -26,9 +41,9 @@ def give_damage_phase(grid, phase):
     for cell in grid.cells:
         if cell.tile is not None and type(cell.tile) == Unit:
             # TODO get all buffs and debuffs
-            # for neighbour in cell.neighbours:
-            # if neighbour is not None and neighbour.tile is not None and type(neighbour)
-            if cell.tile.initiative == phase:
+            # gathering all buffs of initiative
+            initiative_modificator = compute_initiative(cell)
+            if phase == cell.tile.initiative + initiative_modificator:
                 for ind in xrange(len(cell.neighbours)):
                     damage = cell.tile.damage(ind - cell.turn)
                     if damage['melee'] > 0:
@@ -67,19 +82,19 @@ def take_damage_phase(grid):
 if __name__ == "__main__":
     playground = Grid(1)
 
-    outpost_shiper = Unit(0, (0,0,0,0,0,0), (2,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
-    outpost_shooter = Unit(0, (0,0,0,0,0,0), (1,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
-    outpost_kicker = Unit(0, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), 1, 3)
-    moloch_fat = Unit(1, (0,0,0,0,0,0), (0,0,0,0,0,0), (1,1,0,0,0,1), 3, 2)
+    outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), 2)
+    outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
+    outpost_saboteur = Module(0, 1, {}, {'initiative': [1,1,0,0,0,1]})
+    moloch_greaver = Unit(1, 1, (0,0,0,0,0,0), (0,0,0,0,0,0), (1,1,0,0,0,1), 3)
 
     playground.cells[0].tile = outpost_kicker
     playground.cells[0].turn = 1
-    playground.cells[1].tile = outpost_shooter
+    playground.cells[1].tile = outpost_saboteur
     playground.cells[1].turn = 2
-    playground.cells[2].tile = moloch_fat
+    playground.cells[2].tile = moloch_greaver
     playground.cells[2].turn = 4
-    playground.cells[5].tile = outpost_shiper
-    playground.cells[5].turn = 1
+    playground.cells[4].tile = outpost_scout
+    playground.cells[4].turn = 0
 
     battle(playground)
 
