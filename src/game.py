@@ -2,6 +2,7 @@ __author__ = 'dandelion'
 
 from grid import Grid
 from tile import *
+from renderer import Renderer
 
 
 def get_modificator(cell, mod_type):
@@ -131,6 +132,9 @@ if __name__ == "__main__":
     playground.cells[4].turn = 0
     playground.cells[5].tile = outpost_mothermodule
     playground.cells[5].turn = 1
+
+    renderer = Renderer(None)
+    renderer.render_board(playground)
 
     battle(playground)
 
