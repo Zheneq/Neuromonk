@@ -2,6 +2,7 @@ __author__ = 'dandelion'
 
 from grid import Grid
 from tile import *
+from renderer import Renderer
 
 
 def compute_initiative(cell):
@@ -106,6 +107,9 @@ if __name__ == "__main__":
     playground.cells[3].turn = 4
     playground.cells[4].tile = outpost_scout
     playground.cells[4].turn = 0
+
+    renderer = Renderer(None)
+    renderer.render_board(playground)
 
     battle(playground)
 
