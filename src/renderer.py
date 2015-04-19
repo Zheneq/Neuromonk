@@ -47,24 +47,24 @@ class Renderer:
         return tilepic
 
     def generate_tile_unit(self, tile, tilepic):
-        for i in range(0, 5):
+        for i in xrange(len(tile.melee)):
             # armor
             if tile.armor[i]:
                 armorpic = pygame.image.load("../res/armor.png")
                 armorpic.convert_alpha(tilepic)
-                armorpic = pygame.transform.rotozoom(armorpic, 60.0 * i, 1.0)
+                armorpic = pygame.transform.rotozoom(armorpic, -60.0 * i, 1.0)
                 self.generate_tile_blit(tilepic, armorpic)
             # range
             if tile.range[i]:
                 attackpic = pygame.image.load("../res/range" + str(tile.range[i]) + ".png")
                 attackpic.convert_alpha(tilepic)
-                attackpic = pygame.transform.rotozoom(attackpic, 60.0 * i, 1.0)
+                attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
                 self.generate_tile_blit(tilepic, attackpic)
             # melee
             if tile.melee[i]:
                 attackpic = pygame.image.load("../res/melee" + str(tile.melee[i]) + ".png")
                 attackpic.convert_alpha(tilepic)
-                attackpic = pygame.transform.rotozoom(attackpic, 60.0 * i, 1.0)
+                attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
                 self.generate_tile_blit(tilepic, attackpic)
         # initiative
         for init in tile.initiative:
@@ -91,11 +91,11 @@ class Renderer:
         return tilepic
 
     def generate_tile_module_links(self, tilepic, links):
-        for i in range(0, 5):
+        for i in xrange(len(links)):
             if links[i] == 0: continue
-            linkpic = pygame.image.load("../res/module_affects.png")
+            linkpic = pygame.image.load("../res/module_link.png")
             linkpic.convert_alpha(tilepic)
-            linkpic = pygame.transform.rotozoom(linkpic, 60.0 * i, 1.0)
+            linkpic = pygame.transform.rotozoom(linkpic, -60.0 * i, 1.0)
             self.generate_tile_blit(tilepic, linkpic)
 
     def generate_tile_blit(self, tilepic, pic):
@@ -108,7 +108,7 @@ class Renderer:
             if cell.tile is None:
                 continue
             cellpic = self.generate_tile(cell.tile)
-            cellpic = pygame.transform.rotozoom(cellpic, 60.0 * cell.turn, self.scale)
+            cellpic = pygame.transform.rotozoom(cellpic, -60.0 * cell.turn, self.scale)
             cellpicrect = cellpic.get_rect()
             cellpicrect.center = (self.indent[0] + cell.x * self.multiplier[0],
                                   self.indent[1] + cell.y * self.multiplier[1])
