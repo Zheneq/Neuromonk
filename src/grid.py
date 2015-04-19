@@ -7,6 +7,30 @@ class Cell(object):
         self.turn = 0
         self.neighbours = [None for ind in xrange(6)]
 
+    def action(self, damage_modificator):
+        for ind in xrange(len(self.neighbours)):
+            damage = self.tile.damage(ind - self.turn)
+            damage['melee'] += damage_modificator['melee']
+            damage['range'] += damage_modificator['range']
+            if damage['melee'] > 0:
+                if self.neighbours[ind] is not None and self.neighbours[ind].tile is not None:
+                    if self.neighbours[ind].tile.army_id != self.tile.army_id:
+                        damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': self.tile}
+                        self.neighbours[ind].tile.taken_damage.append(damage_to_unit)
+            if damage['range'] > 0:
+                neighbour = self.neighbours[ind]
+                while neighbour is not None:
+                    if neighbour.tile is not None and neighbour.tile.army_id != self.tile.army_id:
+                        range_damage = damage['range'] - neighbour.tile.get_armor(ind - neighbour.turn)
+                        if range_damage > 0:
+                            damage_to_unit = {'value': range_damage,
+                                              'type': 'range',
+                                              'instigator': self.tile}
+                            neighbour.tile.taken_damage.append(damage_to_unit)
+                        if not self.tile.row_attack:
+                            break
+                    neighbour = neighbour.neighbours[ind]
+
     def next(self, ind):
         return self.neighbours[(ind + 1) % 6]
 

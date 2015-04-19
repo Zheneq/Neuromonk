@@ -18,6 +18,7 @@ class Unit(Tile):
         self.armor = armor
         self.row_attack = row_attack
         self.melee_buffed = melee_buff
+        self.add_attacks_used = 0
 
     def damage(self, direction):
         result = {'melee': self.melee[direction % 6], 'range': self.range[direction % 6]}
