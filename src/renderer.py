@@ -17,9 +17,13 @@ class TileRenderer:
             print "unit"
             self.generate_tile_unit()
             self.generate_tile_hp()
-        if isinstance(self.tile, Module) or isinstance(self.tile, Medic):
+        if isinstance(self.tile, Module):
             print "module"
             self.generate_tile_module()
+            self.generate_tile_hp()
+        if isinstance(self.tile, Medic):
+            print "medic"
+            self.generate_tile_medic()
             self.generate_tile_hp()
         return self.tilepic
 
@@ -82,6 +86,19 @@ class TileRenderer:
             buffpic = pygame.image.load("../res/module_" + bufftype + ".png")
             buffpic.convert_alpha(self.tilepic)
             self.blit(buffpic)
+
+    def generate_tile_medic(self):
+        # links
+        self.generate_tile_module_links(self.tile.direction)
+        # rotation
+        self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
+        # medic icons
+        modulepic = pygame.image.load("../res/module.png")
+        modulepic.convert_alpha(self.tilepic)
+        self.blit(modulepic)
+        buffpic = pygame.image.load("../res/unique_medic.png")
+        buffpic.convert_alpha(self.tilepic)
+        self.blit(buffpic)
 
     def generate_tile_module_links(self, links):
         for i in xrange(len(links)):
