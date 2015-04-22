@@ -119,8 +119,8 @@ if __name__ == "__main__":
     outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
     outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    moloch_fat = Unit(1, 5, (0,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[0, True]])
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[4, True]])
+    moloch_fat = Unit(1, 3, (0,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[0, True]])
+    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
 
     playground.cells[0].tile = outpost_kicker
     playground.cells[0].turn = 1
@@ -137,5 +137,7 @@ if __name__ == "__main__":
     renderer.render_board(playground)
 
     battle(playground)
+
+    renderer.render_board(playground)
 
     print "Yay!"
