@@ -78,7 +78,7 @@ class GameMode(object):
         if damaged_units_to_heal:
             # first available medic saves first available unit from first damage in "taken_damage"
             damaged_units_to_heal[0].taken_damage.remove(damaged_units_to_heal[0].taken_damage[0])
-            damaged_units_to_heal[0].active_medics[0].tile = None
+            damaged_units_to_heal[0].active_medics[1].tile = None
         return damaged_units_to_heal
 
     def resolve_medics(self):
@@ -163,7 +163,7 @@ class GameMode(object):
 
 
 if __name__ == "__main__":
-    battle = GameMode(1)
+    battle = GameMode(2)
 
     # outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
     # outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
@@ -175,10 +175,13 @@ if __name__ == "__main__":
     outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
     outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
     outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
+    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
 
 
     battle.playground.cells[0].tile = outpost_medic3
     battle.playground.cells[0].turn = 4
+    battle.playground.cells[1].tile = moloch_greaver
+    battle.playground.cells[1].turn = 3
     battle.playground.cells[2].tile = outpost_medic4
     battle.playground.cells[2].turn = 3
     battle.playground.cells[5].tile = outpost_medic2
