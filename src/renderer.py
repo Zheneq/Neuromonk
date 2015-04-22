@@ -7,10 +7,12 @@ class TileRenderer:
     def __init__(self):
         self.tilepic = pygame.image.load("../res/tile.png")
         self.tile = None
+        self.rotation = 0.0
 
-    def generate_tile(self, tile):
+    def generate_tile(self, tile, rotation = 0.0):
         self.tilepic = pygame.image.load("../res/tile" + str(tile.army_id) + ".png")
         self.tile = tile
+        self.rotation = -60.0 * rotation
         if isinstance(self.tile, Unit):
             print "unit"
             self.generate_tile_unit()
@@ -26,7 +28,7 @@ class TileRenderer:
         if self.tile.hp > 1:
             hppic = pygame.image.load("../res/hp" + str(self.tile.hp) + ".png")
             hppic.convert_alpha(self.tilepic)
-            self.tilepic.blit(hppic, hppic.get_rect())
+            self.blit(hppic)
 
     def generate_tile_unit(self):
         for i in xrange(len(self.tile.melee)):
@@ -35,26 +37,29 @@ class TileRenderer:
                 armorpic = pygame.image.load("../res/armor.png")
                 armorpic.convert_alpha(self.tilepic)
                 armorpic = pygame.transform.rotozoom(armorpic, -60.0 * i, 1.0)
-                self.generate_tile_blit(armorpic)
+                self.blit(armorpic)
             # range
             if self.tile.range[i]:
                 attackpic = pygame.image.load("../res/range" + str(self.tile.range[i]) + ".png")
                 attackpic.convert_alpha(self.tilepic)
                 attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
-                self.generate_tile_blit(attackpic)
+                self.blit(attackpic)
             # melee
             if self.tile.melee[i]:
                 attackpic = pygame.image.load("../res/melee" + str(self.tile.melee[i]) + ".png")
                 attackpic.convert_alpha(self.tilepic)
                 attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
-                self.generate_tile_blit(attackpic)
+                self.blit(attackpic)
+        # rotation
+        self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
         for init in self.tile.initiative:
             initpic = pygame.image.load("../res/init" + str(init[0]) + ".png")
             initpic.convert_alpha(self.tilepic)
-            self.tilepic.blit(initpic, initpic.get_rect())
+            self.blit(initpic)
 
     def generate_tile_module(self):
+        # links
         bufftype = None
         for buff in self.tile.buff.keys():
             bufftype = "buff_" + buff
@@ -62,13 +67,16 @@ class TileRenderer:
         for debuff in self.tile.debuff.keys():
             bufftype = "debuff_" + debuff
             self.generate_tile_module_links(self.tile.debuff[debuff])
+        # rotation
+        self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
+        # module icons
         modulepic = pygame.image.load("../res/module.png")
         modulepic.convert_alpha(self.tilepic)
-        self.tilepic.blit(modulepic, modulepic.get_rect())
+        self.blit(modulepic)
         if bufftype is not None:
             buffpic = pygame.image.load("../res/module_" + bufftype + ".png")
             buffpic.convert_alpha(self.tilepic)
-            self.tilepic.blit(buffpic, buffpic.get_rect())
+            self.blit(buffpic)
 
     def generate_tile_module_links(self, links):
         for i in xrange(len(links)):
@@ -76,9 +84,9 @@ class TileRenderer:
             linkpic = pygame.image.load("../res/module_link.png")
             linkpic.convert_alpha(self.tilepic)
             linkpic = pygame.transform.rotozoom(linkpic, -60.0 * i, 1.0)
-            self.generate_tile_blit(linkpic)
+            self.blit(linkpic)
 
-    def generate_tile_blit(self, pic):
+    def blit(self, pic):
         picrect = pic.get_rect()
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(pic, picrect)
@@ -112,8 +120,8 @@ class Renderer:
         for cell in grid.cells:
             if cell.tile is None:
                 continue
-            cellpic = tile_gen.generate_tile(cell.tile)
-            cellpic = pygame.transform.rotozoom(cellpic, -60.0 * cell.turn, self.scale)
+            cellpic = tile_gen.generate_tile(cell.tile, cell.turn)
+            cellpic = pygame.transform.rotozoom(cellpic, 0.0, self.scale)
             cellpicrect = cellpic.get_rect()
             cellpicrect.center = (self.indent[0] + cell.x * self.multiplier[0],
                                   self.indent[1] + cell.y * self.multiplier[1])
