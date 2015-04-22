@@ -132,7 +132,6 @@ class Renderer:
             cellpicrect.center = (self.indent[0] + cell.x * self.multiplier[0],
                                   self.indent[1] + cell.y * self.multiplier[1])
             self.screen.blit(cellpic, cellpicrect)
-            print "Yaaa..."
         # for test purpose
         pygame.display.flip()
         again = True
