@@ -14,17 +14,16 @@ class TileRenderer:
         self.tile = tile
         self.rotation = -60.0 * rotation
         if isinstance(self.tile, Unit):
-            print "unit"
             self.generate_tile_unit()
             self.generate_tile_hp()
         if isinstance(self.tile, Module):
-            print "module"
             self.generate_tile_module()
             self.generate_tile_hp()
         if isinstance(self.tile, Medic):
-            print "medic"
             self.generate_tile_medic()
             self.generate_tile_hp()
+        if not self.tile.active:
+            self.generate_tile_net()
         return self.tilepic
 
     def generate_tile_hp(self):
@@ -36,16 +35,21 @@ class TileRenderer:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_unit(self):
-        for i in xrange(len(self.tile.melee)):
-            # armor
-            if self.tile.armor[i]:
-                self.blit("../res/armor.png", i)
-            # range
-            if self.tile.range[i]:
-                self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
-            # melee
-            if self.tile.melee[i]:
-                self.blit("../res/melee" + str(self.tile.melee[i]) + ".png", i)
+        # armor
+        if self.tile.armor is not None:
+            for i in xrange(len(self.tile.armor)):
+                if self.tile.armor[i]:
+                    self.blit("../res/armor.png", i)
+        # range
+        if self.tile.range is not None:
+            for i in xrange(len(self.tile.range)):
+                if self.tile.range[i]:
+                    self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
+        # melee
+        if self.tile.melee is not None:
+            for i in xrange(len(self.tile.melee)):
+                if self.tile.melee[i]:
+                    self.blit("../res/melee" + str(self.tile.melee[i]) + ".png", i)
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
@@ -81,6 +85,9 @@ class TileRenderer:
         for i in xrange(len(links)):
             if links[i] == 0: continue
             self.blit("../res/module_link.png", i)
+
+    def generate_tile_net(self):
+        self.blit("../res/net.png")
 
     def blit(self, filename, rotation = 0):
         pic = pygame.image.load(filename)
