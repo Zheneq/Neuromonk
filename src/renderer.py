@@ -17,51 +17,40 @@ class TileRenderer:
             print "unit"
             self.generate_tile_unit()
             self.generate_tile_hp()
-        if isinstance(tile, Module):
+        if isinstance(self.tile, Module):
             print "module"
             self.generate_tile_module()
+            self.generate_tile_hp()
+        if isinstance(self.tile, Medic):
+            print "medic"
+            self.generate_tile_medic()
             self.generate_tile_hp()
         return self.tilepic
 
     def generate_tile_hp(self):
         # hp
         if self.tile.hp > 1:
-            hppic = pygame.image.load("../res/hp" + str(self.tile.hp) + ".png")
-            hppic.convert_alpha(self.tilepic)
-            self.blit(hppic)
+            self.blit("../res/hp" + str(self.tile.hp) + ".png")
         # damage
         if self.tile.injuries > 0:
-            hppic = pygame.image.load("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
-            hppic.convert_alpha(self.tilepic)
-            self.blit(hppic)
+            self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_unit(self):
         for i in xrange(len(self.tile.melee)):
             # armor
             if self.tile.armor[i]:
-                armorpic = pygame.image.load("../res/armor.png")
-                armorpic.convert_alpha(self.tilepic)
-                armorpic = pygame.transform.rotozoom(armorpic, -60.0 * i, 1.0)
-                self.blit(armorpic)
+                self.blit("../res/armor.png", i)
             # range
             if self.tile.range[i]:
-                attackpic = pygame.image.load("../res/range" + str(self.tile.range[i]) + ".png")
-                attackpic.convert_alpha(self.tilepic)
-                attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
-                self.blit(attackpic)
+                self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
             # melee
             if self.tile.melee[i]:
-                attackpic = pygame.image.load("../res/melee" + str(self.tile.melee[i]) + ".png")
-                attackpic.convert_alpha(self.tilepic)
-                attackpic = pygame.transform.rotozoom(attackpic, -60.0 * i, 1.0)
-                self.blit(attackpic)
+                self.blit("../res/melee" + str(self.tile.melee[i]) + ".png", i)
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
         for init in self.tile.initiative:
-            initpic = pygame.image.load("../res/init" + str(init[0]) + ".png")
-            initpic.convert_alpha(self.tilepic)
-            self.blit(initpic)
+            self.blit("../res/init" + str(init[0]) + ".png")
 
     def generate_tile_module(self):
         # links
@@ -75,23 +64,28 @@ class TileRenderer:
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # module icons
-        modulepic = pygame.image.load("../res/module.png")
-        modulepic.convert_alpha(self.tilepic)
-        self.blit(modulepic)
+        self.blit("../res/module.png")
         if bufftype is not None:
-            buffpic = pygame.image.load("../res/module_" + bufftype + ".png")
-            buffpic.convert_alpha(self.tilepic)
-            self.blit(buffpic)
+            self.blit("../res/module_" + bufftype + ".png")
+
+    def generate_tile_medic(self):
+        # links
+        self.generate_tile_module_links(self.tile.direction)
+        # rotation
+        self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
+        # medic icons
+        self.blit("../res/module.png")
+        self.blit("../res/unique_medic.png")
 
     def generate_tile_module_links(self, links):
         for i in xrange(len(links)):
             if links[i] == 0: continue
-            linkpic = pygame.image.load("../res/module_link.png")
-            linkpic.convert_alpha(self.tilepic)
-            linkpic = pygame.transform.rotozoom(linkpic, -60.0 * i, 1.0)
-            self.blit(linkpic)
+            self.blit("../res/module_link.png", i)
 
-    def blit(self, pic):
+    def blit(self, filename, rotation = 0):
+        pic = pygame.image.load(filename)
+        pic.convert_alpha(self.tilepic)
+        if rotation: pic = pygame.transform.rotozoom(pic, -60.0 * rotation, 1.0)
         picrect = pic.get_rect()
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(pic, picrect)
