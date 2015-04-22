@@ -13,7 +13,9 @@ class GameMode(object):
     def get_modificator(self, cell, mod_type):
         mod = 0
         for ind in xrange(len(cell.neighbours)):
-            if cell.neighbours[ind] is not None and cell.neighbours[ind].tile is not None:
+            if cell.neighbours[ind] is not None and \
+                    cell.neighbours[ind].tile is not None and \
+                    cell.neighbours[ind].tile.active:
                 if type(cell.neighbours[ind].tile) == Module:
                     # TODO add buffs from allies
                     if cell.neighbours[ind].tile.army_id == cell.tile.army_id:  # it can buff
@@ -49,13 +51,13 @@ class GameMode(object):
                 if neighbour is not medic_cell and medic_cell not in neighbour.tile.active_medics:
                     neighbour.tile.active_medics.append(medic_cell)  # mark this tile
                     # if tile is another medic continue chain
-                    if type(neighbour.tile) is Medic:
+                    if type(neighbour.tile) is Medic and neighbour.tile.active:
                         self.assign_medic(neighbour, medic_cell)
 
     def compute_medics(self):
         active_medic_found = False
         for cell in self.playground.cells:
-            if cell.tile is not None and type(cell.tile) is Medic:
+            if cell.tile is not None and cell.tile.active and type(cell.tile) is Medic:
                 damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
                 if cell.tile.hp - cell.tile.injuries > damage:
                     # medic can heal somebody who is connected to it
@@ -74,8 +76,8 @@ class GameMode(object):
             if cell.tile is not None and cell.tile.taken_damage and cell.tile.active_medics:
                 # unit is able to be healed by one of medics in list
                 damaged_units_to_heal.append(cell.tile)
-        #TODO choose medic to heal
         if damaged_units_to_heal:
+            #TODO choose medic to heal
             # first available medic saves first available unit from first damage in "taken_damage"
             damaged_units_to_heal[0].taken_damage.remove(damaged_units_to_heal[0].taken_damage[0])
             damaged_units_to_heal[0].active_medics[1].tile = None
@@ -113,7 +115,7 @@ class GameMode(object):
 
     def give_damage_phase(self, phase):
         for cell in self.playground.cells:
-            if cell.tile is not None and type(cell.tile) == Unit:
+            if cell.tile is not None and cell.tile.active and type(cell.tile) == Unit:
                 # gathering all buffs of initiative and add. attacks
                 initiative_modificator = self.compute_initiative(cell)
                 min_initiative = 100
@@ -151,7 +153,24 @@ class GameMode(object):
                     cell.tile.injuries += damage
                     cell.tile.taken_damage = []
                 else:
-                    # TODO release disabled units (by nets)
+                    if type(cell.tile) == Unit and cell.tile.nets:
+                        for ind in xrange(len(cell.neighbours)):
+                            if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
+                                        cell.neighbours[ind] is not None and \
+                                        cell.neighbours[ind].tile is not None and \
+                                        cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                                # release unit if there is no other net fighters
+                                neighbour = cell.neighbours[ind]
+                                for ind in xrange(len(neighbour.neighbours)):
+                                    if cell.neighbours[ind] is not None and \
+                                                cell.neighbours[ind].tile is not None and \
+                                                cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
+                                                type(cell.neighbours[ind].tile) is Unit and \
+                                                cell.neighbours[ind].tile.nets and \
+                                                cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
+                                        break
+                                else:
+                                    neighbour.tile.active = True
                     cell.tile = None
 
     def refresh_units(self):
@@ -165,29 +184,35 @@ class GameMode(object):
 if __name__ == "__main__":
     battle = GameMode(2)
 
-    # outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
-    # outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
-    # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    # moloch_fat = Unit(1, 5, (0,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[0, True]])
+    outpost_kicker1 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
+    outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
+    moloch_fat = Unit(1, 5, None, None, None, None, [])
+    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [])
+
+    # outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
+    # outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
+    # outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
+    # outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
     # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
 
-    outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
-    outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
-    outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
-    outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
 
-
-    battle.playground.cells[0].tile = outpost_medic3
-    battle.playground.cells[0].turn = 4
-    battle.playground.cells[1].tile = moloch_greaver
-    battle.playground.cells[1].turn = 3
-    battle.playground.cells[2].tile = outpost_medic4
-    battle.playground.cells[2].turn = 3
-    battle.playground.cells[5].tile = outpost_medic2
-    battle.playground.cells[5].turn = 0
-    battle.playground.cells[6].tile = outpost_medic1
-    battle.playground.cells[6].turn = 2
+    battle.playground.cells[0].tile = outpost_kicker1
+    battle.playground.cells[0].turn = 1
+    battle.playground.cells[1].tile = moloch_netfighter
+    battle.playground.cells[1].turn = 2
+    battle.playground.cells[2].tile = moloch_fat
+    battle.playground.cells[2].turn = 0
+    battle.playground.cells[3].tile = moloch_greaver
+    battle.playground.cells[3].turn = 4
+    battle.playground.cells[4].tile = outpost_scout
+    battle.playground.cells[4].turn = 0
+    battle.playground.cells[5].tile = outpost_mothermodule
+    battle.playground.cells[5].turn = 1
+    battle.playground.cells[6].tile = outpost_kicker2
+    battle.playground.cells[6].turn = 1
 
     battle.renderer.render_board(battle.playground)
 

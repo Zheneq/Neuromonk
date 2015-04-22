@@ -7,27 +7,36 @@ class Tile(object):
         self.taken_damage = []
         self.active_medics = []
         self.hp = hp
+        self.active = True
         self.injuries = 0
 
 
 class Unit(Tile):
-    def __init__(self, id, hp, melee, range, armor, initiative, row_attack=False, melee_buff=True, range_buff=True):
+    def __init__(self, id, hp, melee, range, armor, nets, initiative,
+                 row_attack=False, melee_buff=True, range_buff=True):
         Tile.__init__(self, id, hp)
         self.initiative = initiative
         self.melee = melee
         self.range = range
         self.armor = armor
+        self.nets = nets
         self.row_attack = row_attack
         self.can_melee_buffed = melee_buff
         self.can_range_buffed = range_buff
         self.add_attacks_used = 0
 
     def damage(self, direction):
-        result = {'melee': self.melee[direction % 6], 'range': self.range[direction % 6]}
+        result = {}
+        if self.melee:
+            result['melee'] = self.melee[direction % 6]
+        if self.range:
+            result['range'] = self.range[direction % 6]
         return result
 
     def get_armor(self, direction):
-        return self.armor[(direction + 3) % 6]
+        if self.armor:
+            return self.armor[(direction + 3) % 6]
+        return 0
 
 
 class Base(Tile):
