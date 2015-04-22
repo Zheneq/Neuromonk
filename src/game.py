@@ -137,4 +137,6 @@ if __name__ == "__main__":
 
     battle.renderer.render_board(battle.playground)
 
+    renderer.render_board(playground)
+
     print "Yay!"
