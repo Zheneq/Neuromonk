@@ -38,6 +38,57 @@ class GameMode(object):
     def compute_additional_attacks(self, cell):
         return self.get_modificator(cell, 'add_attacks')
 
+    def assign_medic(self, cell, medic_cell):
+        # mark all units connected with medic in "cell" as able be healed by this medic
+        for ind in xrange(len(cell.neighbours)):
+            if cell.tile.direction[(ind + 6 - cell.turn) % 6] and \
+                            cell.neighbours[ind] is not None and \
+                            cell.neighbours[ind].tile is not None:
+                # this tile is connected to medic
+                neighbour = cell.neighbours[ind]
+                if neighbour is not medic_cell and medic_cell not in neighbour.tile.active_medics:
+                    neighbour.tile.active_medics.append(medic_cell)  # mark this tile
+                    # if tile is another medic continue chain
+                    if type(neighbour.tile) is Medic:
+                        self.assign_medic(neighbour, medic_cell)
+
+    def compute_medics(self):
+        active_medic_found = False
+        for cell in self.playground.cells:
+            if cell.tile is not None and type(cell.tile) is Medic:
+                damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
+                if cell.tile.hp - cell.tile.injuries > damage:
+                    # medic can heal somebody who is connected to it
+                    active_medic_found = True
+                    self.assign_medic(cell, cell)
+        return active_medic_found
+
+    def clean_medics(self):
+        for cell in self.playground.cells:
+            if cell.tile is not None:
+                cell.tile.active_medics = []
+
+    def one_medic_resolve(self):
+        damaged_units_to_heal = []
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.taken_damage and cell.tile.active_medics:
+                # unit is able to be healed by one of medics in list
+                damaged_units_to_heal.append(cell.tile)
+        #TODO choose medic to heal
+        if damaged_units_to_heal:
+            # first available medic saves first available unit from first damage in "taken_damage"
+            damaged_units_to_heal[0].taken_damage.remove(damaged_units_to_heal[0].taken_damage[0])
+            damaged_units_to_heal[0].active_medics[0].tile = None
+        return damaged_units_to_heal
+
+    def resolve_medics(self):
+        active_medic_found = self.compute_medics()
+        candidates = True
+        while(active_medic_found and candidates):
+            candidates = self.one_medic_resolve()
+            self.clean_medics()
+            active_medic_found = self.compute_medics()
+
     def battle(self):
         # prepare to battle
         # find max initiative
@@ -92,9 +143,9 @@ class GameMode(object):
                                 break
 
     def take_damage_phase(self):
+        self.resolve_medics()
         for cell in self.playground.cells:
             if cell.tile is not None:
-                # TODO if there is connected medic resolve it's possible conflicts
                 damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
                 if cell.tile.hp - cell.tile.injuries > damage:
                     cell.tile.injuries += damage
@@ -114,22 +165,26 @@ class GameMode(object):
 if __name__ == "__main__":
     battle = GameMode(1)
 
-    outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
-    outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
-    outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    moloch_fat = Unit(1, 5, (0,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[0, True]])
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
+    # outpost_kicker = Unit(0, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
+    # outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
+    # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
+    # moloch_fat = Unit(1, 5, (0,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[0, True]])
+    # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
 
-    battle.playground.cells[0].tile = outpost_kicker
-    battle.playground.cells[0].turn = 1
-    battle.playground.cells[2].tile = moloch_fat
-    battle.playground.cells[2].turn = 0
-    battle.playground.cells[3].tile = moloch_greaver
-    battle.playground.cells[3].turn = 4
-    battle.playground.cells[4].tile = outpost_scout
-    battle.playground.cells[4].turn = 0
-    battle.playground.cells[5].tile = outpost_mothermodule
-    battle.playground.cells[5].turn = 1
+    outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
+    outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
+    outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
+    outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
+
+
+    battle.playground.cells[0].tile = outpost_medic3
+    battle.playground.cells[0].turn = 4
+    battle.playground.cells[2].tile = outpost_medic4
+    battle.playground.cells[2].turn = 3
+    battle.playground.cells[5].tile = outpost_medic2
+    battle.playground.cells[5].turn = 0
+    battle.playground.cells[6].tile = outpost_medic1
+    battle.playground.cells[6].turn = 2
 
     battle.renderer.render_board(battle.playground)
 

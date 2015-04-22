@@ -5,6 +5,7 @@ class Tile(object):
     def __init__(self ,id, hp):
         self.army_id = id
         self.taken_damage = []
+        self.active_medics = []
         self.hp = hp
         self.injuries = 0
 
@@ -53,9 +54,10 @@ class Module(Tile):
         return result
 
 
-# class Medic(Tile):
-#     def __init__(self, id, hp):
-#         Tile.__init__()
+class Medic(Tile):
+    def __init__(self, id, hp, direction):
+        Tile.__init__(self, id, hp)
+        self.direction = direction
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 __author__ = 'Dandelion'
 from renderer import Renderer
 
+
 class Cell(object):
     def __init__(self):
         self.tile = None
