@@ -13,8 +13,10 @@ class Cell(object):
     def action(self, damage_modificator):
         for ind in xrange(len(self.neighbours)):
             damage = self.tile.damage(ind - self.turn)
-            damage['melee'] += damage_modificator['melee']
-            damage['range'] += damage_modificator['range']
+            if self.tile.can_melee_buffed:
+                damage['melee'] += damage_modificator['melee']
+            if self.tile.can_range_buffed:
+                damage['range'] += damage_modificator['range']
             if damage['melee'] > 0:
                 if self.neighbours[ind] is not None and self.neighbours[ind].tile is not None:
                     if self.neighbours[ind].tile.army_id != self.tile.army_id:
