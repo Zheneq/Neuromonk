@@ -14,17 +14,16 @@ class TileRenderer:
         self.tile = tile
         self.rotation = -60.0 * rotation
         if isinstance(self.tile, Unit):
-            print "unit"
             self.generate_tile_unit()
             self.generate_tile_hp()
         if isinstance(self.tile, Module):
-            print "module"
             self.generate_tile_module()
             self.generate_tile_hp()
         if isinstance(self.tile, Medic):
-            print "medic"
             self.generate_tile_medic()
             self.generate_tile_hp()
+        if not self.tile.active:
+            self.generate_tile_net()
         return self.tilepic
 
     def generate_tile_hp(self):
@@ -81,6 +80,9 @@ class TileRenderer:
         for i in xrange(len(links)):
             if links[i] == 0: continue
             self.blit("../res/module_link.png", i)
+
+    def generate_tile_net(self):
+        self.blit("../res/net.png")
 
     def blit(self, filename, rotation = 0):
         pic = pygame.image.load(filename)
