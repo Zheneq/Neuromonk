@@ -29,6 +29,11 @@ class TileRenderer:
             hppic = pygame.image.load("../res/hp" + str(self.tile.hp) + ".png")
             hppic.convert_alpha(self.tilepic)
             self.blit(hppic)
+        # damage
+        if self.tile.injuries > 0:
+            hppic = pygame.image.load("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
+            hppic.convert_alpha(self.tilepic)
+            self.blit(hppic)
 
     def generate_tile_unit(self):
         for i in xrange(len(self.tile.melee)):
