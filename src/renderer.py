@@ -35,16 +35,21 @@ class TileRenderer:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_unit(self):
-        for i in xrange(len(self.tile.melee)):
-            # armor
-            if self.tile.armor[i]:
-                self.blit("../res/armor.png", i)
-            # range
-            if self.tile.range[i]:
-                self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
-            # melee
-            if self.tile.melee[i]:
-                self.blit("../res/melee" + str(self.tile.melee[i]) + ".png", i)
+        # armor
+        if self.tile.armor is not None:
+            for i in xrange(len(self.tile.armor)):
+                if self.tile.armor[i]:
+                    self.blit("../res/armor.png", i)
+        # range
+        if self.tile.range is not None:
+            for i in xrange(len(self.tile.range)):
+                if self.tile.range[i]:
+                    self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
+        # melee
+        if self.tile.melee is not None:
+            for i in xrange(len(self.tile.melee)):
+                if self.tile.melee[i]:
+                    self.blit("../res/melee" + str(self.tile.melee[i]) + ".png", i)
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
