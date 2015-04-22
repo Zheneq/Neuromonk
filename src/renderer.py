@@ -17,7 +17,7 @@ class TileRenderer:
             print "unit"
             self.generate_tile_unit()
             self.generate_tile_hp()
-        if isinstance(tile, Module):
+        if isinstance(self.tile, Module) or isinstance(self.tile, Medic):
             print "module"
             self.generate_tile_module()
             self.generate_tile_hp()
