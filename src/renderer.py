@@ -103,7 +103,7 @@ class Renderer:
         self.game = game
         self.screen = pygame.display.set_mode((800, 600))
         self.screenrect = self.screen.get_rect()
-        self.scale = 0.25
+        self.scale = 0.5
         self.multiplier = (1.0, 1.0)
         self.indent = self.screenrect.center
 

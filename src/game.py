@@ -185,12 +185,13 @@ if __name__ == "__main__":
     battle = GameMode(2)
 
     outpost_kicker1 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
-    outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    outpost_kicker1.active = False
+    outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    moloch_fat = Unit(1, 5, None, None, None, None, [])
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
-    moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [])
+    moloch_fat = Unit(1, 5, None, None, None, None, [[0, True]])
+    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
+    moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
 
     # outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
     # outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
@@ -202,7 +203,7 @@ if __name__ == "__main__":
     battle.playground.cells[0].tile = outpost_kicker1
     battle.playground.cells[0].turn = 1
     battle.playground.cells[1].tile = moloch_netfighter
-    battle.playground.cells[1].turn = 2
+    battle.playground.cells[1].turn = 3
     battle.playground.cells[2].tile = moloch_fat
     battle.playground.cells[2].turn = 0
     battle.playground.cells[3].tile = moloch_greaver

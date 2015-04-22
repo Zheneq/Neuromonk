@@ -29,8 +29,12 @@ class Unit(Tile):
         result = {}
         if self.melee:
             result['melee'] = self.melee[direction % 6]
+        else:
+            result['melee'] = 0
         if self.range:
             result['range'] = self.range[direction % 6]
+        else:
+            result['range'] = 0
         return result
 
     def get_armor(self, direction):
