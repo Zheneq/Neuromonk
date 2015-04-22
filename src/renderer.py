@@ -35,6 +35,11 @@ class TileRenderer:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_unit(self):
+        # nets
+        if self.tile.nets is not None:
+            for i in xrange(len(self.tile.nets)):
+                if self.tile.nets[i]:
+                    self.blit("../res/net_attack.png", i)
         # armor
         if self.tile.armor is not None:
             for i in xrange(len(self.tile.armor)):
@@ -53,8 +58,9 @@ class TileRenderer:
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
-        for init in self.tile.initiative:
-            self.blit("../res/init" + str(init[0]) + ".png")
+        if self.tile.initiative is not None:
+            for init in self.tile.initiative:
+                self.blit("../res/init" + str(init[0]) + ".png")
 
     def generate_tile_module(self):
         # links
