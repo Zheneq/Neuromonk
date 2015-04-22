@@ -67,7 +67,7 @@ def give_damage_phase(grid, phase):
             initiative_modificator = compute_initiative(cell)
             min_initiative = 100
             for initiative_ind in xrange(len(cell.tile.initiative)):
-                if cell.tile.initiative[initiative_ind][0] < min_initiative:
+                if cell.tile.initiative[initiative_ind][0] + initiative_modificator < min_initiative:
                     min_initiative = cell.tile.initiative[initiative_ind][0]
                 if cell.tile.initiative[initiative_ind][1] and \
                                 phase == cell.tile.initiative[initiative_ind][0] + initiative_modificator:
