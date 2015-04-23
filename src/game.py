@@ -9,6 +9,7 @@ class GameMode(object):
     def __init__(self, grid_radius):
         self.playground = Grid(grid_radius)
         self.renderer = Renderer(None)
+        self.players = []
 
     def get_modificator(self, cell, mod_type):
         mod = 0
