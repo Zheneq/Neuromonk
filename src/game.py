@@ -1,5 +1,6 @@
 __author__ = 'dandelion'
 
+import pygame
 from grid import Grid
 from tile import *
 from renderer import Renderer
@@ -19,8 +20,82 @@ class GameMode(object):
         :return: nothing is returned.
         """
         self.playground = Grid(grid_radius)
-        self.renderer = Renderer(None)
+        self.renderer = Renderer(self)
         self.players = []
+        self.active = False
+        self.timers = {}
+
+    def startgame(self):
+        """
+        Launches the main cycle
+        :return: nothing is returned.
+        """
+        pygame.init()
+        self.active = True
+        self.beginplay()
+        time = pygame.time.get_ticks()
+        while self.active:
+            prevtime = time
+            time = pygame.time.get_ticks()
+            # processing events
+            pygame.event.pump()
+            event = pygame.event.wait()
+            if event.type == pygame.QUIT:
+                self.active = False
+            if event.type in self.timers:
+                self.timers[event.type][0]()
+                if not self.timers[event.type][1]:
+                    pygame.time.set_timer(event.type, 0)
+                    del self.timers[event.type]
+            # ticking actors
+            deltatime = time - prevtime
+            self.tick(deltatime)
+            self.renderer.tick(deltatime)
+        # unintialization
+        pygame.quit()
+
+    def endgame(self):
+        """
+        Immediately stops the game
+        :return: nothing is returned.
+        """
+        self.active = False
+
+    def beginplay(self):
+        # DEBUG
+        self.settimer(5000, self.battle)
+
+    def tick(self, deltatime):
+        """
+        Subroutine executed every tick
+        :param deltatime: Time since last tick (in milliseconds)
+        :return: nothing is returned.
+        """
+        pass
+
+    def settimer(self, time, callback, repeat = False):
+        """
+        Set a timer
+        :param time: Time in milliseconds. If 0, timer is unset
+        :param callback: Function to call when the timer is fired
+        :param repeat: Bool flag set when timer should be fired repeatedly
+        :return: nothing is returned.
+        """
+        # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
+        #          which one will be unset is unknown.
+        if time:
+            for id in xrange(pygame.USEREVENT, pygame.NUMEVENTS):
+                if id not in self.timers:
+                    pygame.time.set_timer(id, time)
+                    self.timers[id] = (callback, repeat)
+                    break
+            else:
+                raise ValueError("GameMode.settimer: Too many timers!")
+        else:
+            for timer in self.timers:
+                if self.timers[timer][0] is callback:
+                    del self.timers[timer]
+                    break
 
     def battle(self):
         """
@@ -83,10 +158,6 @@ if __name__ == "__main__":
     battle.playground.cells[6].tile = outpost_kicker2
     battle.playground.cells[6].turn = 1
 
-    battle.renderer.render_board(battle.playground)
-
-    battle.battle()
-
-    battle.renderer.render_board(battle.playground)
+    battle.startgame()
 
     print "Yay!"

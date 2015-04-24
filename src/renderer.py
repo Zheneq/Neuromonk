@@ -112,6 +112,23 @@ class Renderer:
         self.scale = 0.3
         self.boardbackbuffer = None
 
+    def tick(self, deltatime):
+        """
+        Subroutine executed every tick
+        :param deltatime: Time since last tick (in milliseconds)
+        :return: nothing is returned.
+        """
+        self.render(deltatime)
+
+    def render(self, deltatime):
+        """
+        Rendering subroutine
+        :param deltatime: Time since last tick (in milliseconds)
+        :return: nothing is returned.
+        """
+        self.render_board(self.game.playground)
+        pygame.display.flip()
+
     def render_board(self, grid):
         try:
             grid.gfx is None
@@ -133,6 +150,10 @@ class Renderer:
         rect.center = self.boardbackbuffer.get_rect().center
         self.boardbackbuffer.blit(grid.gfx, rect)
         self.render_tiles(grid)
+        self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
+        rect = self.boardbackbuffer.get_rect()
+        rect.center = self.screenrect.center
+        self.screen.blit(self.boardbackbuffer, rect)
 
     def render_tiles(self, grid):
         tile_gen = TileRenderer()
@@ -144,14 +165,4 @@ class Renderer:
             cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
                                   grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
             self.boardbackbuffer.blit(cellpic, cellpicrect)
-        # for test purpose
-        self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
-        rect = self.boardbackbuffer.get_rect()
-        rect.center = self.screenrect.center
-        self.screen.blit(self.boardbackbuffer, rect)
-        pygame.display.flip()
-        again = True
-        while again:
-            event = pygame.event.wait()
-            if event.type == pygame.QUIT:
-                again = False
+            
