@@ -55,6 +55,7 @@ class Cell(object):
 
 class Grid(object):
     def __init__(self, radius=2):
+        self.radius = radius
         # relative offsets between adjacent cells
         offset = [(0.0, -1.0), (0.75, -0.5), (0.75, 0.5), (0, 1), (-0.75, 0.5), (-0.75, -0.5)]
         self.cells = [Cell()]
