@@ -2,8 +2,8 @@ __author__ = 'dandelion'
 
 from tile import Unit
 
-from game.battle.buffs import compute_initiative, compute_attack, compute_additional_attacks
-from game.battle.medics import resolve_medics
+from buffs import compute_initiative, compute_attack, compute_additional_attacks
+from medics import resolve_medics
 
 
 def give_damage_phase(playground, phase):
