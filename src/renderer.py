@@ -22,14 +22,14 @@ class TileRenderer:
         if isinstance(self.tile, Medic):
             self.generate_tile_medic()
             self.generate_tile_hp()
-        if not self.tile.active:
-            self.generate_tile_net()
         return self.tilepic
 
     def generate_tile_hp(self):
         # hp
         if self.tile.hp > 1:
             self.blit("../res/hp" + str(self.tile.hp) + ".png")
+
+    def generate_tile_damage(self):
         # damage
         if self.tile.injuries > 0:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
@@ -103,6 +103,24 @@ class TileRenderer:
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(pic, picrect)
 
+    def generate_tile_fx(self, tile):
+        self.tile = tile
+        self.rotation = 0
+        # TODO: Size of the surface shouldn't be a numerical constant
+        self.tilepic = pygame.Surface((500, 500), pygame.SRCALPHA)
+        self.tilepic.fill((0, 0, 0, 0))
+        if tile.highlighted:
+            self.blit("../res/tile" + str(tile.army_id) + "_selection.png")
+        if tile.selected:
+            self.blit("../res/tile" + str(tile.army_id) + "_selection.png")
+        picrect = tile.gfx.get_rect()
+        picrect.center = self.tilepic.get_rect().center
+        self.tilepic.blit(tile.gfx, picrect)
+        self.generate_tile_damage()
+        if not self.tile.active:
+            self.generate_tile_net()
+        return self.tilepic
+
 
 class Renderer:
     def __init__(self, game):
@@ -160,9 +178,10 @@ class Renderer:
         for cell in grid.cells:
             if cell.tile is None:
                 continue
-            cellpic = tile_gen.generate_tile(cell.tile, cell.turn)
-            cellpicrect = cellpic.get_rect()
+            if cell.tile.gfx is None:
+                cell.tile.gfx = tile_gen.generate_tile(cell.tile, cell.turn)
+            pic = tile_gen.generate_tile_fx(cell.tile)
+            cellpicrect = pic.get_rect()
             cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
                                   grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
-            self.boardbackbuffer.blit(cellpic, cellpicrect)
-            
+            self.boardbackbuffer.blit(pic, cellpicrect)
