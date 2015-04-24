@@ -4,6 +4,12 @@ from tile import Module
 
 
 def get_modificator(cell, mod_type):
+    """
+    Gets all buffs and debuffs of type 'modtype' for 'cell'
+    :param cell: cell with tile, collecting bonuses.
+    :param mod_type: type of bonuses. Now can be 'melee', 'range', 'initiative' or 'add_attacks'.
+    :return: returns sum of all modificators
+    """
     mod = 0
     for ind in xrange(len(cell.neighbours)):
         if cell.neighbours[ind] is not None and \
@@ -23,10 +29,20 @@ def get_modificator(cell, mod_type):
 
 
 def compute_initiative(cell):
+    """
+    Gets all buffs and debuffs of initiative for 'cell'
+    :param cell: cell with tile, collecting bonuses.
+    :return: returns sum of all modificators
+    """
     return get_modificator(cell, 'initiative')
 
 
 def compute_attack(cell):
+    """
+    Gets all buffs and debuffs of attack for 'cell'
+    :param cell: cell with tile, collecting bonuses.
+    :return: returns sum of all modificators
+    """
     attack_mod = {'melee': 0, 'range': 0}
     attack_mod['melee'] += get_modificator(cell, 'melee')
     attack_mod['range'] += get_modificator(cell, 'range')
@@ -34,4 +50,9 @@ def compute_attack(cell):
 
 
 def compute_additional_attacks(cell):
+    """
+    Gets all buffs and debuffs of additional attacks for 'cell'
+    :param cell: cell with tile, collecting bonuses.
+    :return: returns sum of all modificators
+    """
     return get_modificator(cell, 'add_attacks')

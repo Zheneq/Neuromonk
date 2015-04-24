@@ -9,12 +9,24 @@ from game.battle.battle import give_damage_phase, take_damage_phase, refresh_uni
 
 
 class GameMode(object):
+    """
+    Main game class. Controls game process.
+    """
     def __init__(self, grid_radius):
+        """
+        Initializes necessary data
+        :param grid_radius: radius of battlefield.
+        :return: nothing is returned.
+        """
         self.playground = Grid(grid_radius)
         self.renderer = Renderer(None)
         self.players = []
 
     def battle(self):
+        """
+        Computes units interaction during battle.
+        :return: nothing is returned.
+        """
         # prepare to battle
         # find max initiative
         max_initiative = 0
