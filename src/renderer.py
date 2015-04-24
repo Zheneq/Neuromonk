@@ -109,22 +109,29 @@ class Renderer:
         self.game = game
         self.screen = pygame.display.set_mode((800, 600))
         self.screenrect = self.screen.get_rect()
-        self.scale = 0.5
-        self.multiplier = (1.0, 1.0)
-        self.indent = self.screenrect.center
+        self.scale = 0.3
+        self.boardbackbuffer = None
 
     def render_board(self, grid):
-        cellpic = pygame.image.load("../res/cell.png")
-        cellpic = pygame.transform.rotozoom(cellpic, 0.0, self.scale)
-        cellpicrect = cellpic.get_rect()
-        center = self.screenrect.center
-        self.multiplier = (cellpicrect.width, cellpicrect.height)
-        self.indent = self.screenrect.center
-        for cell in grid.cells:
+        try:
+            grid.gfx is None
+        except AttributeError:
+            cellpic = pygame.image.load("../res/cell.png")
             cellpicrect = cellpic.get_rect()
-            cellpicrect.center = (self.indent[0] + cell.x * self.multiplier[0],
-                                  self.indent[1] + cell.y * self.multiplier[1])
-            self.screen.blit(cellpic, cellpicrect)
+            grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
+                                       (grid.radius * 2 + 1) * cellpicrect.height))
+            grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
+            grid.gfx_indent = grid.gfx.get_rect().center
+            for cell in grid.cells:
+                cellpicrect = cellpic.get_rect()
+                cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
+                                      grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
+                grid.gfx.blit(cellpic, cellpicrect)
+        self.boardbackbuffer = pygame.Surface((grid.gfx.get_rect().width, grid.gfx.get_rect().height))
+        rect = grid.gfx.get_rect()
+        self.boardbackbuffer = pygame.Surface((rect.width, rect.height))
+        rect.center = self.boardbackbuffer.get_rect().center
+        self.boardbackbuffer.blit(grid.gfx, rect)
         self.render_tiles(grid)
 
     def render_tiles(self, grid):
@@ -133,12 +140,15 @@ class Renderer:
             if cell.tile is None:
                 continue
             cellpic = tile_gen.generate_tile(cell.tile, cell.turn)
-            cellpic = pygame.transform.rotozoom(cellpic, 0.0, self.scale)
             cellpicrect = cellpic.get_rect()
-            cellpicrect.center = (self.indent[0] + cell.x * self.multiplier[0],
-                                  self.indent[1] + cell.y * self.multiplier[1])
-            self.screen.blit(cellpic, cellpicrect)
+            cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
+                                  grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
+            self.boardbackbuffer.blit(cellpic, cellpicrect)
         # for test purpose
+        self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
+        rect = self.boardbackbuffer.get_rect()
+        rect.center = self.screenrect.center
+        self.screen.blit(self.boardbackbuffer, rect)
         pygame.display.flip()
         again = True
         while again:
