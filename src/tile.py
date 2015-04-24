@@ -13,7 +13,7 @@ class Tile(object):
 
 class Unit(Tile):
     def __init__(self, id, hp, melee, range, armor, nets, initiative,
-                 row_attack=False, melee_buff=True, range_buff=True):
+                 row_attack=False, melee_buff=True, range_buff=True, mobility=False):
         Tile.__init__(self, id, hp)
         self.initiative = initiative
         self.melee = melee
@@ -23,6 +23,7 @@ class Unit(Tile):
         self.row_attack = row_attack
         self.can_melee_buffed = melee_buff
         self.can_range_buffed = range_buff
+        self.mobile = mobility
         self.add_attacks_used = 0
 
     def damage(self, direction):
@@ -44,8 +45,11 @@ class Unit(Tile):
 
 
 class Base(Tile):
-    def __init__(self, id, melee, hp, initiative, melee_buff=True):
+    def __init__(self, id, hp, melee, initiative, melee_buff=True):
         Tile.__init__(self, id, hp)
+        self.initiative = initiative
+        self.melee = melee
+        self.can_melee_buffed = melee_buff
 
 
 class Module(Tile):
