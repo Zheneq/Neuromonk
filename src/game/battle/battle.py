@@ -28,7 +28,7 @@ def give_damage_phase(playground, phase):
                         # gathering all buffs of attack strength
                         damage_modificator = compute_attack(cell)
                         # giving damage
-                        cell.action(damage_modificator)
+                        cell.tile.action(cell, damage_modificator)
                         # disable attack in this phase
                         cell.tile.initiative[initiative_ind][1] = False
                         break
