@@ -15,7 +15,7 @@ def get_modificator(cell, mod_type):
         if cell.neighbours[ind] is not None and \
                 cell.neighbours[ind].tile is not None and \
                 cell.neighbours[ind].tile.active:
-            if type(cell.neighbours[ind].tile) == Module:
+            if isinstance(cell.neighbours[ind].tile, Module):
                 # TODO add buffs from allies
                 if cell.neighbours[ind].tile.army_id == cell.tile.army_id:  # it can buff
                     buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)

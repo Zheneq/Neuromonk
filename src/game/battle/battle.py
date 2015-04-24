@@ -1,6 +1,6 @@
 __author__ = 'dandelion'
 
-from tile import Unit
+from tile import Unit, Base
 
 from buffs import compute_initiative, compute_attack, compute_additional_attacks
 from medics import resolve_medics
@@ -15,7 +15,7 @@ def give_damage_phase(playground, phase):
     :return: nothing is returned.
     """
     for cell in playground.cells:
-        if cell.tile is not None and cell.tile.active and type(cell.tile) == Unit:
+        if cell.tile is not None and cell.tile.active and isinstance(cell.tile, Unit):
             # gathering all buffs of initiative and add. attacks
             initiative_modificator = compute_initiative(cell)
             min_initiative = 100
@@ -53,6 +53,15 @@ def take_damage_phase(playground):
     :param playground: battlefield.
     :return: nothing is returned.
     """
+    # for avery HQ remove damage taken from other HQ
+    for cell in playground.cells:
+        if cell.tile is not None and isinstance(cell.tile, Base):
+            cleaned_taken_damage = []
+            for damage in cell.tile.taken_damage:
+                if not isinstance(damage['instigator'], Base):
+                    cleaned_taken_damage.append(damage)
+            cell.tile.taken_damage = cleaned_taken_damage
+    # resolve possible medic conflicts
     resolve_medics(playground)
     for cell in playground.cells:
         if cell.tile is not None:
@@ -63,7 +72,7 @@ def take_damage_phase(playground):
                 cell.tile.taken_damage = []
             else:
                 # if died unit is net fighter release all units caught by him
-                if type(cell.tile) == Unit and cell.tile.nets:
+                if isinstance(cell.tile, Unit) and cell.tile.nets:
                     for ind in xrange(len(cell.neighbours)):
                         if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
                                     cell.neighbours[ind] is not None and \
@@ -75,7 +84,7 @@ def take_damage_phase(playground):
                                 if cell.neighbours[ind] is not None and \
                                             cell.neighbours[ind].tile is not None and \
                                             cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                                            type(cell.neighbours[ind].tile) is Unit and \
+                                            isinstance(cell.neighbours[ind].tile, Unit) and \
                                             cell.neighbours[ind].tile.nets and \
                                             cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
                                     break
@@ -91,7 +100,7 @@ def refresh_units(playground):
     :return: nothing is returned.
     """
     for cell in playground.cells:
-        if cell.tile is not None and type(cell.tile) == Unit:
+        if cell.tile is not None and isinstance(cell.tile, Unit):
             cell.tile.add_attacks_used = 0
             if cell.tile.initiative:
                 for initiative_ind in xrange(len(cell.tile.initiative)):

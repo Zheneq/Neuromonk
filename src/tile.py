@@ -121,19 +121,6 @@ class Unit(Tile):
                     neighbour = neighbour.neighbours[ind]
 
 
-class Base(Tile):
-    def __init__(self, id, hp, melee, initiative, melee_buff=True):
-        """
-        Base constructor.
-        :param id: id of army this unit belongs to.
-        :param hp: HP of unit.
-        """
-        Tile.__init__(self, id, hp)
-        self.initiative = initiative
-        self.melee = melee
-        self.can_melee_buffed = melee_buff
-
-
 class Module(Tile):
     """
     Standard module class. Modules buff allies and debuff enemies
@@ -188,6 +175,29 @@ class Medic(Tile):
         """
         Tile.__init__(self, id, hp)
         self.direction = direction
+
+
+class Base(Unit, Module):
+    """
+    Standard Headquarter class. HQ has features of unit (it can move and fight) and module (it can buff).
+    """
+    def __init__(self, id, hp, melee, initiative, buff, debuff, melee_buff=True):
+        """
+        Base constructor.
+        :param id: id of army this unit belongs to.
+        :param hp: HP of unit.
+        :param melee: list of melee damage HQ can deal. Every item of list is wounds in one direction.
+        None if HQ can't attack in melee.
+        :param initiative: list of initiative phases HQ can action in battle. Every item of list is pair
+        (number, used), where 'number' is phase number and 'used' is a boolean flag reset when HQ action in this phase.
+        None if HQ is passive during battle.
+        :param buff: dictionary of buffs of HQ. Key is type of bonus, value is list of bonus' values in directions.
+        :param debuff: dictionary of debuffs of HQ. Similar to 'buff' parameter.
+        :param melee_buff: boolean flag set when HQ can be influenced by melee damage modificators.
+        :return: nothing is returned.
+        """
+        Unit.__init__(self, id, hp, melee, None, None, None, initiative, melee_buff=melee_buff)
+        Module.__init__(self, id, hp, buff, debuff)
 
 
 if __name__ == "__main__":

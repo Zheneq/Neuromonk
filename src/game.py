@@ -31,7 +31,7 @@ class GameMode(object):
         # find max initiative
         max_initiative = 0
         for cell in self.playground.cells:
-            if cell.tile is not None and type(cell.tile) == Unit and cell.tile.initiative:
+            if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
                 # reset initiative
                 for initiative_ind in xrange(len(cell.tile.initiative)):
                     cell.tile.initiative[initiative_ind][1] = True
@@ -55,11 +55,13 @@ if __name__ == "__main__":
     outpost_kicker1 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
     outpost_kicker1.active = False
     outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
-    outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
+    outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
+    outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
     moloch_fat = Unit(1, 5, None, None, None, None, None)
     moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
+    moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
 
     # outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
     # outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
@@ -76,12 +78,16 @@ if __name__ == "__main__":
     battle.playground.cells[2].turn = 0
     battle.playground.cells[3].tile = moloch_greaver
     battle.playground.cells[3].turn = 4
-    battle.playground.cells[4].tile = outpost_scout
+    battle.playground.cells[4].tile = outpost_hq
     battle.playground.cells[4].turn = 0
     battle.playground.cells[5].tile = outpost_mothermodule
     battle.playground.cells[5].turn = 1
     battle.playground.cells[6].tile = outpost_kicker2
     battle.playground.cells[6].turn = 1
+    battle.playground.cells[13].tile = moloch_hq
+    battle.playground.cells[13].turn = 0
+    battle.playground.cells[15].tile = outpost_medic
+    battle.playground.cells[15].turn = 0
 
     battle.renderer.render_board(battle.playground)
 
