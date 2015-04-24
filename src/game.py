@@ -19,7 +19,7 @@ class GameMode(object):
         # find max initiative
         max_initiative = 0
         for cell in self.playground.cells:
-            if cell.tile is not None and type(cell.tile) == Unit:
+            if cell.tile is not None and type(cell.tile) == Unit and cell.tile.initiative:
                 # reset initiative
                 for initiative_ind in xrange(len(cell.tile.initiative)):
                     cell.tile.initiative[initiative_ind][1] = True
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    moloch_fat = Unit(1, 5, None, None, None, None, [[0, True]])
+    moloch_fat = Unit(1, 5, None, None, None, None, None)
     moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
 

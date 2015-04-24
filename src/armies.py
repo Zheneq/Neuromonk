@@ -53,7 +53,7 @@ class Moloch(Army):
         hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]])
         self.army['hq']= hq
         for i in xrange(2):
-            blocker = Unit(self.army_id, 3, None, None, [1,0,0,0,0,0], None, [[0, True]])
+            blocker = Unit(self.army_id, 3, None, None, [1,0,0,0,0,0], None, None)
             self.army['blocker' + str(i)] = blocker
         for i in xrange(2):
             hybrid = Unit(self.army_id, 1, None, [1,0,0,0,0,0], None, None, [[3, True]])

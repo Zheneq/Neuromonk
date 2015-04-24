@@ -19,30 +19,31 @@ def give_damage_phase(playground, phase):
             # gathering all buffs of initiative and add. attacks
             initiative_modificator = compute_initiative(cell)
             min_initiative = 100
-            for initiative_ind in xrange(len(cell.tile.initiative)):
-                if cell.tile.initiative[initiative_ind][0] + initiative_modificator < min_initiative:
-                    min_initiative = cell.tile.initiative[initiative_ind][0]
-                if cell.tile.initiative[initiative_ind][1] and \
-                                phase == cell.tile.initiative[initiative_ind][0] + initiative_modificator:
-                    # gathering all buffs of attack strength
-                    damage_modificator = compute_attack(cell)
-                    # giving damage
-                    cell.action(damage_modificator)
-                    # disable attack in this phase
-                    cell.tile.initiative[initiative_ind][1] = False
-                    break
-            else:
-                additional_atacks = compute_additional_attacks(cell)
-                if additional_atacks > cell.tile.add_attacks_used:
-                    for add_attack in range(additional_atacks):
-                        if phase == min_initiative - (add_attack + 1):
-                            # gathering all buffs of attack strength
-                            damage_modificator = compute_attack(cell)
-                            # giving damage
-                            cell.action(damage_modificator)
-                            # mark used additional attack
-                            cell.tile.add_attacks_used += 1
-                            break
+            if cell.tile.initiative:
+                for initiative_ind in xrange(len(cell.tile.initiative)):
+                    if cell.tile.initiative[initiative_ind][0] + initiative_modificator < min_initiative:
+                        min_initiative = cell.tile.initiative[initiative_ind][0]
+                    if cell.tile.initiative[initiative_ind][1] and \
+                                    phase == cell.tile.initiative[initiative_ind][0] + initiative_modificator:
+                        # gathering all buffs of attack strength
+                        damage_modificator = compute_attack(cell)
+                        # giving damage
+                        cell.action(damage_modificator)
+                        # disable attack in this phase
+                        cell.tile.initiative[initiative_ind][1] = False
+                        break
+                else:
+                    additional_atacks = compute_additional_attacks(cell)
+                    if additional_atacks > cell.tile.add_attacks_used:
+                        for add_attack in range(additional_atacks):
+                            if phase == min_initiative - (add_attack + 1):
+                                # gathering all buffs of attack strength
+                                damage_modificator = compute_attack(cell)
+                                # giving damage
+                                cell.action(damage_modificator)
+                                # mark used additional attack
+                                cell.tile.add_attacks_used += 1
+                                break
 
 
 def take_damage_phase(playground):
@@ -92,5 +93,6 @@ def refresh_units(playground):
     for cell in playground.cells:
         if cell.tile is not None and type(cell.tile) == Unit:
             cell.tile.add_attacks_used = 0
-            for initiative_ind in xrange(len(cell.tile.initiative)):
-                cell.tile.initiative[initiative_ind][1] = True
+            if cell.tile.initiative:
+                for initiative_ind in xrange(len(cell.tile.initiative)):
+                    cell.tile.initiative[initiative_ind][1] = True
