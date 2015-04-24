@@ -40,7 +40,7 @@ def give_damage_phase(playground, phase):
                                 # gathering all buffs of attack strength
                                 damage_modificator = compute_attack(cell)
                                 # giving damage
-                                cell.action(damage_modificator)
+                                cell.tile.action(cell, damage_modificator)
                                 # mark used additional attack
                                 cell.tile.add_attacks_used += 1
                                 break
