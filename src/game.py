@@ -19,12 +19,12 @@ class GameMode(object):
         :param grid_radius: radius of battlefield.
         :return: nothing is returned.
         """
-        self.playground = Grid(self, grid_radius)
-        self.renderer = Renderer(self)
         self.players = []
         self.actors = []
         self.active = False
         self.timers = {}
+        self.playground = Grid(self, grid_radius)
+        self.renderer = Renderer(self)
 
     def start_game(self):
         """
