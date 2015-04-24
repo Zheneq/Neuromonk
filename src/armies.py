@@ -33,8 +33,8 @@ class Borgo(Army):
             brawler = Unit(self.army_id, 1, [2,0,0,0,0,0], None, None, None, [[2, True]])
             self.army['brawler' + str(i)] = brawler
         for i in xrange(2):
-            assasin = Unit(self.army_id, 1, None, [1,0,0,0,0,0], None, None, [[2, True]], mobility=True)
-            self.army['assasin' + str(i)] = assasin
+            assassin = Unit(self.army_id, 1, None, [1,0,0,0,0,0], None, None, [[2, True]], mobility=True)
+            self.army['assassin' + str(i)] = assassin
         medic = Medic(self.army_id, 1, [1,1,0,0,0,1])
         self.army['medic'] = medic
         for i in xrange(2):
@@ -94,6 +94,6 @@ class Moloch(Army):
 
 
 if __name__ == '__main__':
-    moloch_army = Moloch(1, 'dm')
-    borgo_army = Borgo(2, 'dm')
+    moloch_army = Moloch('dm')
+    borgo_army = Borgo('dm')
     print 'Yay!'
