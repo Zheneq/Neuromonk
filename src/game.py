@@ -19,20 +19,21 @@ class GameMode(object):
         :param grid_radius: radius of battlefield.
         :return: nothing is returned.
         """
-        self.playground = Grid(grid_radius)
+        self.playground = Grid(self, grid_radius)
         self.renderer = Renderer(self)
         self.players = []
+        self.actors = []
         self.active = False
         self.timers = {}
 
-    def startgame(self):
+    def start_game(self):
         """
         Launches the main cycle
         :return: nothing is returned.
         """
         pygame.init()
         self.active = True
-        self.beginplay()
+        self.begin_play()
         time = pygame.time.get_ticks()
         while self.active:
             prevtime = time
@@ -54,16 +55,16 @@ class GameMode(object):
         # unintialization
         pygame.quit()
 
-    def endgame(self):
+    def end_game(self):
         """
         Immediately stops the game
         :return: nothing is returned.
         """
         self.active = False
 
-    def beginplay(self):
+    def begin_play(self):
         # DEBUG
-        self.settimer(5000, self.battle)
+        self.set_timer(5000, self.battle)
 
     def tick(self, deltatime):
         """
@@ -73,7 +74,10 @@ class GameMode(object):
         """
         pass
 
-    def settimer(self, time, callback, repeat = False):
+    def add_actor(self, actor):
+        self.actors.append(actor)
+
+    def set_timer(self, time, callback, repeat = False):
         """
         Set a timer
         :param time: Time in milliseconds. If 0, timer is unset
@@ -94,6 +98,7 @@ class GameMode(object):
         else:
             for timer in self.timers:
                 if self.timers[timer][0] is callback:
+                    pygame.time.set_timer(timer, 0)
                     del self.timers[timer]
                     break
 
@@ -158,6 +163,6 @@ if __name__ == "__main__":
     battle.playground.cells[6].tile = outpost_kicker2
     battle.playground.cells[6].turn = 1
 
-    battle.startgame()
+    battle.start_game()
 
     print "Yay!"

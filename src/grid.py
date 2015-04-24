@@ -3,13 +3,16 @@ from renderer import Renderer
 
 
 class Cell(object):
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.tile = None
         self.turn = 0
         self.neighbours = [None for ind in xrange(6)]
         # gfx values
         self.x = 0.0
         self.y = 0.0
+        #
+        self.game.add_actor(self)
 
     def next(self, ind):
         return self.neighbours[(ind + 1) % 6]
@@ -28,17 +31,18 @@ class Cell(object):
 
 
 class Grid(object):
-    def __init__(self, radius=2):
+    def __init__(self, game, radius=2):
         self.radius = radius
+        self.game = game
         # relative offsets between adjacent cells
         offset = [(0.0, -1.0), (0.75, -0.5), (0.75, 0.5), (0, 1), (-0.75, 0.5), (-0.75, -0.5)]
-        self.cells = [Cell()]
+        self.cells = [Cell(game)]
         for rad in xrange(radius):
             buffer = []
             for cell in self.cells:
                 for ind in xrange(len(cell.neighbours)):
                     if cell.neighbours[ind] is None:
-                        buffer.append(Cell())
+                        buffer.append(Cell(game))
                         last_cell = buffer[len(buffer) - 1]
                         if cell.next(ind) is not None:
                             self.link(cell.next(ind), last_cell, cell.rightind(ind))
