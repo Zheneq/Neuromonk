@@ -125,10 +125,15 @@ class TileRenderer:
 class Renderer:
     def __init__(self, game):
         self.game = game
+        # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
         self.screen = pygame.display.set_mode((800, 600))
         self.screenrect = self.screen.get_rect()
         self.scale = 0.3
         self.boardbackbuffer = None
+        #
+        self.idle = False
+        self.fps = 0
+        self.deltatime = 0
 
     def tick(self, deltatime):
         """
@@ -144,8 +149,17 @@ class Renderer:
         :param deltatime: Time since last tick (in milliseconds)
         :return: nothing is returned.
         """
-        self.render_board(self.game.playground)
-        pygame.display.flip()
+        self.deltatime += deltatime
+        self.fps += 1
+        if self.deltatime >= 1000:
+            self.deltatime = 0
+            pygame.display.set_caption("FPS: %d" % self.fps)
+            print "FPS: %d" % self.fps
+            self.fps = 0
+        if not self.idle:
+            self.render_board(self.game.playground)
+            pygame.display.flip()
+            # self.idle = True
 
     def render_board(self, grid):
         try:
