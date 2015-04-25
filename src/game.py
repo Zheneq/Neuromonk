@@ -1,4 +1,4 @@
-__author__ = 'dandelion'
+__author__ = 'dandelion && zheneq'
 
 import pygame
 from grid import Grid
@@ -13,13 +13,14 @@ class GameMode(object):
     """
     Main game class. Controls game process.
     """
-    def __init__(self, grid_radius):
+    def __init__(self, grid_radius, player=None):
         """
         Initializes necessary data.
         :param grid_radius: radius of battlefield.
         :return: nothing is returned.
         """
-        self.players = []
+        self.player = player
+        self.turn = 1
         self.actors = []
         self.active = False
         self.timers = {}
@@ -126,6 +127,14 @@ class GameMode(object):
                     result.append(obj)
             except IndexError:
                 pass
+
+    def tactic(self):
+        self.player.get_tiles(self.turn)
+        if len(self.player.hand) > 2:
+            #TODO discard one tile from hand
+            pass
+        #TODO let player make choice of actions
+
 
     def battle(self):
         """
