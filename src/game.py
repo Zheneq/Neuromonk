@@ -34,20 +34,28 @@ class GameMode(object):
         pygame.init()
         self.active = True
         self.begin_play()
+        pygame.time.set_timer(pygame.USEREVENT, 50)
         time = pygame.time.get_ticks()
         while self.active:
             prevtime = time
             time = pygame.time.get_ticks()
             # processing events
             pygame.event.pump()
-            event = pygame.event.poll()
-            if event.type == pygame.QUIT:
-                self.active = False
-            if event.type in self.timers:
-                self.timers[event.type][0]()
-                if not self.timers[event.type][1]:
-                    pygame.time.set_timer(event.type, 0)
-                    del self.timers[event.type]
+            events = [pygame.event.wait()]
+            events.extend(pygame.event.get())
+            for event in events:
+                print "Events:"
+                if event.type < pygame.USEREVENT:
+                    print "\t" + pygame.event.event_name(event.type)
+                else:
+                    print "\t" + pygame.event.event_name(event.type) + "(%d)" % (event.type - pygame.USEREVENT)
+                if event.type == pygame.QUIT:
+                    self.active = False
+                if event.type in self.timers:
+                    self.timers[event.type][0]()
+                    if not self.timers[event.type][1]:
+                        pygame.time.set_timer(event.type, 0)
+                        del self.timers[event.type]
             # ticking actors
             deltatime = time - prevtime
             self.tick(deltatime)
@@ -65,6 +73,7 @@ class GameMode(object):
     def begin_play(self):
         # DEBUG
         self.set_timer(5000, self.battle)
+        self.set_timer(10000, self.end_game)
 
     def tick(self, deltatime):
         """
@@ -88,7 +97,7 @@ class GameMode(object):
         # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
         #          which one will be unset is unknown.
         if time:
-            for id in xrange(pygame.USEREVENT, pygame.NUMEVENTS):
+            for id in xrange(pygame.USEREVENT + 1, pygame.NUMEVENTS):
                 if id not in self.timers:
                     pygame.time.set_timer(id, time)
                     self.timers[id] = (callback, repeat)
@@ -101,6 +110,22 @@ class GameMode(object):
                     pygame.time.set_timer(timer, 0)
                     del self.timers[timer]
                     break
+
+    def pend_click(self, cells, callback):
+        self.pending = cells
+        self.clickcallback = callback
+        for cell in cells:
+            cell[0].highlighted = True
+
+    def locate(self, pos):
+        result = []
+        for obj in self.actors:
+            try:
+                if pygame.mask.from_surface(obj.surface).get_at((pos[0] - obj.surface.position[0],
+                                                                 pos[1] - obj.surface.position[1])):
+                    result.append(obj)
+            except IndexError:
+                pass
 
     def battle(self):
         """
@@ -127,6 +152,8 @@ class GameMode(object):
             take_damage_phase(self.playground)
         # refresh support info
         refresh_units(self.playground)
+        # debug
+        self.renderer.idle = False
 
 
 if __name__ == "__main__":
