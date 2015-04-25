@@ -15,7 +15,7 @@ class GameMode(object):
     """
     def __init__(self, grid_radius):
         """
-        Initializes necessary data
+        Initializes necessary data.
         :param grid_radius: radius of battlefield.
         :return: nothing is returned.
         """
@@ -28,7 +28,7 @@ class GameMode(object):
 
     def start_game(self):
         """
-        Launches the main cycle
+        Launches the main cycle.
         :return: nothing is returned.
         """
         pygame.init()
@@ -40,7 +40,7 @@ class GameMode(object):
             time = pygame.time.get_ticks()
             # processing events
             pygame.event.pump()
-            event = pygame.event.wait()
+            event = pygame.event.poll()
             if event.type == pygame.QUIT:
                 self.active = False
             if event.type in self.timers:
@@ -57,7 +57,7 @@ class GameMode(object):
 
     def end_game(self):
         """
-        Immediately stops the game
+        Immediately stops the game.
         :return: nothing is returned.
         """
         self.active = False
@@ -68,7 +68,7 @@ class GameMode(object):
 
     def tick(self, deltatime):
         """
-        Subroutine executed every tick
+        Subroutine executed every tick.
         :param deltatime: Time since last tick (in milliseconds)
         :return: nothing is returned.
         """
@@ -79,7 +79,7 @@ class GameMode(object):
 
     def set_timer(self, time, callback, repeat = False):
         """
-        Set a timer
+        Set a timer.
         :param time: Time in milliseconds. If 0, timer is unset
         :param callback: Function to call when the timer is fired
         :param repeat: Bool flag set when timer should be fired repeatedly
@@ -143,13 +143,6 @@ if __name__ == "__main__":
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
 
-    # outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
-    # outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
-    # outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
-    # outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
-    # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
-
-
     battle.playground.cells[0].tile = outpost_kicker1
     battle.playground.cells[0].turn = 1
     battle.playground.cells[1].tile = moloch_netfighter
@@ -170,5 +163,4 @@ if __name__ == "__main__":
     battle.playground.cells[15].turn = 0
 
     battle.start_game()
-
-    print "Yay!"
+    
