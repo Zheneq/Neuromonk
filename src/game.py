@@ -85,14 +85,18 @@ class GameMode(object):
 
     def test(self, a, b):
         print "test"
-        a.tile, b.tile = b.tile, a.tile
+        if b:
+            a.tile, b.tile = b.tile, a.tile
+        else:
+            print "b is none"
 
     def begin_play(self):
         # DEBUG
         self.set_timer(5000, self.battle)
         # self.set_timer(20000, self.end_game)
         self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-                         self.playground.cells[5]: [self.playground.cells[0]]}, self.test)
+                         self.playground.cells[5]: [self.playground.cells[0]],
+                         self.playground.cells[2]: []}, self.test)
 
     def tick(self, deltatime):
         """
@@ -154,7 +158,12 @@ class GameMode(object):
                     self.click_callback(s, cell)
                     break
             if cell in self.click_pending:
-                self.click_selected = cell
+                # if player doesn't need to select second actor
+                if not self.click_pending[cell]:
+                    self.click_pending = {}
+                    self.click_callback(cell, None)
+                else:
+                    self.click_selected = cell
                 break
 
     def battle(self):
