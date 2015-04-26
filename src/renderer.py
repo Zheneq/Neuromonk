@@ -108,19 +108,22 @@ class TileRenderer:
         self.rotation = 0
         # TODO: Size of the surface shouldn't be a numerical constant
         self.tilepic = pygame.Surface((500, 500), pygame.SRCALPHA)
-        self.tilepic.fill((0, 0, 0, 0))
-        if tile.highlighted:
-            self.blit("../res/tile" + str(tile.army_id) + "_selection.png")
-        if tile.selected:
-            self.blit("../res/tile" + str(tile.army_id) + "_selection.png")
-        picrect = tile.gfx.get_rect()
+        picrect = self.tile.gfx.get_rect()
         picrect.center = self.tilepic.get_rect().center
-        self.tilepic.blit(tile.gfx, picrect)
+        self.tilepic.blit(self.tile.gfx, picrect)
         self.generate_tile_damage()
         if not self.tile.active:
             self.generate_tile_net()
         return self.tilepic
 
+    def generate_cell_fx(self, highlighted = False, selected = False, army_id = 0):
+        # TODO: Size of the surface shouldn't be a numerical constant
+        self.tilepic = pygame.Surface((500, 500), pygame.SRCALPHA)
+        if highlighted:
+            self.blit("../res/tile" + str(army_id) + "_selection.png")
+        if selected:
+            self.blit("../res/tile" + str(army_id) + "_selected.png")
+        return self.tilepic
 
 class Renderer:
     def __init__(self, game):
@@ -171,17 +174,50 @@ class Renderer:
                                        (grid.radius * 2 + 1) * cellpicrect.height))
             grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
             grid.gfx_indent = grid.gfx.get_rect().center
+            # cell mask
+            temppic = pygame.transform.rotozoom(cellpic, 0.0, self.scale)
+            cellmask = pygame.mask.from_surface(temppic)
             for cell in grid.cells:
                 cellpicrect = cellpic.get_rect()
                 cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
                                       grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
                 grid.gfx.blit(cellpic, cellpicrect)
+                # cell mask
+                cell.mask = cellmask
+                cell.maskrect = temppic.get_rect()
+                cell.maskrect.center = ((grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0]) * self.scale +
+                                        (self.screenrect.width - grid.gfx.get_rect().width * self.scale) / 2,
+                                        (grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1]) * self.scale +
+                                        (self.screenrect.height - grid.gfx.get_rect().height * self.scale) / 2)
         self.boardbackbuffer = pygame.Surface((grid.gfx.get_rect().width, grid.gfx.get_rect().height))
         rect = grid.gfx.get_rect()
         self.boardbackbuffer = pygame.Surface((rect.width, rect.height))
         rect.center = self.boardbackbuffer.get_rect().center
         self.boardbackbuffer.blit(grid.gfx, rect)
+        # rendering cell fx
+        if self.game.click_pending:
+            tile_gen = TileRenderer()
+            high = tile_gen.generate_cell_fx(highlighted = True)
+            sel = tile_gen.generate_cell_fx(selected = True)
+            if self.game.click_selected is not None:
+                for cell in self.game.click_pending[self.game.click_selected]:
+                    cellpicrect = high.get_rect()
+                    cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
+                                          grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
+                    self.boardbackbuffer.blit(high, cellpicrect)
+                cellpicrect = sel.get_rect()
+                cellpicrect.center = (grid.gfx_indent[0] + self.game.click_selected.x * grid.gfx_multiplier[0],
+                                      grid.gfx_indent[1] + self.game.click_selected.y * grid.gfx_multiplier[1])
+                self.boardbackbuffer.blit(sel, cellpicrect)
+            else:
+                for cell in self.game.click_pending:
+                    cellpicrect = high.get_rect()
+                    cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
+                                          grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
+                    self.boardbackbuffer.blit(high, cellpicrect)
+        # rendering tiles
         self.render_tiles(grid)
+        # showing it on the screen
         self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
         rect = self.boardbackbuffer.get_rect()
         rect.center = self.screenrect.center

@@ -21,8 +21,6 @@ class Tile(object):
         self.active = True
         self.injuries = 0
         self.gfx = None
-        self.highlighted = False
-        self.selected = False
 
     def invalidate(self):
         """

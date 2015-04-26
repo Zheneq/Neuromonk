@@ -11,6 +11,8 @@ class Cell(object):
         # gfx values
         self.x = 0.0
         self.y = 0.0
+        self.mask = None
+        self.maskrect = None
         #
         self.game.add_actor(self)
 
