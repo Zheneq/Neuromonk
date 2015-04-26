@@ -3,10 +3,11 @@ __author__ = 'dandelion'
 import random
 
 from armies import *
+from grid import Cell
 
 
 class Player(object):
-    def __init__(self, name, army_id, team_id):
+    def __init__(self, name, army_id, team_id, game):
         # self.name = name
         self.army = army_id
         self.team = team_id
@@ -16,6 +17,8 @@ class Player(object):
         else:
             self.tiles = []
         self.hand = []
+        for ind in xrange(3):
+            self.hand.append(Cell(game))
 
     def army_shuffle(self):
         """
@@ -26,14 +29,16 @@ class Player(object):
             second = random.randint(0, first)
             self.tiles[first], self.tiles[second] = self.tiles[second], self.tiles[first]
 
+    def tiles_in_hand(self):
+        return len(filter(lambda x: x.tile, self.hand))
+
     def get_tiles(self, turn):
         turn = min(3, turn)
-        num_tiles_to_get = min(turn - len(self.hand), len(self.tiles))
+        num_tiles_to_get = min(turn - self.tiles_in_hand(), len(self.tiles))
+        self.hand.sort(key=lambda x: x.tile)
         for ind in xrange(num_tiles_to_get):
-            self.hand.append(self.tiles.pop())
+            self.hand[ind].tile = self.tiles.pop()
 
 
 if __name__ == '__main__':
-    Zq = Player('Zq', 1, 0)
-    Zq.army_shuffle()
     print 'Yay!'

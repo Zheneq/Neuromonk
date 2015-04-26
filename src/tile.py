@@ -1,6 +1,11 @@
 __author__ = 'dandelion'
 
 
+class Order(object):
+    def __init__(self, type):
+        self.type = type
+
+
 class Tile(object):
     """
     Basic tile class. Has common to all tiles attributes: army id, HP and injuries, taken in battle,
