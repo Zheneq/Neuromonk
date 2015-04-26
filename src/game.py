@@ -23,6 +23,9 @@ class GameMode(object):
         self.actors = []
         self.active = False
         self.timers = {}
+        self.click_pending = {}
+        self.click_callback = None
+        self.click_selected = None
         self.playground = Grid(self, grid_radius)
         self.renderer = Renderer(self)
 
@@ -43,14 +46,24 @@ class GameMode(object):
             pygame.event.pump()
             events = [pygame.event.wait()]
             events.extend(pygame.event.get())
+            # print "Events:"
             for event in events:
-                print "Events:"
-                if event.type < pygame.USEREVENT:
-                    print "\t" + pygame.event.event_name(event.type)
-                else:
-                    print "\t" + pygame.event.event_name(event.type) + "(%d)" % (event.type - pygame.USEREVENT)
+                # debug print
+                # if event.type < pygame.USEREVENT:
+                #     print "\t" + pygame.event.event_name(event.type)
+                # else:
+                #     print "\t" + pygame.event.event_name(event.type) + "(%d)" % (event.type - pygame.USEREVENT)
+                #
                 if event.type == pygame.QUIT:
                     self.active = False
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    print "Click!"
+                    clicked = self.locate(event.pos)
+                    for c in clicked:
+                        if c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+                        else: print "\t" + "None"
+                    if clicked:
+                        self.select(clicked)
                 if event.type in self.timers:
                     self.timers[event.type][0]()
                     if not self.timers[event.type][1]:
@@ -70,10 +83,16 @@ class GameMode(object):
         """
         self.active = False
 
+    def test(self, a, b):
+        print "test"
+        a.tile, b.tile = b.tile, a.tile
+
     def begin_play(self):
         # DEBUG
         self.set_timer(5000, self.battle)
-        self.set_timer(10000, self.end_game)
+        # self.set_timer(20000, self.end_game)
+        self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
+                         self.playground.cells[5]: [self.playground.cells[0]]}, self.test)
 
     def tick(self, deltatime):
         """
@@ -112,20 +131,31 @@ class GameMode(object):
                     break
 
     def pend_click(self, cells, callback):
-        self.pending = cells
-        self.clickcallback = callback
-        for cell in cells:
-            cell[0].highlighted = True
+        self.click_pending = cells
+        self.click_callback = callback
 
     def locate(self, pos):
         result = []
         for obj in self.actors:
             try:
-                if pygame.mask.from_surface(obj.surface).get_at((pos[0] - obj.surface.position[0],
-                                                                 pos[1] - obj.surface.position[1])):
+                if obj.mask.get_at((pos[0] - obj.maskrect.left, pos[1] - obj.maskrect.top)):
                     result.append(obj)
             except IndexError:
                 pass
+        return result
+
+    def select(self, cells):
+        for cell in cells:
+            if self.click_selected is not None:
+                if cell in self.click_pending[self.click_selected]:
+                    s = self.click_selected
+                    self.click_selected = None
+                    self.click_pending = {}
+                    self.click_callback(s, cell)
+                    break
+            if cell in self.click_pending:
+                self.click_selected = cell
+                break
 
     def battle(self):
         """
