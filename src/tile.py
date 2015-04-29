@@ -101,7 +101,7 @@ class Unit(Tile):
             return self.armor[(direction + 3) % 6]
         return 0
 
-    def action(self, cell, damage_modificator):
+    def attack(self, cell, damage_modificator):
         """
         Performs unit's action during battle.
         :param cell: cell where unit is on the battlefield.
@@ -132,6 +132,23 @@ class Unit(Tile):
                         if not self.row_attack:
                             break
                     neighbour = neighbour.neighbours[ind]
+
+    def maneuver_rate(self, cell, depth=1, result=None):
+        if not result:
+            result = [cell]
+        if depth > 0:
+            for neighbour in cell.neighbours:
+                if neighbour in result:
+                    #visited cell
+                    continue
+                else:
+                    # unvisited cell
+                    if neighbour.tile is None:
+                        # free cell
+                        result.append(neighbour)
+                        result.extend(self.maneuver_rate(neighbour, depth - 1, result))
+            return result
+        return result
 
 
 class Module(Tile):

@@ -2,13 +2,20 @@ __author__ = 'zheneq & dandelion'
 
 import pygame
 
-from grid import Grid
+from grid import Grid, Cell
 from tile import *
 from renderer import Renderer
 from player import Player
 
 from game.battle.buffs import compute_initiative
 from game.battle.battle import give_damage_phase, take_damage_phase, refresh_units
+
+
+class Button(Cell):
+    def __init__(self, game, action):
+        Cell.__init__(self, game)
+        self.action = action
+        game.add_actor(self)
 
 
 class GameMode(object):
@@ -30,8 +37,13 @@ class GameMode(object):
         self.click_callback = None
         self.click_selected = None
         self.playground = Grid(self, grid_radius)
-        self.turn_num = 1
+        self.turn_num = 0
         self.renderer = Renderer(self)
+        # DEBUG
+        self.buttons = {}
+        self.buttons['remove'] = Button(self, None)
+        self.buttons['apply'] = Button(self, None)
+        self.buttons['confirm'] = Button(self, None)
 
     def start_game(self):
         """
@@ -102,12 +114,13 @@ class GameMode(object):
         self.players[1].next = self.players[0]
         self.player = self.players[0]
 
+        self.set_timer(5000, self.battle)
+
         self.turn()
 
-        self.set_timer(5000, self.battle)
         # self.set_timer(20000, self.end_game)
-        self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-                         self.playground.cells[5]: [self.playground.cells[0]]}, self.test)
+        # self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
+        #                  self.playground.cells[5]: [self.playground.cells[0]]}, self.test)
 
     def tick(self, deltatime):
         """
@@ -182,17 +195,64 @@ class GameMode(object):
                 self.click_selected = cell
                 break
 
+    def callback_dispatcher(self, s, cell):
+        #TODO choose the callback by parameters
+        # DEBUG
+        if isinstance(s, Button):
+            # s.action()
+            pass
+        self.test(s, cell)
+        # remove action from possible ones - it is done
+        del self.action_types[s]
+        if s in self.player.get_hand():
+            self.player.remove_from_hand(s)
+        # reconstruct values in dictionary of actions
+        self.tactic()
+
     def turn(self):
-        self.player.get_tiles(self.turn)
+        """
+        Initialize player's hand and actions he can make.
+        :return: nothing is returned.
+        """
+        print self.player.name + '\'s turn!'
+        self.turn_num += 1
+        self.player.get_tiles(self.turn_num)
         #TODO draw player's hand
-        self.actions = 0
+        # create dictionary of actions
+        self.action_types = {}
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.army_id == self.player.army and cell.tile.mobile:
+                self.action_types[cell] = []
+        for cell in self.player.hand:
+            if cell.tile:
+                self.action_types[cell] = []
+        self.action_types[self.buttons['confirm']] = []
+        # fill dictionary values
         self.tactic()
 
     def tactic(self):
-        #TODO let player make choice of actions
-        cells = {}
-        callback = None
-        self.pend_click(cells, callback)
+        """
+        Constructs values for keys in dictionary of player's actions.
+        :return: nothing is returned.
+        """
+        if self.turn_num > 2 and self.player.tiles_in_hand() == 1:
+            # 3d tile in hand needs to be removed
+            self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
+        for action_type in self.action_types:
+            if action_type in self.playground.cells:
+                # actor is on the battlefield - mobility
+                self.action_types[action_type] = action_type.tile.maneuver_rate(action_type)
+            elif action_type in self.player.hand:
+                # actor is in hand - it can be removed
+                self.action_types[action_type] = [self.buttons['remove']]
+                if isinstance(action_type.tile, Tile):
+                    # this is tile - it can be placed on the battlefield
+                    self.action_types[action_type].extend(self.playground.get_free_cells())
+                else:
+                    # this is order - it can be applied
+                    self.action_types[action_type].append(self.buttons['apply'])
+        callback = self.callback_dispatcher
+        self.pend_click(self.action_types, callback)
 
     def battle(self):
         """

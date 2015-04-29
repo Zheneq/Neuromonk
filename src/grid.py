@@ -59,6 +59,13 @@ class Grid(object):
         cell1.neighbours[direction] = cell2
         cell2.neighbours[cell1.oppose(direction)] = cell1
 
+    def get_free_cells(self):
+        result = []
+        for cell in self.cells:
+            if cell.tile is None:
+                result.append(cell)
+        return result
+
 
 if __name__ == "__main__":
     grid = Grid(2)

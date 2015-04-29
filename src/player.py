@@ -8,7 +8,7 @@ from grid import Cell
 
 class Player(object):
     def __init__(self, name, army_id, team_id, game):
-        # self.name = name
+        self.name = name
         self.army = army_id
         self.team = team_id
         if self.army in armies:
@@ -30,7 +30,16 @@ class Player(object):
             self.tiles[first], self.tiles[second] = self.tiles[second], self.tiles[first]
 
     def tiles_in_hand(self):
-        return len(filter(lambda x: x.tile, self.hand))
+        return len(self.get_hand())
+
+    def get_hand(self):
+        return filter(lambda x: x.tile, self.hand)
+
+    def remove_from_hand(self, tile):
+        for cell in self.hand:
+            if cell.tile is tile:
+                cell.tile = None
+                break
 
     def get_tiles(self, turn):
         turn = min(3, turn)
