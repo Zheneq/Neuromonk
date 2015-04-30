@@ -9,6 +9,8 @@ from grid import Cell
 class Player(object):
     def __init__(self, name, army_id, team_id, game):
         self.name = name
+        self.next = None
+        self.remove_in_turn = False
         self.army = army_id
         self.team = team_id
         self.next = None
@@ -43,6 +45,7 @@ class Player(object):
             if cell.tile is tile:
                 cell.tile = None
                 break
+        self.remove_in_turn = True
 
     def get_tiles(self, turn):
         turn = min(3, turn)
