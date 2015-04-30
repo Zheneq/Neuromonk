@@ -1,25 +1,31 @@
 __author__ = 'dandelion'
 
 
-class Order(object):
-    def __init__(self, type):
+class Hex(object):
+    def __init__(self, id):
+        self.army_id = id
+        self.gfx = None
+
+class Order(Hex):
+    def __init__(self, id, type):
+        Hex.__init__(self, id)
         self.type = type
 
 
-class Tile(object):
+class Tile(Hex):
     """
     Basic tile class. Has common to all tiles attributes: army id, HP and injuries, taken in battle,
     is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
     healing unit.
     """
-    def __init__(self ,id, hp, mobility=False):
+    def __init__(self, id, hp, mobility=False):
         """
         Tile constructor.
         :param id: id of army this unit belongs to.
         :param hp: HP of unit.
         :return: nothing is returned.
         """
-        self.army_id = id
+        Hex.__init__(self, id)
         self.taken_damage = []
         self.active_medics = []
         self.hp = hp

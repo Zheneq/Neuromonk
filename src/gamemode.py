@@ -77,7 +77,8 @@ class GameMode(object):
                     print "Click!"
                     clicked = self.locate(event.pos)
                     for c in clicked:
-                        if isinstance(c, Cell) and c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+                        if isinstance(c, Cell) and isinstance(c.tile, Tile):
+                            print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
                         else: print "\t" + "None"
                     if clicked:
                         self.select(clicked)
@@ -265,7 +266,7 @@ class GameMode(object):
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
         #DEBUG
-        self.player.hand[0].tile = Order('march')
+        self.player.hand[0].tile = Order(self.player.army, 'move')
         self.player.remove_in_turn = False
         # create dictionary of actions
         self.action_types = {}

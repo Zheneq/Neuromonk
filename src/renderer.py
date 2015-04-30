@@ -116,6 +116,7 @@ class TileRenderer:
         picrect = self.tile.gfx.get_rect()
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(self.tile.gfx, picrect)
+        if not isinstance(tile, Tile): return self.tilepic
         self.generate_tile_damage()
         if not self.tile.active:
             self.generate_tile_net()
