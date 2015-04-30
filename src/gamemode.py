@@ -264,6 +264,8 @@ class GameMode(object):
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
+        #DEBUG
+        self.player.hand[0].tile = Order('march')
         self.player.remove_in_turn = False
         # create dictionary of actions
         self.action_types = {}

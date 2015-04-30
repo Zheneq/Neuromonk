@@ -12,7 +12,7 @@ class Tile(object):
     is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
     healing unit.
     """
-    def __init__(self ,id, hp):
+    def __init__(self ,id, hp, mobility=False):
         """
         Tile constructor.
         :param id: id of army this unit belongs to.
@@ -23,6 +23,7 @@ class Tile(object):
         self.taken_damage = []
         self.active_medics = []
         self.hp = hp
+        self.mobile = mobility
         self.active = True
         self.injuries = 0
         self.gfx = None
@@ -62,7 +63,7 @@ class Unit(Tile):
         :param mobility: boolean flag set when unit is mobile.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp)
+        Tile.__init__(self, id, hp, mobility=mobility)
         self.initiative = initiative
         self.melee = melee
         self.range = range
@@ -71,7 +72,6 @@ class Unit(Tile):
         self.row_attack = row_attack
         self.can_melee_buffed = melee_buff
         self.can_range_buffed = range_buff
-        self.mobile = mobility
         self.add_attacks_used = 0
 
     def damage(self, direction):
@@ -155,7 +155,7 @@ class Module(Tile):
     """
     Standard module class. Modules buff allies and debuff enemies
     """
-    def __init__(self, id, hp, buff, debuff):
+    def __init__(self, id, hp, buff, debuff, mobility=False):
         """
         Module constructor.
         :param id: id of army this module belongs to.
@@ -164,7 +164,7 @@ class Module(Tile):
         :param debuff: dictionary of debuffs of module. Similar to 'buff' parameter.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp)
+        Tile.__init__(self, id, hp, mobility=mobility)
         self.buff = buff
         self.debuff = debuff
 
@@ -195,7 +195,7 @@ class Medic(Tile):
     """
     Medic class. Stores directions medic can heal allies.
     """
-    def __init__(self, id, hp, direction):
+    def __init__(self, id, hp, direction, mobility=False):
         """
         Medic constructor.
         :param id: id of army this medic belongs to.
@@ -203,7 +203,7 @@ class Medic(Tile):
         :param direction: list of directions medic can heal. Item is 1 if medic can heal and 0 otherwise.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp)
+        Tile.__init__(self, id, hp, mobility=mobility)
         self.direction = direction
 
 
@@ -211,7 +211,7 @@ class Base(Unit, Module):
     """
     Standard Headquarter class. HQ has features of unit (it can move and fight) and module (it can buff).
     """
-    def __init__(self, id, hp, melee, initiative, buff, debuff, melee_buff=True):
+    def __init__(self, id, hp, melee, initiative, buff, debuff, melee_buff=True, mobility=False):
         """
         Base constructor.
         :param id: id of army this unit belongs to.
@@ -226,8 +226,8 @@ class Base(Unit, Module):
         :param melee_buff: boolean flag set when HQ can be influenced by melee damage modificators.
         :return: nothing is returned.
         """
-        Unit.__init__(self, id, hp, melee, None, None, None, initiative, melee_buff=melee_buff)
-        Module.__init__(self, id, hp, buff, debuff)
+        Unit.__init__(self, id, hp, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=False)
+        Module.__init__(self, id, hp, buff, debuff, mobility=False)
 
 
 if __name__ == "__main__":
