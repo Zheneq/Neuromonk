@@ -2,20 +2,13 @@ __author__ = 'zheneq & dandelion'
 
 import pygame
 
-from grid import Grid, Cell
+from grid import Grid, Cell, Button
 from tile import *
 from renderer import Renderer
 from player import Player
 
 from game.battle.buffs import compute_initiative
 from game.battle.battle import give_damage_phase, take_damage_phase, refresh_units
-
-
-class Button(Cell):
-    def __init__(self, game, action):
-        Cell.__init__(self, game)
-        self.action = action
-        game.actors.remove(self)
 
 
 class GameMode(object):
@@ -36,14 +29,14 @@ class GameMode(object):
         self.click_pending = {}
         self.click_callback = None
         self.click_selected = None
+        self.renderer = Renderer(self)
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
-        self.renderer = Renderer(self)
         # DEBUG
         self.buttons = {}
-        self.buttons['remove'] = Button(self, None)
-        self.buttons['apply'] = Button(self, None)
-        self.buttons['confirm'] = Button(self, None)
+        self.buttons['remove'] = Button(self, None, 0, 550, .1)
+        self.buttons['apply'] = Button(self, None, 50, 550, .1)
+        self.buttons['confirm'] = Button(self, None, 100, 550, .1)
 
     def start_game(self):
         """
@@ -84,7 +77,7 @@ class GameMode(object):
                     print "Click!"
                     clicked = self.locate(event.pos)
                     for c in clicked:
-                        if c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+                        if isinstance(c, Cell) and c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
                         else: print "\t" + "None"
                     if clicked:
                         self.select(clicked)
@@ -129,15 +122,12 @@ class GameMode(object):
 
         self.buttons['remove'].action = self.player.remove_from_hand
         self.buttons['apply'].action = self.resolve_order
+        self.buttons['confirm'].action = self.new_turn
 
         # self.set_timer(5000, self.battle)
 
         self.turn()
-
         # self.set_timer(20000, self.end_game)
-        # self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-        #                  self.playground.cells[5]: [self.playground.cells[0]],
-        #                  self.playground.cells[2]: []}, self.test)
 
     def tick(self, deltatime):
         """
@@ -239,7 +229,7 @@ class GameMode(object):
                 # if player doesn't need to select second actor
                 if not self.click_pending[cell]:
                     self.click_pending = {}
-                    self.click_callback(cell, None)
+                    self.event(self.click_callback, (cell, None))
                 else:
                     self.click_selected = cell
                 break
@@ -248,12 +238,11 @@ class GameMode(object):
         # DEBUG
         if isinstance(s, Button):
             #TODO begin new turn on 'Confirm' click
-            if not self.player.remove_in_turn:
+            if self.turn_num > 2 and not self.player.remove_in_turn:
                 # must remove one first
                 print 'You must remove one tile from hand first!'
             else:
-                # s.action()
-                pass
+                s.action()
         elif isinstance(s, Cell):
             if isinstance(cell, Button):
                 # apply/remove
@@ -293,9 +282,6 @@ class GameMode(object):
         Constructs values for keys in dictionary of player's actions.
         :return: nothing is returned.
         """
-        if self.turn_num > 2 and self.player.tiles_in_hand() == 1:
-            # 3d tile in hand needs to be removed
-            self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
         for action_type in self.action_types:
             if action_type in self.playground.cells:
                 # actor is on the battlefield - mobility
@@ -309,6 +295,9 @@ class GameMode(object):
                 else:
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
+        if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:
+            # 3rd tile in hand needs to be removed
+            self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
         self.pend_click(self.action_types, self.callback_dispatcher)
 
     def battle(self):

@@ -13,6 +13,7 @@ class Player(object):
         self.remove_in_turn = False
         self.army = army_id
         self.team = team_id
+        self.next = None
         if self.army in armies:
             self.army_dict = armies[self.army]()
             self.tiles = self.army_dict.army.values()
@@ -20,10 +21,9 @@ class Player(object):
             self.tiles = []
         self.hand = []
         for ind in xrange(3):
-            cell = Cell(game)
-            self.hand.append(cell)
-            # DEBUG
-            game.actors.remove(cell)
+            self.hand.append(Cell(game))
+            self.hand[ind].x = (ind - 1) * 1.05
+            self.hand[ind].y = 0
 
     def army_shuffle(self):
         """
