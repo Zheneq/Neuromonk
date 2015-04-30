@@ -146,7 +146,9 @@ class Unit(Tile):
                 neighbour = cell.neighbours[ind]
                 while neighbour is not None:
                     if neighbour.tile is not None and neighbour.tile.army_id != self.army_id:
-                        range_damage = damage['range'] - neighbour.tile.get_armor(ind - neighbour.turn)
+                        range_damage = damage['range']
+                        if isinstance(neighbour.tile, Unit):
+                            range_damage -= neighbour.tile.get_armor(ind - neighbour.turn)
                         if range_damage > 0:
                             damage_to_unit = {'value': range_damage,
                                               'type': 'range',

@@ -128,10 +128,7 @@ class GameMode(object):
         self.buttons['apply'].action = self.resolve_order
         self.buttons['confirm'].action = self.new_turn
 
-        # self.set_timer(5000, self.battle)
-
-        self.turn()
-        # self.set_timer(20000, self.end_game)
+        self.place_all_hq()
 
     def tick(self, deltatime):
         """
@@ -273,6 +270,23 @@ class GameMode(object):
                 if not cell.tile:
                     # mobility resolve
                     self.march((s, cell))
+
+    def place_hq(self, (who, where)):
+        self.swap((who, where))
+        self.event(self.next_hq)
+
+    def next_hq(self):
+        self.player = self.player.next
+        if self.player is self.players[0]:
+            self.event(self.turn)
+        else:
+            self.event(self.place_all_hq)
+
+    def place_all_hq(self):
+        print self.player.name + '\'s turn!'
+        self.player.hand[0].tile = self.player.hq
+        self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
+        self.pend_click(self.action_types, self.place_hq)
 
     def turn(self):
         """

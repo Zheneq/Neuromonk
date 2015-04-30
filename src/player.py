@@ -18,6 +18,7 @@ class Player(object):
             self.tiles = self.army_dict.army.values()
         else:
             self.tiles = []
+        self.hq = self.army_dict.hq
         self.hand = []
         for ind in xrange(3):
             self.hand.append(Cell(game))

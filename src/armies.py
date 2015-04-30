@@ -6,18 +6,18 @@ from tile import *
 class Army(object):
     def __init__(self, id, mode):
         self.army_id = id
+        self.hq = None
         self.army = {}
         if mode == '2vs2':
             self.base_hp = 13
         elif mode == 'dm':
-            self.base_hp = 20
+            self.base_hp = 5
 
 
 class Borgo(Army):
     def __init__(self, mode='dm'):
         Army.__init__(self, 2, mode)
-        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,1,1,1,1]}, {})
-        self.army['hq']= hq
+        self.hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,1,1,1,1]}, {})
         for i in xrange(6):
             mutant = Unit(self.army_id, 1, [1,1,0,0,0,1], None, None, None, [[2, True]])
             self.army['mutant' + str(i)] = mutant
@@ -50,8 +50,7 @@ class Borgo(Army):
 class Moloch(Army):
     def __init__(self, mode='dm'):
         Army.__init__(self, 1, mode)
-        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'range': [1,1,1,1,1,1]}, {})
-        self.army['hq']= hq
+        self.hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'range': [1,1,1,1,1,1]}, {})
         for i in xrange(2):
             blocker = Unit(self.army_id, 3, None, None, [1,0,0,0,0,0], None, None)
             self.army['blocker' + str(i)] = blocker
