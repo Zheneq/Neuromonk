@@ -15,7 +15,7 @@ class Button(Cell):
     def __init__(self, game, action):
         Cell.__init__(self, game)
         self.action = action
-        game.add_actor(self)
+        game.actors.remove(self)
 
 
 class GameMode(object):
@@ -72,6 +72,14 @@ class GameMode(object):
                 #
                 if event.type == pygame.QUIT:
                     self.active = False
+                # if event.type == pygame.MOUSEMOTION:
+                #     print "Click!"
+                #     clicked = self.locate(event.pos)
+                #     for c in clicked:
+                #         if c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+                #         else: print "\t" + "None"
+                #     if clicked:
+                #         self.select(clicked)
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     print "Click!"
                     clicked = self.locate(event.pos)
@@ -114,7 +122,7 @@ class GameMode(object):
         self.players[1].next = self.players[0]
         self.player = self.players[0]
 
-        self.set_timer(5000, self.battle)
+        # self.set_timer(5000, self.battle)
 
         self.turn()
 
@@ -201,11 +209,11 @@ class GameMode(object):
         if isinstance(s, Button):
             # s.action()
             pass
-        self.test(s, cell)
+        if isinstance(s, Cell) and not cell.tile:
+            # mobility/march resolve
+            self.test(s, cell)
         # remove action from possible ones - it is done
         del self.action_types[s]
-        if s in self.player.get_hand():
-            self.player.remove_from_hand(s)
         # reconstruct values in dictionary of actions
         self.tactic()
 
@@ -300,7 +308,7 @@ if __name__ == "__main__":
     outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_fat = Unit(1, 5, None, None, None, None, None)
+    moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
     moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})

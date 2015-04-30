@@ -146,7 +146,7 @@ class Unit(Tile):
                     if neighbour.tile is None:
                         # free cell
                         result.append(neighbour)
-                        result.extend(self.maneuver_rate(neighbour, depth - 1, result))
+                        self.maneuver_rate(neighbour, depth - 1, result)
             return result
         return result
 

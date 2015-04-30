@@ -9,6 +9,7 @@ from grid import Cell
 class Player(object):
     def __init__(self, name, army_id, team_id, game):
         self.name = name
+        self.next = None
         self.army = army_id
         self.team = team_id
         if self.army in armies:
@@ -18,7 +19,10 @@ class Player(object):
             self.tiles = []
         self.hand = []
         for ind in xrange(3):
-            self.hand.append(Cell(game))
+            cell = Cell(game)
+            self.hand.append(cell)
+            # DEBUG
+            game.actors.remove(cell)
 
     def army_shuffle(self):
         """
@@ -35,11 +39,11 @@ class Player(object):
     def get_hand(self):
         return filter(lambda x: x.tile, self.hand)
 
-    def remove_from_hand(self, tile):
-        for cell in self.hand:
-            if cell.tile is tile:
-                cell.tile = None
-                break
+    # def remove_from_hand(self, tile):
+    #     for cell in self.hand:
+    #         if cell.tile is tile:
+    #             cell.tile = None
+    #             break
 
     def get_tiles(self, turn):
         turn = min(3, turn)
