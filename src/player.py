@@ -10,6 +10,7 @@ class Player(object):
     def __init__(self, name, army_id, team_id, game):
         self.name = name
         self.next = None
+        self.remove_in_turn = False
         self.army = army_id
         self.team = team_id
         if self.army in armies:
@@ -39,11 +40,12 @@ class Player(object):
     def get_hand(self):
         return filter(lambda x: x.tile, self.hand)
 
-    # def remove_from_hand(self, tile):
-    #     for cell in self.hand:
-    #         if cell.tile is tile:
-    #             cell.tile = None
-    #             break
+    def remove_from_hand(self, tile):
+        for cell in self.hand:
+            if cell.tile is tile:
+                cell.tile = None
+                break
+        self.remove_in_turn = True
 
     def get_tiles(self, turn):
         turn = min(3, turn)

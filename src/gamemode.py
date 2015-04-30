@@ -109,7 +109,7 @@ class GameMode(object):
         """
         self.active = False
 
-    def test(self, (a, b)):
+    def swap(self, (a, b)):
         print "test"
         if b:
             a.tile, b.tile = b.tile, a.tile
@@ -127,14 +127,17 @@ class GameMode(object):
         self.players[1].next = self.players[0]
         self.player = self.players[0]
 
+        self.buttons['remove'].action = self.player.remove_from_hand
+        self.buttons['apply'].action = self.resolve_order
+
         # self.set_timer(5000, self.battle)
 
         self.turn()
 
         # self.set_timer(20000, self.end_game)
-        self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-                         self.playground.cells[5]: [self.playground.cells[0]],
-                         self.playground.cells[2]: []}, self.test)
+        # self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
+        #                  self.playground.cells[5]: [self.playground.cells[0]],
+        #                  self.playground.cells[2]: []}, self.test)
 
     def tick(self, deltatime):
         """
@@ -189,6 +192,32 @@ class GameMode(object):
                 pass
         return result
 
+    def resolve_order(self, order):
+        if order.type == 'battle':
+            self.begin_battle()
+        elif order.type == 'march':
+            self.begin_march()
+
+    def begin_march(self):
+        maneuvers = {}
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.army_id == self.player.army:
+                maneuvers[cell] = cell.tile.maneuver_rate(cell)
+        self.pend_click(maneuvers, self.march)
+
+    def march(self, (who, where)):
+        self.swap((who, where))
+        self.pend_click(self.action_types, self.callback_dispatcher())
+        #TODO make tile's turn
+
+    def begin_battle(self):
+        self.battle()
+        self.pend_click(self.action_types, self.callback_dispatcher())
+
+    def new_turn(self):
+        self.player = self.player.next
+        self.turn()
+
     def select(self, cells):
         """
         Common interface of selecting.
@@ -215,17 +244,26 @@ class GameMode(object):
                     self.click_selected = cell
                 break
 
-    def callback_dispatcher(self, s, cell):
-        #TODO choose the callback by parameters
+    def callback_dispatcher(self, (s, cell)):
         # DEBUG
         if isinstance(s, Button):
-            # s.action()
-            pass
-        if isinstance(s, Cell) and not cell.tile:
-            # mobility/march resolve
-            self.test(s, cell)
-        # remove action from possible ones - it is done
-        del self.action_types[s]
+            #TODO begin new turn on 'Confirm' click
+            if not self.player.remove_in_turn:
+                # must remove one first
+                print 'You must remove one tile from hand first!'
+            else:
+                # s.action()
+                pass
+        elif isinstance(s, Cell):
+            if isinstance(cell, Button):
+                # apply/remove
+                cell.action(s.tile)
+            else:
+                if not cell.tile:
+                    # mobility/march resolve
+                    self.swap((s, cell))
+            # remove action from possible ones - it is done
+            del self.action_types[s]
         # reconstruct values in dictionary of actions
         self.tactic()
 
@@ -237,7 +275,7 @@ class GameMode(object):
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
-        #TODO draw player's hand
+        self.player.remove_in_turn = False
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
@@ -271,8 +309,7 @@ class GameMode(object):
                 else:
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
-        callback = self.callback_dispatcher
-        self.pend_click(self.action_types, callback)
+        self.pend_click(self.action_types, self.callback_dispatcher)
 
     def battle(self):
         """
@@ -318,14 +355,14 @@ if __name__ == "__main__":
     # Zq.get_tiles(game.turn_num + 2)
 
 
-    outpost_kicker1 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    outpost_kicker1 = Unit(0, 5, (1,0,0,0,0,0), None, None, None, [[3, True]])
     outpost_kicker1.active = False
     outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
     moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
+    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]], mobility=True)
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
 
