@@ -8,7 +8,7 @@ from renderer import Renderer
 from player import Player
 
 from game.battle.buffs import compute_initiative
-from game.battle.battle import give_damage_phase, take_damage_phase, refresh_units
+from game.battle.battle import Battle
 
 
 class GameMode(object):
@@ -128,7 +128,8 @@ class GameMode(object):
         self.buttons['apply'].action = self.resolve_order
         self.buttons['confirm'].action = self.new_turn
 
-        self.place_all_hq()
+        # self.place_all_hq()
+        self.turn()
 
     def tick(self, deltatime):
         """
@@ -211,7 +212,6 @@ class GameMode(object):
 
     def begin_battle(self):
         self.battle()
-        self.new_turn()
 
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
@@ -341,26 +341,9 @@ class GameMode(object):
         """
         # prepare to battle
         # find max initiative
-        max_initiative = 0
-        for cell in self.playground.cells:
-            if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
-                # reset initiative
-                for initiative_ind in xrange(len(cell.tile.initiative)):
-                    cell.tile.initiative[initiative_ind][1] = True
-                # find max initiative
-                initiative_modificator = compute_initiative(cell)
-                if cell.tile.initiative[0][0] + initiative_modificator > max_initiative:
-                    max_initiative = cell.tile.initiative[0][0] + initiative_modificator
         # battle
-        for phase in range(max_initiative, -1, -1):
-            # phase of giving damage
-            give_damage_phase(self.playground, phase)
-            # phase of taking damage and cleaning corpses
-            take_damage_phase(self.playground)
-        # refresh support info
-        refresh_units(self.playground)
-        # debug
-        self.renderer.idle = False
+        battle = Battle(self.playground, self.pend_click, self.event, self.renderer, self.new_turn)
+        battle.battle_phase()
 
     EVENT_TICKER = pygame.USEREVENT
     EVENT_USEREVENT = pygame.USEREVENT + 1
@@ -376,27 +359,34 @@ if __name__ == "__main__":
     # outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     # outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
+    moloch_medic1 = Medic(1, 1, [1,1,0,0,0,1])
+    moloch_medic2 = Medic(1, 1, [1,1,0,0,0,1])
+    moloch_medic3 = Medic(1, 1, [1,1,0,0,0,1])
+    moloch_medic4 = Medic(1, 1, [1,1,0,0,0,1])
+    moloch_medic5 = Medic(1, 1, [1,1,0,0,0,1])
     # moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
-    # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]], mobility=True)
+    moloch_greaver1 = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[2, True]], mobility=True)
+    moloch_greaver2 = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[2, True]], mobility=True)
+    borgo_fighter = Unit(2, 1, (1,1,0,0,0,0), None, None, None, [[3, True]])
     # moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     # moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
     #
-    # game.playground.cells[0].tile = outpost_kicker1
-    # game.playground.cells[0].turn = 1
-    # game.playground.cells[1].tile = moloch_netfighter
-    # game.playground.cells[1].turn = 3
-    # game.playground.cells[2].tile = moloch_fat
-    # game.playground.cells[2].turn = 0
-    # game.playground.cells[3].tile = moloch_greaver
-    # game.playground.cells[3].turn = 4
-    # game.playground.cells[4].tile = outpost_hq
-    # game.playground.cells[4].turn = 0
-    # game.playground.cells[5].tile = outpost_mothermodule
-    # game.playground.cells[5].turn = 1
-    # game.playground.cells[6].tile = outpost_kicker2
-    # game.playground.cells[6].turn = 1
-    # game.playground.cells[13].tile = moloch_hq
-    # game.playground.cells[13].turn = 0
+    game.playground.cells[0].tile = moloch_medic1
+    game.playground.cells[0].turn = 2
+    game.playground.cells[2].tile = moloch_medic2
+    game.playground.cells[2].turn = 5
+    game.playground.cells[1].tile = moloch_medic3
+    game.playground.cells[1].turn = 3
+    game.playground.cells[6].tile = moloch_medic4
+    game.playground.cells[6].turn = 2
+    game.playground.cells[5].tile = moloch_medic5
+    game.playground.cells[5].turn = 1
+    game.playground.cells[3].tile = moloch_greaver1
+    game.playground.cells[3].turn = 1
+    game.playground.cells[4].tile = moloch_greaver2
+    game.playground.cells[4].turn = 1
+    game.playground.cells[13].tile = borgo_fighter
+    game.playground.cells[13].turn = 5
     # game.playground.cells[15].tile = outpost_medic
     # game.playground.cells[15].turn = 0
 
