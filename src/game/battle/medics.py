@@ -20,7 +20,7 @@ def assign_medic(cell, medic_cell):
             if neighbour is not medic_cell and medic_cell not in neighbour.tile.active_medics:
                 neighbour.tile.active_medics.append(medic_cell)  # mark this tile
                 # if tile is another medic continue chain
-                if type(neighbour.tile) is Medic and neighbour.tile.active:
+                if isinstance(neighbour.tile, Medic) and neighbour.tile.active:
                     assign_medic(neighbour, medic_cell)
 
 
@@ -32,7 +32,7 @@ def compute_medics(playground):
     """
     active_medic_found = False
     for cell in playground.cells:
-        if cell.tile is not None and cell.tile.active and type(cell.tile) is Medic:
+        if cell.tile is not None and cell.tile.active and isinstance(cell.tile, Medic):
             damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
             if cell.tile.hp - cell.tile.injuries > damage:
                 # medic can heal somebody who is connected to it
@@ -67,7 +67,7 @@ def one_medic_resolve(playground):
         #TODO choose medic to heal
         # first available medic saves first available unit from first damage in "taken_damage"
         damaged_units_to_heal[0].taken_damage.remove(damaged_units_to_heal[0].taken_damage[0])
-        damaged_units_to_heal[0].active_medics[1].tile = None
+        damaged_units_to_heal[0].active_medics[0].tile = None
     return damaged_units_to_heal
 
 

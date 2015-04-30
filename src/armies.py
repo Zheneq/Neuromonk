@@ -14,9 +14,9 @@ class Army(object):
 
 
 class Borgo(Army):
-    def __init__(self, mode):
+    def __init__(self, mode='dm'):
         Army.__init__(self, 2, mode)
-        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]])
+        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,1,1,1,1]}, {})
         self.army['hq']= hq
         for i in xrange(6):
             mutant = Unit(self.army_id, 1, [1,1,0,0,0,1], None, None, None, [[2, True]])
@@ -48,9 +48,9 @@ class Borgo(Army):
 
 
 class Moloch(Army):
-    def __init__(self, mode):
+    def __init__(self, mode='dm'):
         Army.__init__(self, 1, mode)
-        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]])
+        hq = Base(self.army_id, self.base_hp, [1,1,1,1,1,1], [[0, True]], {'range': [1,1,1,1,1,1]}, {})
         self.army['hq']= hq
         for i in xrange(2):
             blocker = Unit(self.army_id, 3, None, None, [1,0,0,0,0,0], None, None)
@@ -93,7 +93,11 @@ class Moloch(Army):
         self.army['scout'] = scout
 
 
+armies = {}
+armies[1] = Moloch
+armies[2] = Borgo
+
+
 if __name__ == '__main__':
     moloch_army = Moloch('dm')
     borgo_army = Borgo('dm')
-    print 'Yay!'

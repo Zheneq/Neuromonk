@@ -1,12 +1,21 @@
-__author__ = 'dandelion'
+__author__ = 'zheneq & dandelion'
 
 import pygame
-from grid import Grid
+
+from grid import Grid, Cell
 from tile import *
 from renderer import Renderer
+from player import Player
 
 from game.battle.buffs import compute_initiative
 from game.battle.battle import give_damage_phase, take_damage_phase, refresh_units
+
+
+class Button(Cell):
+    def __init__(self, game, action):
+        Cell.__init__(self, game)
+        self.action = action
+        game.add_actor(self)
 
 
 class GameMode(object):
@@ -15,11 +24,12 @@ class GameMode(object):
     """
     def __init__(self, grid_radius):
         """
-        Initializes necessary data
+        Initializes necessary data.
         :param grid_radius: radius of battlefield.
         :return: nothing is returned.
         """
         self.players = []
+        self.player = None
         self.actors = []
         self.active = False
         self.timers = {}
@@ -27,11 +37,17 @@ class GameMode(object):
         self.click_callback = None
         self.click_selected = None
         self.playground = Grid(self, grid_radius)
+        self.turn_num = 0
         self.renderer = Renderer(self)
+        # DEBUG
+        self.buttons = {}
+        self.buttons['remove'] = Button(self, None)
+        self.buttons['apply'] = Button(self, None)
+        self.buttons['confirm'] = Button(self, None)
 
     def start_game(self):
         """
-        Launches the main cycle
+        Launches the main cycle.
         :return: nothing is returned.
         """
         pygame.init()
@@ -80,7 +96,7 @@ class GameMode(object):
 
     def end_game(self):
         """
-        Immediately stops the game
+        Immediately stops the game.
         :return: nothing is returned.
         """
         self.active = False
@@ -94,7 +110,19 @@ class GameMode(object):
 
     def begin_play(self):
         # DEBUG
+        Zq = Player('Zheneq', 1, 0, self)
+        Zq.army_shuffle()
+        Dand = Player('Dandelion', 2, 1, self)
+        Dand.army_shuffle()
+        self.players = [Zq, Dand]
+        self.players[0].next = self.players[1]
+        self.players[1].next = self.players[0]
+        self.player = self.players[0]
+
         self.set_timer(5000, self.battle)
+
+        self.turn()
+
         # self.set_timer(20000, self.end_game)
         self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
                          self.playground.cells[5]: [self.playground.cells[0]],
@@ -102,7 +130,7 @@ class GameMode(object):
 
     def tick(self, deltatime):
         """
-        Subroutine executed every tick
+        Subroutine executed every tick.
         :param deltatime: Time since last tick (in milliseconds)
         :return: nothing is returned.
         """
@@ -113,7 +141,7 @@ class GameMode(object):
 
     def set_timer(self, time, callback, repeat = False):
         """
-        Set a timer
+        Set a timer.
         :param time: Time in milliseconds. If 0, timer is unset
         :param callback: Function to call when the timer is fired
         :param repeat: Bool flag set when timer should be fired repeatedly
@@ -154,10 +182,18 @@ class GameMode(object):
         return result
 
     def select(self, cells):
+        """
+        Common interface of selecting.
+        :param cells: cells clicked by player.
+        :return: nothing is returned.
+        """
         for cell in cells:
             if self.click_selected is not None:
+                # there is tile from dictionary selected by previous click
                 if cell in self.click_pending[self.click_selected]:
+                    # there is pair (source, dist) of action
                     s = self.click_selected
+                    # reset selection dictionary
                     self.click_selected = None
                     self.click_pending = {}
                     self.event(self.click_callback, (s, cell))
@@ -171,6 +207,65 @@ class GameMode(object):
                     self.click_selected = cell
                 break
 
+    def callback_dispatcher(self, s, cell):
+        #TODO choose the callback by parameters
+        # DEBUG
+        if isinstance(s, Button):
+            # s.action()
+            pass
+        self.test(s, cell)
+        # remove action from possible ones - it is done
+        del self.action_types[s]
+        if s in self.player.get_hand():
+            self.player.remove_from_hand(s)
+        # reconstruct values in dictionary of actions
+        self.tactic()
+
+    def turn(self):
+        """
+        Initialize player's hand and actions he can make.
+        :return: nothing is returned.
+        """
+        print self.player.name + '\'s turn!'
+        self.turn_num += 1
+        self.player.get_tiles(self.turn_num)
+        #TODO draw player's hand
+        # create dictionary of actions
+        self.action_types = {}
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.army_id == self.player.army and cell.tile.mobile:
+                self.action_types[cell] = []
+        for cell in self.player.hand:
+            if cell.tile:
+                self.action_types[cell] = []
+        self.action_types[self.buttons['confirm']] = []
+        # fill dictionary values
+        self.tactic()
+
+    def tactic(self):
+        """
+        Constructs values for keys in dictionary of player's actions.
+        :return: nothing is returned.
+        """
+        if self.turn_num > 2 and self.player.tiles_in_hand() == 1:
+            # 3d tile in hand needs to be removed
+            self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
+        for action_type in self.action_types:
+            if action_type in self.playground.cells:
+                # actor is on the battlefield - mobility
+                self.action_types[action_type] = action_type.tile.maneuver_rate(action_type)
+            elif action_type in self.player.hand:
+                # actor is in hand - it can be removed
+                self.action_types[action_type] = [self.buttons['remove']]
+                if isinstance(action_type.tile, Tile):
+                    # this is tile - it can be placed on the battlefield
+                    self.action_types[action_type].extend(self.playground.get_free_cells())
+                else:
+                    # this is order - it can be applied
+                    self.action_types[action_type].append(self.buttons['apply'])
+        callback = self.callback_dispatcher
+        self.pend_click(self.action_types, callback)
+
     def battle(self):
         """
         Computes units interaction during battle.
@@ -180,7 +275,7 @@ class GameMode(object):
         # find max initiative
         max_initiative = 0
         for cell in self.playground.cells:
-            if cell.tile is not None and type(cell.tile) == Unit and cell.tile.initiative:
+            if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
                 # reset initiative
                 for initiative_ind in xrange(len(cell.tile.initiative)):
                     cell.tile.initiative[initiative_ind][1] = True
@@ -205,39 +300,45 @@ class GameMode(object):
 
 
 if __name__ == "__main__":
-    battle = GameMode(2)
+    game = GameMode(2)
+
+    # Zq = Player('Zq', 1, 0, game)
+    # Zq.army_shuffle()
+    #
+    # Zq.get_tiles(game.turn_num)
+    # Zq.get_tiles(game.turn_num + 1)
+    # Zq.get_tiles(game.turn_num + 2)
+
 
     outpost_kicker1 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[3, True]])
     outpost_kicker1.active = False
     outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
-    outpost_scout = Module(0, 1, {'initiative': [1,1,0,0,0,1]}, {})
+    outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
+    outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
     moloch_fat = Unit(1, 5, None, None, None, None, None)
     moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
+    moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
 
-    # outpost_medic1 = Medic(0, 1, [1,1,0,0,0,1])
-    # outpost_medic2 = Medic(0, 1, [0,1,0,0,0,1])
-    # outpost_medic3 = Medic(0, 1, [0,0,0,1,0,0])
-    # outpost_medic4 = Medic(0, 1, [1,1,0,0,0,1])
-    # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), (0,0,0,0,0,0), (0,0,0,0,0,0), [[3, True]])
+    game.playground.cells[0].tile = outpost_kicker1
+    game.playground.cells[0].turn = 1
+    game.playground.cells[1].tile = moloch_netfighter
+    game.playground.cells[1].turn = 3
+    game.playground.cells[2].tile = moloch_fat
+    game.playground.cells[2].turn = 0
+    game.playground.cells[3].tile = moloch_greaver
+    game.playground.cells[3].turn = 4
+    game.playground.cells[4].tile = outpost_hq
+    game.playground.cells[4].turn = 0
+    game.playground.cells[5].tile = outpost_mothermodule
+    game.playground.cells[5].turn = 1
+    game.playground.cells[6].tile = outpost_kicker2
+    game.playground.cells[6].turn = 1
+    game.playground.cells[13].tile = moloch_hq
+    game.playground.cells[13].turn = 0
+    game.playground.cells[15].tile = outpost_medic
+    game.playground.cells[15].turn = 0
 
-
-    battle.playground.cells[0].tile = outpost_kicker1
-    battle.playground.cells[0].turn = 1
-    battle.playground.cells[1].tile = moloch_netfighter
-    battle.playground.cells[1].turn = 3
-    battle.playground.cells[2].tile = moloch_fat
-    battle.playground.cells[2].turn = 0
-    battle.playground.cells[3].tile = moloch_greaver
-    battle.playground.cells[3].turn = 4
-    battle.playground.cells[4].tile = outpost_scout
-    battle.playground.cells[4].turn = 0
-    battle.playground.cells[5].tile = outpost_mothermodule
-    battle.playground.cells[5].turn = 1
-    battle.playground.cells[6].tile = outpost_kicker2
-    battle.playground.cells[6].turn = 1
-
-    battle.start_game()
-
-    print "Yay!"
+    game.start_game()
+    
