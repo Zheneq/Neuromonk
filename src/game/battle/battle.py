@@ -7,8 +7,21 @@ from medics import Medicine
 
 
 class Battle(object):
+    """
+    Class for support info in battle.
+    Stores current initiative phase, the battlefield and support info for event performing.
+    """
     def __init__(self, playground, pend_click, event, renderer, continue_game):
+        """
+        Battle constructor.
+        :param playground: battlefield.
+        :param pend_click: function assigning callback to dictionary of actors.
+        :param event: event poster.
+        :param renderer: for debug reasons (don't know why).
+        :param continue_game: function continuing game after battle.
+        """
         self.battlefield = playground
+
         self.pend_click = pend_click
         self.event = event
         self.renderer = renderer
@@ -22,18 +35,26 @@ class Battle(object):
                 # reset initiative
                 for initiative_ind in xrange(len(cell.tile.initiative)):
                     cell.tile.initiative[initiative_ind][1] = True
-                # find max initiative
+                # find max initiative to start form
                 initiative_modificator = compute_initiative(cell)
                 if cell.tile.initiative[0][0] + initiative_modificator > self.initiative_phase:
                     self.initiative_phase = cell.tile.initiative[0][0] + initiative_modificator
 
     def battle_phase(self):
+        """
+        Actions during one initiative phase in battle.
+        :return: nothing is returned.
+        """
         # phase of giving damage
         self.give_damage_phase()
         # phase of taking damage and cleaning corpses
         self.take_damage_phase()
 
     def end_battle(self):
+        """
+        Finishes battle and continues game.
+        :return: nothing is returned.
+        """
         # debug
         self.renderer.idle = False
         self.event(self.continue_game)
@@ -42,8 +63,6 @@ class Battle(object):
         """
         In this phase units give damage to all directions they can.
         Adsorbed damage is stored in "taken_damage" field if avery tile.
-        :param playground: battlefield.
-        :param phase: number of battle phase.
         :return: nothing is returned.
         """
         for cell in self.battlefield.cells:
@@ -80,14 +99,9 @@ class Battle(object):
 
     def take_damage_phase(self):
         """
-        In this phase medics heal their patients and unhealed damage converts to injuries.
-        If unit's HP is over, it's corpse is removed from battlefield.
-        :param playground: battlefield.
+        Removes damage from HQ to another HQ and resolves medics.
         :return: nothing is returned.
         """
-        self.reduce_damage()
-
-    def reduce_damage(self):
         # for every HQ remove damage taken from other HQ
         for cell in self.battlefield.cells:
             if cell.tile is not None and isinstance(cell.tile, Base):
@@ -97,10 +111,14 @@ class Battle(object):
                         cleaned_taken_damage.append(damage)
                 cell.tile.taken_damage = cleaned_taken_damage
         # resolve possible medic conflicts
-        medicine = Medicine(self.battlefield, self.pend_click, self.convert_damage, self.event)
+        medicine = Medicine(self.battlefield, self.pend_click, self.compute_injuries, self.event)
         medicine.resolve_medics()
 
-    def convert_damage(self):
+    def compute_injuries(self):
+        """
+        Converts unhealed taken damage to injuries and clears corpses, after that continues battle.
+        :return: nothing is returned
+        """
         for cell in self.battlefield.cells:
             if cell.tile is not None:
                 damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)

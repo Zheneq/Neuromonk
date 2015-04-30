@@ -208,9 +208,6 @@ class GameMode(object):
         #TODO make tile's turn
         self.event(self.tactic)
 
-    def begin_battle(self):
-        self.battle()
-
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
         self.event(self.tactic)
@@ -331,7 +328,7 @@ class GameMode(object):
             self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
         self.pend_click(self.action_types, self.callback_dispatcher)
 
-    def battle(self):
+    def begin_battle(self):
         """
         Computes units interaction during battle.
         :return: nothing is returned.

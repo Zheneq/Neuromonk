@@ -4,6 +4,7 @@ from tile import Medic
 
 
 class Medicine(object):
+
     def __init__(self, battlefield, pend_click, continue_battle, make_event):
         self.battlefield = battlefield
         self.pend_click = pend_click
@@ -14,7 +15,8 @@ class Medicine(object):
         """
         Assigns medic to all damaged units connected to this medic.
         Tiles connected to medic are searched by recursive DFS.
-        :param playground: battlefield.
+        :param cell: current node of recursion.
+        :param medic_cell: cell with healing medic we assign.
         :return: nothing is returned.
         """
         # mark all units connected with medic in "cell" as able be healed by this medic
@@ -33,8 +35,7 @@ class Medicine(object):
     def compute_medics(self):
         """
         Assigns every medic to all units connected to it. .
-        :param playground: battlefield.
-        :return: returns True, if there is healing medic. False, otherwise.
+        :return: nothing is returned.
         """
         for cell in self.battlefield.cells:
             if cell.tile is not None and cell.tile.active and isinstance(cell.tile, Medic):
@@ -46,7 +47,6 @@ class Medicine(object):
     def clean_medics(self):
         """
         Cleans assigned medics in every tile.
-        :param playground: battlefield.
         :return: nothing is returned.
         """
         for cell in self.battlefield.cells:
@@ -54,6 +54,11 @@ class Medicine(object):
                 cell.tile.active_medics = []
 
     def resolve_medics(self):
+        """
+        Creates dictionary of (patient, list of healing medics) for user to choose from.
+        If there is no patients with healing medics continues the battle.
+        :return: nothing is returned.
+        """
         self.clean_medics()
         self.compute_medics()
         damaged_units_to_heal = {}
@@ -62,11 +67,16 @@ class Medicine(object):
                 # unit is able to be healed by one of medics in list
                 damaged_units_to_heal[cell] = cell.tile.active_medics
         if damaged_units_to_heal:
+            # assign callback to dictionary
             self.pend_click(damaged_units_to_heal, self.one_medic_resolve)
         else:
             self.continue_battle()
 
     def one_medic_resolve(self, (patient, medic)):
+        """
+        Resolves one medic. Healing medic removes max damage from single instigator.
+        :return: nothing is returned.
+        """
         #TODO choose wound (if it is important)
         # remove max damage from single instigator
         patient.tile.taken_damage.remove(max(patient.tile.taken_damage, key=lambda x: x['value']))
