@@ -7,12 +7,12 @@ from medics import Medicine
 
 
 class Battle(object):
-    def __init__(self, playground, pend_click, event, renderer, new_turn):
+    def __init__(self, playground, pend_click, event, renderer, continue_game):
         self.battlefield = playground
         self.pend_click = pend_click
         self.event = event
         self.renderer = renderer
-        self.new_turn = new_turn
+        self.continue_game = continue_game
 
         self.initiative_phase = 0
         for cell in self.battlefield.cells:
@@ -36,7 +36,7 @@ class Battle(object):
     def end_battle(self):
         # debug
         self.renderer.idle = False
-        self.event(self.new_turn)
+        self.event(self.continue_game)
 
     def give_damage_phase(self):
         """

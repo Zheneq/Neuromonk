@@ -33,10 +33,8 @@ class GameMode(object):
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
         # DEBUG
-        self.buttons = {}
-        self.buttons['remove'] = Button(self, None, 0, 550, .1)
-        self.buttons['apply'] = Button(self, None, 50, 550, .1)
-        self.buttons['confirm'] = Button(self, None, 100, 550, .1)
+        self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
+                        'confirm': Button(self, None, 100, 550, .1)}
 
     def start_game(self):
         """
@@ -201,7 +199,7 @@ class GameMode(object):
             self.event(self.tactic)
 
     def march(self, (who, where)):
-        if who in self.action_types:
+        if who in self.action_types and who is not where:
             # move mobile unit - change cell in dictionary
             values = self.action_types[who]
             del self.action_types[who]
@@ -267,9 +265,8 @@ class GameMode(object):
                 cell.action(tile)
                 return
             else:
-                if not cell.tile:
-                    # mobility resolve
-                    self.march((s, cell))
+                # marsh/mobility resolve
+                self.march((s, cell))
 
     def place_hq(self, (who, where)):
         self.swap((who, where))
