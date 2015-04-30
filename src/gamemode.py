@@ -53,7 +53,7 @@ class GameMode(object):
         pygame.init()
         self.active = True
         self.begin_play()
-        pygame.time.set_timer(pygame.USEREVENT, 50)
+        pygame.time.set_timer(self.EVENT_TICKER, 50)
         time = pygame.time.get_ticks()
         while self.active:
             prevtime = time
@@ -88,6 +88,8 @@ class GameMode(object):
                         else: print "\t" + "None"
                     if clicked:
                         self.select(clicked)
+                if event.type == self.EVENT_USEREVENT:
+                    event.callback(event.parameters)
                 if event.type in self.timers:
                     self.timers[event.type][0]()
                     if not self.timers[event.type][1]:
@@ -107,9 +109,12 @@ class GameMode(object):
         """
         self.active = False
 
-    def test(self, a, b):
+    def test(self, (a, b)):
         print "test"
-        a.tile, b.tile = b.tile, a.tile
+        if b:
+            a.tile, b.tile = b.tile, a.tile
+        else:
+            print "b is none"
 
     def begin_play(self):
         # DEBUG
@@ -127,8 +132,9 @@ class GameMode(object):
         self.turn()
 
         # self.set_timer(20000, self.end_game)
-        # self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-        #                  self.playground.cells[5]: [self.playground.cells[0]]}, self.test)
+        self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
+                         self.playground.cells[5]: [self.playground.cells[0]],
+                         self.playground.cells[2]: []}, self.test)
 
     def tick(self, deltatime):
         """
@@ -152,7 +158,7 @@ class GameMode(object):
         # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
         #          which one will be unset is unknown.
         if time:
-            for id in xrange(pygame.USEREVENT + 1, pygame.NUMEVENTS):
+            for id in xrange(self.EVENT_MAX, pygame.NUMEVENTS):
                 if id not in self.timers:
                     pygame.time.set_timer(id, time)
                     self.timers[id] = (callback, repeat)
@@ -165,6 +171,9 @@ class GameMode(object):
                     pygame.time.set_timer(timer, 0)
                     del self.timers[timer]
                     break
+
+    def event(self, callback, parameters = ()):
+        pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def pend_click(self, cells, callback):
         self.click_pending = cells
@@ -195,12 +204,15 @@ class GameMode(object):
                     # reset selection dictionary
                     self.click_selected = None
                     self.click_pending = {}
-                    # perform action
-                    self.click_callback(s, cell)
+                    self.event(self.click_callback, (s, cell))
                     break
             if cell in self.click_pending:
-                # one from dictionary is selected
-                self.click_selected = cell
+                # if player doesn't need to select second actor
+                if not self.click_pending[cell]:
+                    self.click_pending = {}
+                    self.click_callback(cell, None)
+                else:
+                    self.click_selected = cell
                 break
 
     def callback_dispatcher(self, s, cell):
@@ -289,6 +301,10 @@ class GameMode(object):
         refresh_units(self.playground)
         # debug
         self.renderer.idle = False
+
+    EVENT_TICKER = pygame.USEREVENT
+    EVENT_USEREVENT = pygame.USEREVENT + 1
+    EVENT_MAX = pygame.USEREVENT + 2
 
 
 if __name__ == "__main__":
