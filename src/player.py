@@ -9,7 +9,6 @@ from grid import Cell
 class Player(object):
     def __init__(self, name, army_id, team_id, game):
         self.name = name
-        self.next = None
         self.remove_in_turn = False
         self.army = army_id
         self.team = team_id

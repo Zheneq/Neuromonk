@@ -83,7 +83,10 @@ class GameMode(object):
                     if clicked:
                         self.select(clicked)
                 if event.type == self.EVENT_USEREVENT:
-                    event.callback(event.parameters)
+                    if event.parameters:
+                        event.callback(event.parameters)
+                    else:
+                        event.callback()
                 if event.type in self.timers:
                     self.timers[event.type][0]()
                     if not self.timers[event.type][1]:
@@ -121,7 +124,7 @@ class GameMode(object):
         self.players[1].next = self.players[0]
         self.player = self.players[0]
 
-        self.buttons['remove'].action = self.player.remove_from_hand
+        self.buttons['remove'].action = self.remove_tile_from_hand
         self.buttons['apply'].action = self.resolve_order
         self.buttons['confirm'].action = self.new_turn
 
@@ -186,7 +189,7 @@ class GameMode(object):
     def resolve_order(self, order):
         if order.type == 'battle':
             self.begin_battle()
-        elif order.type == 'march':
+        elif order.type == 'move':
             self.begin_march()
 
     def begin_march(self):
@@ -194,20 +197,32 @@ class GameMode(object):
         for cell in self.playground.cells:
             if cell.tile is not None and cell.tile.army_id == self.player.army:
                 maneuvers[cell] = cell.tile.maneuver_rate(cell)
-        self.pend_click(maneuvers, self.march)
+        if maneuvers:
+            self.pend_click(maneuvers, self.march)
+        else:
+            self.event(self.tactic)
 
     def march(self, (who, where)):
+        if who in self.action_types:
+            # move mobile unit - change cell in dictionary
+            values = self.action_types[who]
+            del self.action_types[who]
+            self.action_types[where] = values
         self.swap((who, where))
-        self.pend_click(self.action_types, self.callback_dispatcher())
         #TODO make tile's turn
+        self.event(self.tactic)
 
     def begin_battle(self):
         self.battle()
-        self.pend_click(self.action_types, self.callback_dispatcher())
+        self.new_turn()
+
+    def remove_tile_from_hand(self, tile):
+        self.player.remove_in_turn = True
+        self.event(self.tactic)
 
     def new_turn(self):
         self.player = self.player.next
-        self.turn()
+        self.event(self.turn)
 
     def select(self, cells):
         """
@@ -242,20 +257,22 @@ class GameMode(object):
             if self.turn_num > 2 and not self.player.remove_in_turn:
                 # must remove one first
                 print 'You must remove one tile from hand first!'
+                self.event(self.tactic)
             else:
                 s.action()
         elif isinstance(s, Cell):
-            if isinstance(cell, Button):
-                # apply/remove
-                cell.action(s.tile)
-            else:
-                if not cell.tile:
-                    # mobility/march resolve
-                    self.swap((s, cell))
             # remove action from possible ones - it is done
             del self.action_types[s]
-        # reconstruct values in dictionary of actions
-        self.tactic()
+            tile = s.tile
+            if isinstance(cell, Button):
+                # apply/remove
+                self.player.remove_from_hand(tile)
+                cell.action(tile)
+                return
+            else:
+                if not cell.tile:
+                    # mobility resolve
+                    self.march((s, cell))
 
     def turn(self):
         """
@@ -265,9 +282,9 @@ class GameMode(object):
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
-        #DEBUG
-        self.player.hand[0].tile = Order(self.player.army, 'move')
         self.player.remove_in_turn = False
+        #DEBUG
+        self.player.hand[0].tile = Order(self.player.army, 'battle')
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
@@ -339,43 +356,35 @@ class GameMode(object):
 if __name__ == "__main__":
     game = GameMode(2)
 
-    # Zq = Player('Zq', 1, 0, game)
-    # Zq.army_shuffle()
+    # outpost_kicker1 = Unit(0, 5, (1,0,0,0,0,0), None, None, None, [[3, True]])
+    # outpost_kicker1.active = False
+    # outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
+    # outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
+    # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
+    # outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
+    # moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
+    # moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]], mobility=True)
+    # moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
+    # moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
     #
-    # Zq.get_tiles(game.turn_num)
-    # Zq.get_tiles(game.turn_num + 1)
-    # Zq.get_tiles(game.turn_num + 2)
-
-
-    outpost_kicker1 = Unit(0, 5, (1,0,0,0,0,0), None, None, None, [[3, True]])
-    outpost_kicker1.active = False
-    outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
-    outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
-    outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
-    moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]], mobility=True)
-    moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
-    moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
-
-    game.playground.cells[0].tile = outpost_kicker1
-    game.playground.cells[0].turn = 1
-    game.playground.cells[1].tile = moloch_netfighter
-    game.playground.cells[1].turn = 3
-    game.playground.cells[2].tile = moloch_fat
-    game.playground.cells[2].turn = 0
-    game.playground.cells[3].tile = moloch_greaver
-    game.playground.cells[3].turn = 4
-    game.playground.cells[4].tile = outpost_hq
-    game.playground.cells[4].turn = 0
-    game.playground.cells[5].tile = outpost_mothermodule
-    game.playground.cells[5].turn = 1
-    game.playground.cells[6].tile = outpost_kicker2
-    game.playground.cells[6].turn = 1
-    game.playground.cells[13].tile = moloch_hq
-    game.playground.cells[13].turn = 0
-    game.playground.cells[15].tile = outpost_medic
-    game.playground.cells[15].turn = 0
+    # game.playground.cells[0].tile = outpost_kicker1
+    # game.playground.cells[0].turn = 1
+    # game.playground.cells[1].tile = moloch_netfighter
+    # game.playground.cells[1].turn = 3
+    # game.playground.cells[2].tile = moloch_fat
+    # game.playground.cells[2].turn = 0
+    # game.playground.cells[3].tile = moloch_greaver
+    # game.playground.cells[3].turn = 4
+    # game.playground.cells[4].tile = outpost_hq
+    # game.playground.cells[4].turn = 0
+    # game.playground.cells[5].tile = outpost_mothermodule
+    # game.playground.cells[5].turn = 1
+    # game.playground.cells[6].tile = outpost_kicker2
+    # game.playground.cells[6].turn = 1
+    # game.playground.cells[13].tile = moloch_hq
+    # game.playground.cells[13].turn = 0
+    # game.playground.cells[15].tile = outpost_medic
+    # game.playground.cells[15].turn = 0
 
     game.start_game()
     

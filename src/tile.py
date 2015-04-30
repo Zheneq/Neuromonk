@@ -41,6 +41,23 @@ class Tile(Hex):
         """
         self.gfx = None
 
+    def maneuver_rate(self, cell, depth=1, result=None):
+        if not result:
+            result = [cell]
+        if depth > 0:
+            for neighbour in cell.neighbours:
+                if neighbour in result:
+                    #visited cell
+                    continue
+                else:
+                    # unvisited cell
+                    if neighbour is not None and neighbour.tile is None:
+                        # free cell
+                        result.append(neighbour)
+                        self.maneuver_rate(neighbour, depth - 1, result)
+            return result
+        return result
+
 
 class Unit(Tile):
     """
@@ -138,23 +155,6 @@ class Unit(Tile):
                         if not self.row_attack:
                             break
                     neighbour = neighbour.neighbours[ind]
-
-    def maneuver_rate(self, cell, depth=1, result=None):
-        if not result:
-            result = [cell]
-        if depth > 0:
-            for neighbour in cell.neighbours:
-                if neighbour in result:
-                    #visited cell
-                    continue
-                else:
-                    # unvisited cell
-                    if neighbour is not None and neighbour.tile is None:
-                        # free cell
-                        result.append(neighbour)
-                        self.maneuver_rate(neighbour, depth - 1, result)
-            return result
-        return result
 
 
 class Module(Tile):
