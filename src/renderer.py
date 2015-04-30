@@ -16,10 +16,12 @@ class TileRenderer:
         if isinstance(self.tile, Unit):
             self.generate_tile_unit()
             self.generate_tile_hp()
-        if isinstance(self.tile, Module):
+        elif isinstance(self.tile, Module):
             self.generate_tile_module()
             self.generate_tile_hp()
-        if isinstance(self.tile, Medic):
+        elif isinstance(self.tile, Order):
+            self.generate_tile_order()
+        elif isinstance(self.tile, Medic):
             self.generate_tile_medic()
             self.generate_tile_hp()
         return self.tilepic
@@ -33,6 +35,9 @@ class TileRenderer:
         # damage
         if self.tile.injuries > 0:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
+
+    def generate_tile_order(self):
+        self.blit("../res/order_" + self.tile.type + ".png")
 
     def generate_tile_unit(self):
         # nets
