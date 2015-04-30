@@ -2,12 +2,9 @@ __author__ = 'Dandelion'
 from renderer import Renderer
 
 
-class Cell(object):
+class Clickable(object):
     def __init__(self, game):
         self.game = game
-        self.tile = None
-        self.turn = 0
-        self.neighbours = [None for ind in xrange(6)]
         # gfx values
         self.x = 0.0
         self.y = 0.0
@@ -15,6 +12,33 @@ class Cell(object):
         self.maskrect = None
         #
         self.game.add_actor(self)
+        self.invalidate()
+
+    def invalidate(self):
+        self.mask = None
+        self.maskrect = None
+
+
+class Button(Clickable):
+    def __init__(self, game, action, x = 0, y = 0, scale = 1.0):
+        self.scale = scale
+        Clickable.__init__(self, game)
+        self.x = x
+        self.y = y
+        self.action = action
+        self.invalidate()
+
+    def invalidate(self):
+        Clickable.invalidate(self)
+        self.game.renderer.make_button(self)
+
+
+class Cell(Clickable):
+    def __init__(self, game):
+        Clickable.__init__(self, game)
+        self.tile = None
+        self.turn = 0
+        self.neighbours = [None for ind in xrange(6)]
 
     def next(self, ind):
         return self.neighbours[(ind + 1) % 6]
@@ -30,6 +54,10 @@ class Cell(object):
 
     def oppose(self, ind):
         return (ind + 3) % 6
+
+    def invalidate(self):
+        Clickable.invalidate(self)
+        self.game.renderer.make_cell(self)
 
 
 class Grid(object):
@@ -54,6 +82,7 @@ class Grid(object):
                         last_cell.x = cell.x + offset[ind][0]
                         last_cell.y = cell.y + offset[ind][1]
             self.cells.extend(buffer)
+        self.game.renderer.make_board(self)
 
     def link(self, cell1, cell2, direction):
         cell1.neighbours[direction] = cell2

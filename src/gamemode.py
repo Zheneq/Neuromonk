@@ -2,20 +2,13 @@ __author__ = 'zheneq & dandelion'
 
 import pygame
 
-from grid import Grid, Cell
+from grid import Grid, Cell, Button
 from tile import *
 from renderer import Renderer
 from player import Player
 
 from game.battle.buffs import compute_initiative
 from game.battle.battle import give_damage_phase, take_damage_phase, refresh_units
-
-
-class Button(Cell):
-    def __init__(self, game, action):
-        Cell.__init__(self, game)
-        self.action = action
-        game.add_actor(self)
 
 
 class GameMode(object):
@@ -36,14 +29,14 @@ class GameMode(object):
         self.click_pending = {}
         self.click_callback = None
         self.click_selected = None
+        self.renderer = Renderer(self)
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
-        self.renderer = Renderer(self)
         # DEBUG
         self.buttons = {}
-        self.buttons['remove'] = Button(self, None)
-        self.buttons['apply'] = Button(self, None)
-        self.buttons['confirm'] = Button(self, None)
+        self.buttons['remove'] = Button(self, None, 0, 550, .1)
+        self.buttons['apply'] = Button(self, None, 50, 550, .1)
+        self.buttons['confirm'] = Button(self, None, 100, 550, .1)
 
     def start_game(self):
         """
@@ -76,7 +69,7 @@ class GameMode(object):
                     print "Click!"
                     clicked = self.locate(event.pos)
                     for c in clicked:
-                        if c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+                        if isinstance(c, Cell) and c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
                         else: print "\t" + "None"
                     if clicked:
                         self.select(clicked)
@@ -118,15 +111,8 @@ class GameMode(object):
         self.players[0].next = self.players[1]
         self.players[1].next = self.players[0]
         self.player = self.players[0]
-
-        self.set_timer(5000, self.battle)
-
         self.turn()
-
         # self.set_timer(20000, self.end_game)
-        self.pend_click({self.playground.cells[6]: [self.playground.cells[0]],
-                         self.playground.cells[5]: [self.playground.cells[0]],
-                         self.playground.cells[2]: []}, self.test)
 
     def tick(self, deltatime):
         """
@@ -202,18 +188,18 @@ class GameMode(object):
                 # if player doesn't need to select second actor
                 if not self.click_pending[cell]:
                     self.click_pending = {}
-                    self.click_callback(cell, None)
+                    self.event(self.click_callback, (cell, None))
                 else:
                     self.click_selected = cell
                 break
 
-    def callback_dispatcher(self, s, cell):
+    def callback_dispatcher(self, (s, cell)):
         #TODO choose the callback by parameters
         # DEBUG
         if isinstance(s, Button):
             # s.action()
             pass
-        self.test(s, cell)
+        self.test((s, cell))
         # remove action from possible ones - it is done
         del self.action_types[s]
         if s in self.player.get_hand():
@@ -316,7 +302,7 @@ if __name__ == "__main__":
     outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_fat = Unit(1, 5, None, None, None, None, None)
+    moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
     moloch_greaver = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
     moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
