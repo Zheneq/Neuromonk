@@ -328,12 +328,17 @@ class GameMode(object):
     def callback_dispatcher(self, (s, cell)):
         # DEBUG
         if isinstance(s, Button):
-            if self.turn_num > 2 and not self.player.remove_in_turn:
-                # must remove one first
-                print 'You must remove one tile from hand first!'
-                self.event(self.tactic)
+            if s is self.buttons['confirm']:
+                if self.turn_num > 2 and not self.player.remove_in_turn:
+                    # must remove one first
+                    print 'You must remove one tile from hand first!'
+                    self.event(self.tactic)
+                else:
+                    s.action()
             else:
-                s.action()
+                # unlucky draw
+                self.player.refresh_hand()
+                self.event(self.tactic)
         elif isinstance(s, Cell):
             # remove action from possible ones - it is done
             if isinstance(s.tile, Order) and \
@@ -383,8 +388,6 @@ class GameMode(object):
         self.player.remove_in_turn = False
         if self.turn_num < 3:
             self.player.remove_in_turn = True
-        # DEBUG
-        self.player.hand[0].tile = Order(self.player.army, 'pushback')
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
@@ -408,6 +411,14 @@ class GameMode(object):
         """
         for cell in self.playground.cells:
             self.disable_units(cell)
+        if self.turn_num > 2 and \
+                isinstance(self.player.hand[0].tile, Order) and \
+                isinstance(self.player.hand[1].tile, Order) and \
+                isinstance(self.player.hand[2].tile, Order):
+            #TODO implement unlucky draw
+            self.action_types[self.buttons['remove']] = []
+        elif self.buttons['remove'] in self.action_types:
+            del self.action_types[self.buttons['remove']]
         for action_type in self.action_types:
             if action_type in self.playground.cells:
                 # actor is on the battlefield - mobility

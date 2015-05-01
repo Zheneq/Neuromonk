@@ -45,6 +45,14 @@ class Borgo(Army):
         for i in xrange(2):
             scout = Module(self.army_id, 1, {'initiative': [1,1,0,0,0,1]}, {})
             self.army['scout' + str(i)] = scout
+        grenade = Order(self.army_id, 'gernade')
+        self.army['grenade'] = grenade
+        for i in xrange(6):
+            battle = Order(self.army_id, 'battle')
+            self.army['battle' + str(i)] = battle
+        for i in xrange(4):
+            move = Order(self.army_id, 'move')
+            self.army['move' + str(i)] = move
 
 
 class Moloch(Army):
@@ -67,7 +75,7 @@ class Moloch(Army):
         for i in xrange(2):
             armored_hunter = Unit(self.army_id, 1, [1,1,1,1,1,1], None, [1,0,0,0,0,1], None, [[2, True]])
             self.army['armored_hunter' + str(i)] = armored_hunter
-        armored_guard = Unit(self.army_id, 1, None, [0,1,0,0,0,1], None, [1,0,0,0,0,0], [[2, True]])
+        armored_guard = Unit(self.army_id, 1, None, [0,1,0,0,0,1], [1,0,0,0,0,0], None, [[2, True]])
         self.army['armored_guard'] = armored_guard
         guard = Unit(self.army_id, 1, None, [1,0,0,0,0,1], None, None, [[2, True]])
         self.army['guard'] = guard
@@ -90,6 +98,16 @@ class Moloch(Army):
         self.army['officer'] = officer
         scout = Module(self.army_id, 1, {'initiative': [1,0,1,0,1,0]}, {})
         self.army['scout'] = scout
+        airstrike = Order(self.army_id, 'airstrike')
+        self.army['airstrike'] = airstrike
+        for i in xrange(4):
+            battle = Order(self.army_id, 'battle')
+            self.army['battle' + str(i)] = battle
+        move = Order(self.army_id, 'move')
+        self.army['move'] = move
+        for i in xrange(5):
+            pushback = Order(self.army_id, 'pushback')
+            self.army['pushback' + str(i)] = pushback
 
 
 armies = {}

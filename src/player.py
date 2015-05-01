@@ -40,6 +40,12 @@ class Player(object):
     def get_hand(self):
         return filter(lambda x: x.tile, self.hand)
 
+    def refresh_hand(self):
+        self.hand[0].tile = None
+        self.hand[1].tile = None
+        self.hand[2].tile = None
+        self.get_tiles(3)
+
     def remove_from_hand(self, tile):
         for cell in self.hand:
             if cell.tile is tile:
