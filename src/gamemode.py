@@ -7,7 +7,6 @@ from tile import *
 from renderer import Renderer
 from player import Player
 
-from game.battle.buffs import compute_initiative
 from game.battle.battle import Battle
 
 
@@ -210,6 +209,7 @@ class GameMode(object):
 
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
+        self.action_types[self.buttons['confirm']] = []
         self.event(self.tactic)
 
     def new_turn(self):
@@ -245,7 +245,6 @@ class GameMode(object):
     def callback_dispatcher(self, (s, cell)):
         # DEBUG
         if isinstance(s, Button):
-            #TODO begin new turn on 'Confirm' click
             if self.turn_num > 2 and not self.player.remove_in_turn:
                 # must remove one first
                 print 'You must remove one tile from hand first!'
@@ -254,16 +253,24 @@ class GameMode(object):
                 s.action()
         elif isinstance(s, Cell):
             # remove action from possible ones - it is done
-            del self.action_types[s]
-            tile = s.tile
-            if isinstance(cell, Button):
-                # apply/remove
-                self.player.remove_from_hand(tile)
-                cell.action(tile)
-                return
+            if isinstance(s.tile, Order) and \
+                            s.tile.type is 'battle' and \
+                            cell is self.buttons['apply'] and \
+                            not self.player.remove_in_turn:
+                # must remove one before battle start
+                print 'You must remove one tile from hand first!'
+                self.event(self.tactic)
             else:
-                # marsh/mobility resolve
-                self.march((s, cell))
+                del self.action_types[s]
+                tile = s.tile
+                if isinstance(cell, Button):
+                    # apply/remove
+                    self.player.remove_from_hand(tile)
+                    cell.action(tile)
+                    return
+                else:
+                    # marsh/mobility resolve
+                    self.march((s, cell))
 
     def place_hq(self, (who, where)):
         self.swap((who, where))
@@ -291,6 +298,8 @@ class GameMode(object):
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
         self.player.remove_in_turn = False
+        if self.turn_num < 3:
+            self.player.remove_in_turn = True
         #DEBUG
         self.player.hand[0].tile = Order(self.player.army, 'battle')
         # create dictionary of actions
@@ -301,7 +310,8 @@ class GameMode(object):
         for cell in self.player.hand:
             if cell.tile:
                 self.action_types[cell] = []
-        self.action_types[self.buttons['confirm']] = []
+        if self.player.remove_in_turn:
+            self.action_types[self.buttons['confirm']] = []
         # fill dictionary values
         self.tactic()
 

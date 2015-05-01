@@ -6,6 +6,7 @@ class Hex(object):
         self.army_id = id
         self.gfx = None
 
+
 class Order(Hex):
     def __init__(self, id, type):
         Hex.__init__(self, id)
