@@ -15,6 +15,7 @@ class GameMode(object):
     """
     Main game class. Controls game process.
     """
+
     def __init__(self, grid_radius):
         """
         Initializes necessary data.
@@ -56,29 +57,16 @@ class GameMode(object):
             events.extend(pygame.event.get())
             # print "Events:"
             for event in events:
-                # debug print
-                # if event.type < pygame.USEREVENT:
-                #     print "\t" + pygame.event.event_name(event.type)
-                # else:
-                #     print "\t" + pygame.event.event_name(event.type) + "(%d)" % (event.type - pygame.USEREVENT)
-                #
                 if event.type == pygame.QUIT:
                     self.active = False
-                # if event.type == pygame.MOUSEMOTION:
-                #     print "Click!"
-                #     clicked = self.locate(event.pos)
-                #     for c in clicked:
-                #         if c.tile is not None: print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
-                #         else: print "\t" + "None"
-                #     if clicked:
-                #         self.select(clicked)
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     print "Click!"
                     clicked = self.locate(event.pos)
                     for c in clicked:
                         if isinstance(c, Cell) and isinstance(c.tile, Tile):
                             print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
-                        else: print "\t" + "None"
+                        else:
+                            print "\t" + "None"
                     if clicked:
                         self.select(clicked)
                 if self.rot_pending and event.type == pygame.MOUSEMOTION:
@@ -111,6 +99,7 @@ class GameMode(object):
         print "test"
         if b:
             a.tile, b.tile = b.tile, a.tile
+            a.turn, b.turn = b.turn, a.turn
         else:
             print "b is none"
 
@@ -143,7 +132,7 @@ class GameMode(object):
     def add_actor(self, actor):
         self.actors.append(actor)
 
-    def set_timer(self, time, callback, repeat = False):
+    def set_timer(self, time, callback, repeat=False):
         """
         Set a timer.
         :param time: Time in milliseconds. If 0, timer is unset
@@ -152,7 +141,7 @@ class GameMode(object):
         :return: nothing is returned.
         """
         # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
-        #          which one will be unset is unknown.
+        # which one will be unset is unknown.
         if time:
             for id in xrange(self.EVENT_MAX, pygame.NUMEVENTS):
                 if id not in self.timers:
@@ -168,7 +157,7 @@ class GameMode(object):
                     del self.timers[timer]
                     break
 
-    def event(self, callback, parameters = ()):
+    def event(self, callback, parameters=()):
         pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def pend_click(self, cells, callback):
@@ -201,6 +190,48 @@ class GameMode(object):
             self.begin_battle()
         elif order.type == 'move':
             self.begin_march()
+        elif order.type == 'pushback':
+            self.begin_pushback()
+
+    def begin_pushback(self):
+        pushes = {}
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.army_id == self.player.army:
+                # if there is unit to push back we add cell in actions dictionary
+                enemies = []
+                for ind in xrange(len(cell.neighbours)):
+                    neighbour = cell.neighbours[ind]
+                    if neighbour is not None and \
+                                    neighbour.tile is not None and \
+                                    neighbour.tile.army_id != self.player.army:
+                        # neighbour is enemy tile
+                        for retreat_ind in xrange(ind + 5, ind + 8):
+                            if neighbour.neighbours[retreat_ind % 6] is not None and \
+                                            neighbour.neighbours[retreat_ind % 6].tile is None:
+                                # neighbour tile can retreat here
+                                enemies.append(neighbour)
+                                break
+                if enemies:
+                    pushes[cell] = enemies
+        if pushes:
+            self.pend_click(pushes, self.pushback)
+        else:
+            self.event(self.tactic)
+
+    def pushback(self, (who, whom)):
+        retreat_ways = []
+        ind = who.neighbours.index(whom)
+        for retreat_ind in xrange(ind + 5, ind + 8):
+            if whom.neighbours[retreat_ind % 6] is not None and \
+                            whom.neighbours[retreat_ind % 6].tile is None:
+                # whom tile can retreat here
+                retreat_ways.append(whom.neighbours[retreat_ind % 6])
+        possible_retreats = {whom: retreat_ways}
+        self.pend_click(possible_retreats, self.retreat)
+
+    def retreat(self, (who, where)):
+        self.swap((who, where))
+        self.event(self.tactic)
 
     def begin_march(self):
         maneuvers = {}
@@ -274,7 +305,7 @@ class GameMode(object):
             if isinstance(s.tile, Order) and \
                             s.tile.type is 'battle' and \
                             cell is self.buttons['apply'] and \
-                            not self.player.remove_in_turn:
+                    not self.player.remove_in_turn:
                 # must remove one before battle start
                 print 'You must remove one tile from hand first!'
                 self.event(self.tactic)
@@ -318,8 +349,8 @@ class GameMode(object):
         self.player.remove_in_turn = False
         if self.turn_num < 3:
             self.player.remove_in_turn = True
-        #DEBUG
-        self.player.hand[0].tile = Order(self.player.army, 'battle')
+        # DEBUG
+        self.player.hand[0].tile = Order(self.player.army, 'pushback')
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
@@ -381,15 +412,15 @@ if __name__ == "__main__":
     # outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     # outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_medic1 = Medic(1, 1, [1,1,0,0,0,1])
-    moloch_medic2 = Medic(1, 1, [1,1,0,0,0,1])
-    moloch_medic3 = Medic(1, 1, [1,1,0,0,0,1])
-    moloch_medic4 = Medic(1, 1, [1,1,0,0,0,1])
-    moloch_medic5 = Medic(1, 1, [1,1,0,0,0,1])
+    moloch_medic1 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    moloch_medic2 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    moloch_medic3 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    moloch_medic4 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    moloch_medic5 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
     # moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
-    moloch_greaver1 = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[2, True]], mobility=True)
-    moloch_greaver2 = Unit(1, 1, (1,0,0,0,0,0), None, None, None, [[2, True]], mobility=True)
-    borgo_fighter = Unit(2, 1, (1,1,0,0,0,0), None, None, None, [[3, True]])
+    moloch_greaver1 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
+    moloch_greaver2 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
+    borgo_fighter = Unit(2, 1, (1, 1, 0, 0, 0, 0), None, None, None, [[3, True]])
     # moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     # moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
     #
