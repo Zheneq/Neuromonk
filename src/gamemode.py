@@ -98,6 +98,9 @@ class GameMode(object):
     def swap(self, (a, b)):
         print "test"
         if b:
+            # release units disabled by nets of a.tile (if there are)
+            self.release_disable_units(a)
+            # move tile from a to b
             a.tile, b.tile = b.tile, a.tile
             a.turn, b.turn = b.turn, a.turn
         else:
@@ -118,8 +121,8 @@ class GameMode(object):
         self.buttons['apply'].action = self.resolve_order
         self.buttons['confirm'].action = self.new_turn
 
-        # self.place_all_hq()
-        self.turn()
+        self.place_all_hq()
+        # self.turn()
 
     def tick(self, deltatime):
         """
@@ -185,6 +188,36 @@ class GameMode(object):
                 pass
         return result
 
+    def release_disable_units(self, cell):
+        if isinstance(cell.tile, Unit) and cell.tile.nets:
+            for ind in xrange(len(cell.neighbours)):
+                if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
+                            cell.neighbours[ind] is not None and \
+                            cell.neighbours[ind].tile is not None and \
+                            cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                    # release unit if there is no other net fighters
+                    neighbour = cell.neighbours[ind]
+                    for ind in xrange(len(neighbour.neighbours)):
+                        if cell.neighbours[ind] is not None and \
+                                    cell.neighbours[ind].tile is not None and \
+                                    cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
+                                    isinstance(cell.neighbours[ind].tile, Unit) and \
+                                    cell.neighbours[ind].tile.nets and \
+                                    cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
+                            break
+                    else:
+                        neighbour.tile.active = True
+
+    def disable_units(self, cell):
+        if isinstance(cell.tile, Unit) and cell.tile.active and cell.tile.nets:
+            for ind in xrange(len(cell.neighbours)):
+                if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
+                            cell.neighbours[ind] is not None and \
+                            cell.neighbours[ind].tile is not None and \
+                            cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                    # disable unit
+                    cell.neighbours[ind].tile.active = False
+
     def resolve_order(self, order):
         if order.type == 'battle':
             self.begin_battle()
@@ -203,6 +236,7 @@ class GameMode(object):
                     neighbour = cell.neighbours[ind]
                     if neighbour is not None and \
                                     neighbour.tile is not None and \
+                                    neighbour.tile.active and \
                                     neighbour.tile.army_id != self.player.army:
                         # neighbour is enemy tile
                         for retreat_ind in xrange(ind + 5, ind + 8):
@@ -354,7 +388,10 @@ class GameMode(object):
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.army_id == self.player.army and cell.tile.mobile:
+            if cell.tile is not None and \
+                    cell.tile.active and \
+                    cell.tile.army_id == self.player.army and \
+                    cell.tile.mobile:
                 self.action_types[cell] = []
         for cell in self.player.hand:
             if cell.tile:
@@ -369,6 +406,8 @@ class GameMode(object):
         Constructs values for keys in dictionary of player's actions.
         :return: nothing is returned.
         """
+        for cell in self.playground.cells:
+            self.disable_units(cell)
         for action_type in self.action_types:
             if action_type in self.playground.cells:
                 # actor is on the battlefield - mobility
@@ -395,7 +434,12 @@ class GameMode(object):
         # prepare to battle
         # find max initiative
         # battle
-        battle = Battle(self.playground, self.pend_click, self.event, self.renderer, self.new_turn)
+        battle = Battle(self.playground,
+                        self.pend_click,
+                        self.release_disable_units,
+                        self.event,
+                        self.renderer,
+                        self.new_turn)
         battle.battle_phase()
 
     EVENT_TICKER = pygame.USEREVENT
@@ -412,34 +456,34 @@ if __name__ == "__main__":
     # outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
     # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
     # outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
-    moloch_medic1 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
-    moloch_medic2 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
-    moloch_medic3 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
-    moloch_medic4 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
-    moloch_medic5 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    # moloch_medic1 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    # moloch_medic2 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    # moloch_medic3 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    # moloch_medic4 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
+    # moloch_medic5 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
     # moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
-    moloch_greaver1 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
-    moloch_greaver2 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
-    borgo_fighter = Unit(2, 1, (1, 1, 0, 0, 0, 0), None, None, None, [[3, True]])
+    # moloch_greaver1 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
+    # moloch_greaver2 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
+    # borgo_fighter = Unit(2, 1, (1, 1, 0, 0, 0, 0), None, None, None, [[3, True]])
     # moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     # moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
     #
-    game.playground.cells[0].tile = moloch_medic1
-    game.playground.cells[0].turn = 2
-    game.playground.cells[2].tile = moloch_medic2
-    game.playground.cells[2].turn = 5
-    game.playground.cells[1].tile = moloch_medic3
-    game.playground.cells[1].turn = 3
-    game.playground.cells[6].tile = moloch_medic4
-    game.playground.cells[6].turn = 2
-    game.playground.cells[5].tile = moloch_medic5
-    game.playground.cells[5].turn = 1
-    game.playground.cells[3].tile = moloch_greaver1
-    game.playground.cells[3].turn = 1
-    game.playground.cells[4].tile = moloch_greaver2
-    game.playground.cells[4].turn = 1
-    game.playground.cells[13].tile = borgo_fighter
-    game.playground.cells[13].turn = 5
+    # game.playground.cells[0].tile = moloch_medic1
+    # game.playground.cells[0].turn = 2
+    # game.playground.cells[2].tile = moloch_medic2
+    # game.playground.cells[2].turn = 5
+    # game.playground.cells[1].tile = moloch_medic3
+    # game.playground.cells[1].turn = 3
+    # game.playground.cells[6].tile = moloch_medic4
+    # game.playground.cells[6].turn = 2
+    # game.playground.cells[5].tile = moloch_medic5
+    # game.playground.cells[5].turn = 1
+    # game.playground.cells[3].tile = moloch_greaver1
+    # game.playground.cells[3].turn = 1
+    # game.playground.cells[4].tile = moloch_greaver2
+    # game.playground.cells[4].turn = 1
+    # game.playground.cells[13].tile = borgo_fighter
+    # game.playground.cells[13].turn = 5
     # game.playground.cells[15].tile = outpost_medic
     # game.playground.cells[15].turn = 0
 

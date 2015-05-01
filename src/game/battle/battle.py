@@ -11,12 +11,13 @@ class Battle(object):
     Class for support info in battle.
     Stores current initiative phase, the battlefield and support info for event performing.
     """
-    def __init__(self, playground, pend_click, event, renderer, continue_game):
+    def __init__(self, playground, pend_click, releaser, event, renderer, continue_game):
         """
         Battle constructor.
         :param playground: battlefield.
         :param pend_click: function assigning callback to dictionary of actors.
         :param event: event poster.
+        :param releaser: function releasing disable by net units.
         :param renderer: for debug reasons (don't know why).
         :param continue_game: function continuing game after battle.
         """
@@ -24,6 +25,7 @@ class Battle(object):
 
         self.pend_click = pend_click
         self.event = event
+        self.release_disable_units = releaser
         self.renderer = renderer
         self.continue_game = continue_game
 
@@ -128,24 +130,7 @@ class Battle(object):
                     cell.tile.taken_damage = []
                 else:
                     # if died unit is net fighter release all units caught by him
-                    if isinstance(cell.tile, Unit) and cell.tile.nets:
-                        for ind in xrange(len(cell.neighbours)):
-                            if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
-                                        cell.neighbours[ind] is not None and \
-                                        cell.neighbours[ind].tile is not None and \
-                                        cell.neighbours[ind].tile.army_id != cell.tile.army_id:
-                                # release unit if there is no other net fighters
-                                neighbour = cell.neighbours[ind]
-                                for ind in xrange(len(neighbour.neighbours)):
-                                    if cell.neighbours[ind] is not None and \
-                                                cell.neighbours[ind].tile is not None and \
-                                                cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                                                isinstance(cell.neighbours[ind].tile, Unit) and \
-                                                cell.neighbours[ind].tile.nets and \
-                                                cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
-                                        break
-                                else:
-                                    neighbour.tile.active = True
+                    self.release_disable_units(cell)
                     cell.tile = None
         self.initiative_phase -= 1
         if self.initiative_phase < 0:
