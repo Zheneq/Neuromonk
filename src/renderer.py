@@ -108,14 +108,14 @@ class TileRenderer:
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(pic, picrect)
 
-    def generate_tile_fx(self, tile):
+    def generate_tile_fx(self, tile, turn):
         self.tile = tile
         self.rotation = 0
         # TODO: Size of the surface shouldn't be a numerical constant
         self.tilepic = pygame.Surface((500, 500), pygame.SRCALPHA)
-        picrect = self.tile.gfx.get_rect()
+        picrect = self.tile.gfx[turn].get_rect()
         picrect.center = self.tilepic.get_rect().center
-        self.tilepic.blit(self.tile.gfx, picrect)
+        self.tilepic.blit(self.tile.gfx[turn], picrect)
         if not isinstance(tile, Tile): return self.tilepic
         self.generate_tile_damage()
         if not self.tile.active:
@@ -217,9 +217,9 @@ class Renderer:
                 tile_gen = TileRenderer()
                 if cell.tile is None:
                     continue
-                if cell.tile.gfx is None:
-                    cell.tile.gfx = tile_gen.generate_tile(cell.tile, cell.turn)
-                tilepic = tile_gen.generate_tile_fx(cell.tile)
+                if cell.turn not in cell.tile.gfx:
+                    cell.tile.gfx[cell.turn] = tile_gen.generate_tile(cell.tile, cell.turn)
+                tilepic = tile_gen.generate_tile_fx(cell.tile, cell.turn)
                 cellpicrect = tilepic.get_rect()
                 cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
                                       gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
@@ -258,6 +258,13 @@ class Renderer:
                     cellpicrect.center = (grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0],
                                           grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1])
                     self.boardbackbuffer.blit(clickable.gfx["highlighted"], cellpicrect)
+        elif self.game.rot_pending:
+            if self.game.rot_pending in grid.cells:
+                cellpicrect = self.game.rot_pending.gfx["selected"].get_rect()
+                cellpicrect.center = (grid.gfx_indent[0] + self.game.rot_pending.x * grid.gfx_multiplier[0],
+                                      grid.gfx_indent[1] + self.game.rot_pending.y * grid.gfx_multiplier[1])
+                self.boardbackbuffer.blit(self.game.rot_pending.gfx["selected"], cellpicrect)
+
         # rendering tiles
         self.render_tiles(grid)
         # showing it on the screen
@@ -272,9 +279,9 @@ class Renderer:
         for cell in grid.cells:
             if cell.tile is None:
                 continue
-            if cell.tile.gfx is None:
-                cell.tile.gfx = tile_gen.generate_tile(cell.tile, cell.turn)
-            pic = tile_gen.generate_tile_fx(cell.tile)
+            if cell.turn not in cell.tile.gfx:
+                cell.tile.gfx[cell.turn] = tile_gen.generate_tile(cell.tile, cell.turn)
+            pic = tile_gen.generate_tile_fx(cell.tile, cell.turn)
             cellpicrect = pic.get_rect()
             cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
                                   grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])

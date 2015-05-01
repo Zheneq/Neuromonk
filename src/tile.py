@@ -4,7 +4,7 @@ __author__ = 'dandelion'
 class Hex(object):
     def __init__(self, id):
         self.army_id = id
-        self.gfx = None
+        self.gfx = {}
 
 
 class Order(Hex):
@@ -33,7 +33,6 @@ class Tile(Hex):
         self.mobile = mobility
         self.active = True
         self.injuries = 0
-        self.gfx = None
 
     def invalidate(self):
         """
