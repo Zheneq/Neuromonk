@@ -1,6 +1,7 @@
 __author__ = 'zheneq & dandelion'
 
 import pygame
+import math
 
 from grid import Grid, Cell, Button
 from tile import *
@@ -29,6 +30,7 @@ class GameMode(object):
         self.click_pending = {}
         self.click_callback = None
         self.click_selected = None
+        self.rot_pending = None
         self.renderer = Renderer(self)
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
@@ -80,6 +82,8 @@ class GameMode(object):
                         else: print "\t" + "None"
                     if clicked:
                         self.select(clicked)
+                if self.rot_pending and event.type == pygame.MOUSEMOTION:
+                    self.rotate_tile(event.pos)
                 if event.type == self.EVENT_USEREVENT:
                     if event.parameters:
                         event.callback(event.parameters)
@@ -169,8 +173,19 @@ class GameMode(object):
         pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def pend_click(self, cells, callback):
+        self.rot_pending = None
         self.click_pending = cells
         self.click_callback = callback
+
+    def pend_rotation(self, cell, callback):
+        self.click_pending = None
+        self.rot_pending = cell
+        self.click_callback = callback
+
+    def rotate_tile(self, mousepos):
+        x = self.rot_pending.maskrect.center[0] - mousepos[0]
+        y = self.rot_pending.maskrect.center[1] - mousepos[1]
+        self.rot_pending.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
 
     def locate(self, pos):
         result = []
@@ -205,8 +220,7 @@ class GameMode(object):
             del self.action_types[who]
             self.action_types[where] = values
         self.swap((who, where))
-        #TODO make tile's turn
-        self.event(self.tactic)
+        self.pend_rotation(where, self.tactic)
 
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
@@ -222,25 +236,29 @@ class GameMode(object):
         :param cells: cells clicked by player.
         :return: nothing is returned.
         """
-        for cell in cells:
-            if self.click_selected is not None:
-                # there is tile from dictionary selected by previous click
-                if cell in self.click_pending[self.click_selected]:
-                    # there is pair (source, dist) of action
-                    s = self.click_selected
-                    # reset selection dictionary
-                    self.click_selected = None
-                    self.click_pending = {}
-                    self.event(self.click_callback, (s, cell))
+        if self.rot_pending:
+            self.rot_pending = None
+            self.event(self.click_callback)
+        else:
+            for cell in cells:
+                if self.click_selected is not None:
+                    # there is tile from dictionary selected by previous click
+                    if cell in self.click_pending[self.click_selected]:
+                        # there is pair (source, dist) of action
+                        s = self.click_selected
+                        # reset selection dictionary
+                        self.click_selected = None
+                        self.click_pending = {}
+                        self.event(self.click_callback, (s, cell))
+                        break
+                if cell in self.click_pending:
+                    # if player doesn't need to select second actor
+                    if not self.click_pending[cell]:
+                        self.click_pending = {}
+                        self.event(self.click_callback, (cell, None))
+                    else:
+                        self.click_selected = cell
                     break
-            if cell in self.click_pending:
-                # if player doesn't need to select second actor
-                if not self.click_pending[cell]:
-                    self.click_pending = {}
-                    self.event(self.click_callback, (cell, None))
-                else:
-                    self.click_selected = cell
-                break
 
     def callback_dispatcher(self, (s, cell)):
         # DEBUG
