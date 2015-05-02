@@ -45,7 +45,7 @@ class Borgo(Army):
         for i in xrange(2):
             scout = Module(self.army_id, 1, {'initiative': [1,1,0,0,0,1]}, {})
             self.army['scout' + str(i)] = scout
-        grenade = Order(self.army_id, 'gernade')
+        grenade = Order(self.army_id, 'grenade')
         self.army['grenade'] = grenade
         for i in xrange(6):
             battle = Order(self.army_id, 'battle')

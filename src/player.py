@@ -51,7 +51,6 @@ class Player(object):
             if cell.tile is tile:
                 cell.tile = None
                 break
-        self.remove_in_turn = True
 
     def get_tiles(self, turn):
         turn = min(3, turn)

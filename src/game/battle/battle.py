@@ -11,12 +11,14 @@ class Battle(object):
     Class for support info in battle.
     Stores current initiative phase, the battlefield and support info for event performing.
     """
-    def __init__(self, playground, pend_click, releaser, event, renderer, continue_game):
+    def __init__(self, playground, pend_click, releaser, event, timer, period, renderer, continue_game):
         """
         Battle constructor.
         :param playground: battlefield.
         :param pend_click: function assigning callback to dictionary of actors.
         :param event: event poster.
+        :param timer: function creating delay before action.
+        :param period: time of delay in milliseconds.
         :param releaser: function releasing disable by net units.
         :param renderer: for debug reasons (don't know why).
         :param continue_game: function continuing game after battle.
@@ -25,6 +27,8 @@ class Battle(object):
 
         self.pend_click = pend_click
         self.event = event
+        self.set_timer = timer
+        self.period = period
         self.release_disable_units = releaser
         self.renderer = renderer
         self.continue_game = continue_game
@@ -136,4 +140,4 @@ class Battle(object):
         if self.initiative_phase < 0:
             self.event(self.end_battle)
         else:
-            self.event(self.battle_phase)
+            self.set_timer(self.period, self.battle_phase)

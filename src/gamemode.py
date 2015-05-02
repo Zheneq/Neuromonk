@@ -192,18 +192,18 @@ class GameMode(object):
         if isinstance(cell.tile, Unit) and cell.tile.nets:
             for ind in xrange(len(cell.neighbours)):
                 if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
-                            cell.neighbours[ind] is not None and \
-                            cell.neighbours[ind].tile is not None and \
-                            cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                                cell.neighbours[ind] is not None and \
+                                cell.neighbours[ind].tile is not None and \
+                                cell.neighbours[ind].tile.army_id != cell.tile.army_id:
                     # release unit if there is no other net fighters
                     neighbour = cell.neighbours[ind]
                     for ind in xrange(len(neighbour.neighbours)):
                         if cell.neighbours[ind] is not None and \
-                                    cell.neighbours[ind].tile is not None and \
-                                    cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                                    isinstance(cell.neighbours[ind].tile, Unit) and \
-                                    cell.neighbours[ind].tile.nets and \
-                                    cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
+                                        cell.neighbours[ind].tile is not None and \
+                                        cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
+                                isinstance(cell.neighbours[ind].tile, Unit) and \
+                                cell.neighbours[ind].tile.nets and \
+                                cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
                             break
                     else:
                         neighbour.tile.active = True
@@ -212,9 +212,9 @@ class GameMode(object):
         if isinstance(cell.tile, Unit) and cell.tile.active and cell.tile.nets:
             for ind in xrange(len(cell.neighbours)):
                 if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
-                            cell.neighbours[ind] is not None and \
-                            cell.neighbours[ind].tile is not None and \
-                            cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                                cell.neighbours[ind] is not None and \
+                                cell.neighbours[ind].tile is not None and \
+                                cell.neighbours[ind].tile.army_id != cell.tile.army_id:
                     # disable unit
                     cell.neighbours[ind].tile.active = False
 
@@ -229,14 +229,14 @@ class GameMode(object):
     def begin_pushback(self):
         pushes = {}
         for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.army_id == self.player.army:
+            if cell.tile is not None and cell.tile.active and cell.tile.army_id == self.player.army:
                 # if there is unit to push back we add cell in actions dictionary
                 enemies = []
                 for ind in xrange(len(cell.neighbours)):
                     neighbour = cell.neighbours[ind]
                     if neighbour is not None and \
                                     neighbour.tile is not None and \
-                                    neighbour.tile.active and \
+                            neighbour.tile.active and \
                                     neighbour.tile.army_id != self.player.army:
                         # neighbour is enemy tile
                         for retreat_ind in xrange(ind + 5, ind + 8):
@@ -270,7 +270,7 @@ class GameMode(object):
     def begin_march(self):
         maneuvers = {}
         for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.army_id == self.player.army:
+            if cell.tile is not None and cell.tile.active and cell.tile.army_id == self.player.army:
                 maneuvers[cell] = cell.tile.maneuver_rate(cell)
         if maneuvers:
             self.pend_click(maneuvers, self.march)
@@ -344,7 +344,7 @@ class GameMode(object):
             if isinstance(s.tile, Order) and \
                             s.tile.type is 'battle' and \
                             cell is self.buttons['apply'] and \
-                    not self.player.remove_in_turn:
+                            not self.player.remove_in_turn:
                 # must remove one before battle start
                 print 'You must remove one tile from hand first!'
                 self.event(self.tactic)
@@ -409,13 +409,17 @@ class GameMode(object):
         Constructs values for keys in dictionary of player's actions.
         :return: nothing is returned.
         """
+        # if all battlefield is full begin the battle
+        if not self.playground.get_free_cells():
+            self.begin_battle()
+            return
         for cell in self.playground.cells:
             self.disable_units(cell)
         if self.turn_num > 2 and \
                 isinstance(self.player.hand[0].tile, Order) and \
                 isinstance(self.player.hand[1].tile, Order) and \
                 isinstance(self.player.hand[2].tile, Order):
-            #TODO implement unlucky draw
+            # unlucky draw
             self.action_types[self.buttons['remove']] = []
         elif self.buttons['remove'] in self.action_types:
             del self.action_types[self.buttons['remove']]
@@ -426,10 +430,13 @@ class GameMode(object):
             elif action_type in self.player.hand:
                 # actor is in hand - it can be removed
                 self.action_types[action_type] = [self.buttons['remove']]
-                if isinstance(action_type.tile, Tile):
+                if isinstance(action_type.tile, Tile) and \
+                            (len(self.playground.get_free_cells()) > 1 or self.player.remove_in_turn):
                     # this is tile - it can be placed on the battlefield
+                    # placing new tile on the playground won't start the battle
                     self.action_types[action_type].extend(self.playground.get_free_cells())
-                else:
+                elif isinstance(action_type.tile, Order) and \
+                            (action_type.tile.type != 'battle' or self.player.remove_in_turn):
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
         if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:
@@ -437,7 +444,7 @@ class GameMode(object):
             self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
         self.pend_click(self.action_types, self.callback_dispatcher)
 
-    def begin_battle(self):
+    def begin_battle(self, period=3000):
         """
         Computes units interaction during battle.
         :return: nothing is returned.
@@ -449,9 +456,11 @@ class GameMode(object):
                         self.pend_click,
                         self.release_disable_units,
                         self.event,
+                        self.set_timer,
+                        period,
                         self.renderer,
                         self.new_turn)
-        battle.battle_phase()
+        self.set_timer(period, battle.battle_phase)
 
     EVENT_TICKER = pygame.USEREVENT
     EVENT_USEREVENT = pygame.USEREVENT + 1
@@ -499,4 +508,3 @@ if __name__ == "__main__":
     # game.playground.cells[15].turn = 0
 
     game.start_game()
-    
