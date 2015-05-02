@@ -221,10 +221,36 @@ class GameMode(object):
     def resolve_order(self, order):
         if order.type == 'battle':
             self.begin_battle()
+        if order.type == 'airstrike':
+            self.begin_airstrike()
         elif order.type == 'move':
             self.begin_march()
         elif order.type == 'pushback':
             self.begin_pushback()
+
+    def begin_airstrike(self):
+        targets = {}
+        for cell in self.playground.cells:
+            if None not in cell.neighbours:
+                targets[cell] = []
+        self.pend_click(targets, self.airstrike)
+
+    def airstrike(self, (target, empty)):
+        if target.tile is not None and not isinstance(target.tile, Base):
+            target.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': None})
+        for cell in target.neighbours:
+            if cell.tile is not None and not isinstance(cell.tile, Base):
+                cell.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': None})
+        battle = Battle(self.playground,
+                        self.pend_click,
+                        self.release_disable_units,
+                        self.event,
+                        self.set_timer,
+                        2000,
+                        self.renderer,
+                        self.tactic,
+                        0)
+        self.set_timer(2000, battle.take_damage_phase)
 
     def begin_pushback(self):
         pushes = {}

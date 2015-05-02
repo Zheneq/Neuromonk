@@ -11,7 +11,16 @@ class Battle(object):
     Class for support info in battle.
     Stores current initiative phase, the battlefield and support info for event performing.
     """
-    def __init__(self, playground, pend_click, releaser, event, timer, period, renderer, continue_game):
+    def __init__(self,
+                 playground,
+                 pend_click,
+                 releaser,
+                 event,
+                 timer,
+                 period,
+                 renderer,
+                 continue_game,
+                 init_phase=1000):
         """
         Battle constructor.
         :param playground: battlefield.
@@ -22,6 +31,7 @@ class Battle(object):
         :param releaser: function releasing disable by net units.
         :param renderer: for debug reasons (don't know why).
         :param continue_game: function continuing game after battle.
+        :param init_phase: phase of battle in special cases (such as airstrike, sniper, grenade, etc.).
         """
         self.battlefield = playground
 
@@ -33,18 +43,21 @@ class Battle(object):
         self.renderer = renderer
         self.continue_game = continue_game
 
-        self.initiative_phase = 0
-        for cell in self.battlefield.cells:
-            if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
-                # reset additional attacks
-                cell.tile.add_attacks_used = 0
-                # reset initiative
-                for initiative_ind in xrange(len(cell.tile.initiative)):
-                    cell.tile.initiative[initiative_ind][1] = True
-                # find max initiative to start form
-                initiative_modificator = compute_initiative(cell)
-                if cell.tile.initiative[0][0] + initiative_modificator > self.initiative_phase:
-                    self.initiative_phase = cell.tile.initiative[0][0] + initiative_modificator
+        if init_phase == 1000:
+            self.initiative_phase = 0
+            for cell in self.battlefield.cells:
+                if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
+                    # reset additional attacks
+                    cell.tile.add_attacks_used = 0
+                    # reset initiative
+                    for initiative_ind in xrange(len(cell.tile.initiative)):
+                        cell.tile.initiative[initiative_ind][1] = True
+                    # find max initiative to start form
+                    initiative_modificator = compute_initiative(cell)
+                    if cell.tile.initiative[0][0] + initiative_modificator > self.initiative_phase:
+                        self.initiative_phase = cell.tile.initiative[0][0] + initiative_modificator
+        else:
+            self.initiative_phase = init_phase
 
     def battle_phase(self):
         """
