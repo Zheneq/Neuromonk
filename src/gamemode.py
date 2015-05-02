@@ -102,7 +102,7 @@ class GameMode(object):
             self.release_disable_units(a)
             # move tile from a to b
             a.tile, b.tile = b.tile, a.tile
-            a.turn, b.turn = b.turn, a.turn
+            a.turn, b.turn = 0, a.turn
         else:
             print "b is none"
 
@@ -238,20 +238,26 @@ class GameMode(object):
         self.pend_click(targets, self.airstrike)
 
     def airstrike(self, (target, empty)):
+        base_cell = None
+        for cell in self.playground.cells:
+            if cell.tile is not None and cell.tile.army_id == self.player.army and isinstance(cell.tile, Base):
+                base_cell = cell
+                break
         if target.tile is not None and not isinstance(target.tile, Base):
-            target.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': None})
+            target.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': base_cell})
         for cell in target.neighbours:
             if cell.tile is not None and not isinstance(cell.tile, Base):
-                cell.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': None})
+                cell.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': base_cell})
         battle = Battle(self.playground,
                         self.pend_click,
+                        self.buttons,
                         self.release_disable_units,
                         self.event,
                         self.set_timer,
                         2000,
                         self.renderer,
                         self.tactic,
-                        0)
+                        init_phase=0)
         self.set_timer(2000, battle.take_damage_phase)
 
     def begin_grenade(self):
@@ -430,6 +436,12 @@ class GameMode(object):
         Initialize player's hand and actions he can make.
         :return: nothing is returned.
         """
+        for player in self.players:
+            if player.hq is None:
+                print player.name + '\'s HQ is destroyed'
+                print 'Congratulations,', player.next.name + '!!!'
+                self.set_timer(3000, self.end_game)
+                return
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
@@ -502,6 +514,7 @@ class GameMode(object):
         # battle
         battle = Battle(self.playground,
                         self.pend_click,
+                        self.buttons,
                         self.release_disable_units,
                         self.event,
                         self.set_timer,

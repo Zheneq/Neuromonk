@@ -19,17 +19,20 @@ class Tile(Hex):
     is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
     healing unit.
     """
-    def __init__(self, id, hp, mobility=False):
+    def __init__(self, id, hp, name, mobility=False):
         """
         Tile constructor.
         :param id: id of army this unit belongs to.
         :param hp: HP of unit.
+        :param name: name of tile.
+        :param mobility: ability to move without special order.
         :return: nothing is returned.
         """
         Hex.__init__(self, id)
         self.taken_damage = []
         self.active_medics = []
         self.hp = hp
+        self.name = name
         self.mobile = mobility
         self.active = True
         self.injuries = 0
@@ -63,12 +66,13 @@ class Unit(Tile):
     """
     Standard unit class. Besides of common tile info stores initiative, attack, armor and using nets.
     """
-    def __init__(self, id, hp, melee, range, armor, nets, initiative,
-                 row_attack=False, melee_buff=True, range_buff=True, mobility=False):
+    def __init__(self, id, hp, name, melee, range, armor, nets, initiative,
+                 row_attack=False, melee_buff=True, range_buff=True, mobility=False, unique_action=None):
         """
         Unit constructor.
         :param id: id of army this unit belongs to.
         :param hp: HP of unit.
+        :param name: name of unit.
         :param melee: list of melee damage unit can deal. Every item of list is wounds in one direction.
         None if unit can't attack in melee.
         :param range: list of range damage unit can deal. Similar to 'melee' parameter.
@@ -84,9 +88,10 @@ class Unit(Tile):
         :param melee_buff: boolean flag set when unit can be influenced by melee damage modificators.
         :param range_buff: boolean flag set when unit can be influenced by range damage modificators.
         :param mobility: boolean flag set when unit is mobile.
+        :param unique_action: unique action unit can do.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp, mobility=mobility)
+        Tile.__init__(self, id, hp, name, mobility=mobility)
         self.initiative = initiative
         self.melee = melee
         self.range = range
@@ -96,6 +101,8 @@ class Unit(Tile):
         self.can_melee_buffed = melee_buff
         self.can_range_buffed = range_buff
         self.add_attacks_used = 0
+        self.unique_attack = unique_action
+        self.attack = self.usual_attack
 
     def damage(self, direction):
         """
@@ -124,7 +131,7 @@ class Unit(Tile):
             return self.armor[(direction + 3) % 6]
         return 0
 
-    def attack(self, cell, damage_modificator):
+    def usual_attack(self, cell, damage_modificator):
         """
         Performs unit's action during battle.
         :param cell: cell where unit is on the battlefield.
@@ -140,7 +147,7 @@ class Unit(Tile):
             if damage['melee'] > 0:
                 if cell.neighbours[ind] is not None and cell.neighbours[ind].tile is not None:
                     if cell.neighbours[ind].tile.army_id != self.army_id:
-                        damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': self}
+                        damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': cell}
                         cell.neighbours[ind].tile.taken_damage.append(damage_to_unit)
             if damage['range'] > 0:
                 neighbour = cell.neighbours[ind]
@@ -152,7 +159,7 @@ class Unit(Tile):
                         if range_damage > 0:
                             damage_to_unit = {'value': range_damage,
                                               'type': 'range',
-                                              'instigator': self}
+                                              'instigator': cell}
                             neighbour.tile.taken_damage.append(damage_to_unit)
                         if not self.row_attack:
                             break
@@ -163,16 +170,17 @@ class Module(Tile):
     """
     Standard module class. Modules buff allies and debuff enemies
     """
-    def __init__(self, id, hp, buff, debuff, mobility=False):
+    def __init__(self, id, hp, name, buff, debuff, mobility=False):
         """
         Module constructor.
         :param id: id of army this module belongs to.
         :param hp: HP of module.
+        :param name: name of module.
         :param buff: dictionary of buffs of module. Key is type of bonus, value is list of bonus' values in directions.
         :param debuff: dictionary of debuffs of module. Similar to 'buff' parameter.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp, mobility=mobility)
+        Tile.__init__(self, id, hp, name, mobility=mobility)
         self.buff = buff
         self.debuff = debuff
 
@@ -203,15 +211,16 @@ class Medic(Tile):
     """
     Medic class. Stores directions medic can heal allies.
     """
-    def __init__(self, id, hp, direction, mobility=False):
+    def __init__(self, id, hp, name, direction, mobility=False):
         """
         Medic constructor.
         :param id: id of army this medic belongs to.
         :param hp: HP of medic.
+        :param name: name of medic.
         :param direction: list of directions medic can heal. Item is 1 if medic can heal and 0 otherwise.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp, mobility=mobility)
+        Tile.__init__(self, id, hp, name, mobility=mobility)
         self.direction = direction
 
 
@@ -219,11 +228,12 @@ class Base(Unit, Module):
     """
     Standard Headquarter class. HQ has features of unit (it can move and fight) and module (it can buff).
     """
-    def __init__(self, id, hp, melee, initiative, buff, debuff, melee_buff=True, mobility=False):
+    def __init__(self, id, hp, name, melee, initiative, buff, debuff, melee_buff=True, mobility=False):
         """
         Base constructor.
         :param id: id of army this unit belongs to.
         :param hp: HP of unit.
+        :param name: name of HQ.
         :param melee: list of melee damage HQ can deal. Every item of list is wounds in one direction.
         None if HQ can't attack in melee.
         :param initiative: list of initiative phases HQ can action in battle. Every item of list is pair
@@ -234,12 +244,9 @@ class Base(Unit, Module):
         :param melee_buff: boolean flag set when HQ can be influenced by melee damage modificators.
         :return: nothing is returned.
         """
-        Unit.__init__(self, id, hp, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=False)
-        Module.__init__(self, id, hp, buff, debuff, mobility=False)
+        Unit.__init__(self, id, hp, name, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=False)
+        Module.__init__(self, id, hp, name, buff, debuff, mobility=False)
 
 
 if __name__ == "__main__":
-    borgo_mutant1 = Unit(0, (2,1,0,0,0,1), 1, 2)
-    borgo_mutant2 = Unit(0, (2,1,0,0,0,1), 1, 2)
-    borgo_killer1 = Unit(0, (3,0,0,0,0,0), 2, 2)
-    moloch_hunter1 = Unit(1, (1,1,1,1,1,1), 1, 3)
+    pass
