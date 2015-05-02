@@ -257,7 +257,7 @@ class GameMode(object):
                         2000,
                         self.renderer,
                         self.tactic,
-                        0)
+                        init_phase=0)
         self.set_timer(2000, battle.take_damage_phase)
 
     def begin_grenade(self):

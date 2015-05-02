@@ -22,7 +22,6 @@ class Battle(object):
                  period,
                  renderer,
                  continue_game,
-                 choose_action_for_unit,
                  init_phase=1000):
         """
         Battle constructor.
@@ -47,7 +46,6 @@ class Battle(object):
         self.release_disable_units = releaser
         self.renderer = renderer
         self.continue_game = continue_game
-        self.choose_action_for_unit = choose_action_for_unit
 
         self.actions = {}
 
@@ -89,7 +87,7 @@ class Battle(object):
         self.event(self.continue_game)
 
     def add_choice(self, cell):
-        if cell.tile.unique_action:
+        if cell.tile.unique_attack:
             # make choice what actions unit will do in this phase
             self.actions[cell] = [self.buttons['apply'], self.buttons['confirm']]
 
@@ -103,7 +101,7 @@ class Battle(object):
 
     def choose_action_for_unit(self, (unit_cell, button)):
         del self.actions[unit_cell]
-        if button.type is 'apply':
+        if button is self.buttons['apply']:
             unit_cell.tile.attack = unit_cell.cell.unique_attack
         else:
             unit_cell.tile.attack = unit_cell.cell.usual_attack
