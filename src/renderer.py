@@ -13,7 +13,9 @@ class TileRenderer:
         self.tilepic = pygame.image.load("../res/tile" + str(tile.army_id) + ".png")
         self.tile = tile
         self.rotation = -60.0 * rotation
-        if isinstance(self.tile, Unit):
+        if isinstance(self.tile, Base):
+            self.generate_tile_base()
+        elif isinstance(self.tile, Unit):
             self.generate_tile_unit()
             self.generate_tile_hp()
         elif isinstance(self.tile, Module):
@@ -35,6 +37,9 @@ class TileRenderer:
         # damage
         if self.tile.injuries > 0:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
+
+    def generate_tile_base(self):
+        return self.generate_tile_module()
 
     def generate_tile_order(self):
         self.blit("../res/order_" + self.tile.type + ".png")
@@ -116,8 +121,10 @@ class TileRenderer:
         picrect = self.tile.gfx[turn].get_rect()
         picrect.center = self.tilepic.get_rect().center
         self.tilepic.blit(self.tile.gfx[turn], picrect)
-        if not isinstance(tile, Tile): return self.tilepic
-        self.generate_tile_damage()
+        if not isinstance(self.tile, Tile):
+            return self.tilepic
+        if not isinstance(self.tile, Base):
+            self.generate_tile_damage()
         if not self.tile.active:
             self.generate_tile_net()
         return self.tilepic
