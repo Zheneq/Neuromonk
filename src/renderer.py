@@ -172,7 +172,7 @@ class Renderer:
         if self.deltatime >= 1000:
             self.deltatime = 0
             pygame.display.set_caption("FPS: %d" % self.fps)
-            print "FPS: %d" % self.fps
+            # print "FPS: %d" % self.fps
             self.fps = 0
         if not self.idle:
             self.screen.fill((240, 240, 240))
