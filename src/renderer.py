@@ -72,6 +72,9 @@ class TileRenderer:
         if self.tile.initiative is not None:
             for init in self.tile.initiative:
                 self.blit("../res/init" + str(init[0]) + ".png")
+        # mobility
+        if self.tile.mobile:
+            self.blit("../res/mobility.png")
 
     def generate_tile_module(self):
         # links
