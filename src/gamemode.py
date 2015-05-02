@@ -364,17 +364,17 @@ class GameMode(object):
                     # there is tile from dictionary selected by previous click
                     if cell in self.click_pending[self.click_selected]:
                         # there is pair (source, dist) of action
-                        s = self.click_selected
+                        self.event(self.click_callback, (self.click_selected, cell))
                         # reset selection dictionary
                         self.click_selected = None
                         self.click_pending = {}
-                        self.event(self.click_callback, (s, cell))
                         break
                 if cell in self.click_pending:
                     # if player doesn't need to select second actor
                     if not self.click_pending[cell]:
-                        self.click_pending = {}
                         self.event(self.click_callback, (cell, None))
+                        self.click_selected = None
+                        self.click_pending = {}
                     else:
                         self.click_selected = cell
                     break
