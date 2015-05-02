@@ -102,9 +102,9 @@ class Battle(object):
     def choose_action_for_unit(self, (unit_cell, button)):
         del self.actions[unit_cell]
         if button is self.buttons['apply']:
-            unit_cell.tile.attack = unit_cell.cell.unique_attack
+            unit_cell.tile.attack = unit_cell.tile.unique_attack
         else:
-            unit_cell.tile.attack = unit_cell.cell.usual_attack
+            unit_cell.tile.attack = unit_cell.tile.usual_attack
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
