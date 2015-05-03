@@ -469,6 +469,7 @@ class GameMode(object):
             print 'The Final Battle begins!'
             self.over = True
             self.begin_battle()
+            return
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
