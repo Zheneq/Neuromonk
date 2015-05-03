@@ -140,16 +140,16 @@ class Unit(Tile):
         """
         for ind in xrange(len(cell.neighbours)):
             damage = self.damage(ind - cell.turn)
-            if self.can_melee_buffed and 'melee' in damage_modificator:
-                damage['melee'] += damage_modificator['melee']
-            if self.can_range_buffed and 'range' in damage_modificator:
-                damage['range'] += damage_modificator['range']
             if damage['melee'] > 0:
+                if self.can_melee_buffed and 'melee' in damage_modificator:
+                    damage['melee'] += damage_modificator['melee']
                 if cell.neighbours[ind] is not None and cell.neighbours[ind].tile is not None:
                     if cell.neighbours[ind].tile.army_id != self.army_id:
                         damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': cell}
                         cell.neighbours[ind].tile.taken_damage.append(damage_to_unit)
             if damage['range'] > 0:
+                if self.can_range_buffed and 'range' in damage_modificator:
+                    damage['range'] += damage_modificator['range']
                 neighbour = cell.neighbours[ind]
                 while neighbour is not None:
                     if neighbour.tile is not None and neighbour.tile.army_id != self.army_id:
