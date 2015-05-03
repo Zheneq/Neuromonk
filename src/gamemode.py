@@ -102,27 +102,15 @@ class GameMode(object):
     """
     Main game class. Controls game process.
     """
+    EVENT_TICKER = pygame.USEREVENT
+    EVENT_USEREVENT = pygame.USEREVENT + 1
+    EVENT_MAX = pygame.USEREVENT + 2
 
-    def __init__(self, grid_radius):
-        """
-        Initializes necessary data.
-        :param grid_radius: radius of battlefield.
-        :return: nothing is returned.
-        """
-        self.players = []
-        self.player = None
-        self.last_player = None
+    def __init__(self, renderer):
         self.active = False
         self.timers = {}
         self.clicker = Clicker(self)
-        self.renderer = Renderer(self)
-        self.playground = Grid(self, grid_radius)
-        self.turn_num = 0
-        self.over = False
-        self.action_types = {}
-        # DEBUG
-        self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
-                        'confirm': Button(self, None, 100, 550, .1)}
+        self.renderer = renderer(self)
 
     def start_game(self):
         """
@@ -173,34 +161,8 @@ class GameMode(object):
         """
         self.active = False
 
-    def swap(self, (a, b)):
-        print "test"
-        if b:
-            # release units disabled by nets of a.tile (if there are)
-            self.release_disable_units(a)
-            # move tile from a to b
-            a.tile, b.tile = b.tile, a.tile
-            a.turn, b.turn = 0, a.turn
-        else:
-            print "b is none"
-
     def begin_play(self):
-        # DEBUG
-        Zq = Player('Zheneq', 1, 0, self)
-        Zq.army_shuffle()
-        Dand = Player('Dandelion', 2, 1, self)
-        Dand.army_shuffle()
-        self.players = [Zq, Dand]
-        self.players[0].next = self.players[1]
-        self.players[1].next = self.players[0]
-        self.player = self.players[0]
-
-        self.buttons['remove'].action = self.remove_tile_from_hand
-        self.buttons['apply'].action = self.resolve_order
-        self.buttons['confirm'].action = self.new_turn
-
-        self.place_all_hq()
-        # self.turn()
+        pass
 
     def tick(self, deltatime):
         """
@@ -209,6 +171,9 @@ class GameMode(object):
         :return: nothing is returned.
         """
         pass
+
+    def event(self, callback, parameters=()):
+        pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def set_timer(self, time, callback, repeat=False):
         """
@@ -235,8 +200,59 @@ class GameMode(object):
                     del self.timers[timer]
                     break
 
-    def event(self, callback, parameters=()):
-        pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
+
+class Neuroshima(GameMode):
+    """
+    Main game class. Controls game process.
+    """
+
+    def __init__(self, grid_radius):
+        """
+        Initializes necessary data.
+        :param grid_radius: radius of battlefield.
+        :return: nothing is returned.
+        """
+        GameMode.__init__(self, Renderer)
+        self.players = []
+        self.player = None
+        self.last_player = None
+        self.playground = Grid(self, grid_radius)
+        self.turn_num = 0
+        self.over = False
+        self.action_types = {}
+        # DEBUG
+        self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
+                        'confirm': Button(self, None, 100, 550, .1)}
+
+    def swap(self, (a, b)):
+        print "test"
+        if b:
+            # release units disabled by nets of a.tile (if there are)
+            self.release_disable_units(a)
+            # move tile from a to b
+            a.tile, b.tile = b.tile, a.tile
+            a.turn, b.turn = 0, a.turn
+        else:
+            print "b is none"
+
+    def begin_play(self):
+        GameMode.begin_play(self)
+        # DEBUG
+        Zq = Player('Zheneq', 1, 0, self)
+        Zq.army_shuffle()
+        Dand = Player('Dandelion', 2, 1, self)
+        Dand.army_shuffle()
+        self.players = [Zq, Dand]
+        self.players[0].next = self.players[1]
+        self.players[1].next = self.players[0]
+        self.player = self.players[0]
+
+        self.buttons['remove'].action = self.remove_tile_from_hand
+        self.buttons['apply'].action = self.resolve_order
+        self.buttons['confirm'].action = self.new_turn
+
+        self.place_all_hq()
+        # self.turn()
 
     def release_disable_units(self, cell):
         if isinstance(cell.tile, Unit) and cell.tile.nets:
@@ -572,13 +588,9 @@ class GameMode(object):
                         self.new_turn)
         self.set_timer(period, battle.battle_phase)
 
-    EVENT_TICKER = pygame.USEREVENT
-    EVENT_USEREVENT = pygame.USEREVENT + 1
-    EVENT_MAX = pygame.USEREVENT + 2
-
 
 if __name__ == "__main__":
-    game = GameMode(2)
+    game = Neuroshima(2)
 
     # # moloch_medic1 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
     # # moloch_medic2 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
