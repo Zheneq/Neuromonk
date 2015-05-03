@@ -39,7 +39,8 @@ class TileRenderer:
             self.blit("../res/hp" + str(self.tile.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_base(self):
-        return self.generate_tile_module()
+        self.generate_tile_module()
+        self.generate_tile_unit()
 
     def generate_tile_order(self):
         self.blit("../res/order_" + self.tile.type + ".png")
@@ -71,6 +72,9 @@ class TileRenderer:
         if self.tile.initiative is not None:
             for init in self.tile.initiative:
                 self.blit("../res/init" + str(init[0]) + ".png")
+        # mobility
+        if self.tile.mobile:
+            self.blit("../res/mobility.png")
 
     def generate_tile_module(self):
         # links
