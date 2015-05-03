@@ -24,6 +24,7 @@ class GameMode(object):
         """
         self.players = []
         self.player = None
+        self.last_player = None
         self.actors = []
         self.active = False
         self.timers = {}
@@ -34,6 +35,7 @@ class GameMode(object):
         self.renderer = Renderer(self)
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
+        self.over = False
         # DEBUG
         self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
                         'confirm': Button(self, None, 100, 550, .1)}
@@ -442,6 +444,28 @@ class GameMode(object):
                 print 'Congratulations,', player.next.name + '!!!'
                 self.set_timer(3000, self.end_game)
                 return
+        if self.over:
+            if self.player.hq.hp - self.player.hq.injuries < self.player.next.hq.hp - self.player.next.hq.injuries:
+                print self.player.name + '\'s HQ is more damaged'
+                print 'Congratulations,', self.player.next.name + '!!!'
+                self.set_timer(3000, self.end_game)
+                return
+            elif self.player.hq.hp - self.player.hq.injuries > self.player.next.hq.hp - self.player.next.hq.injuries:
+                print self.player.next.name + '\'s HQ is more damaged'
+                print 'Congratulations,', self.player.name + '!!!'
+                self.set_timer(3000, self.end_game)
+                return
+            else:
+                #TODO implement additional turn
+                print 'Both HQs are equally damaged'
+                print 'That\'s a draw('
+                self.set_timer(3000, self.end_game)
+                return
+        if self.last_player and self.last_player is self.player:
+            # Final Battle
+            print 'The Final Battle begins!'
+            self.over = True
+            self.begin_battle()
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
@@ -475,7 +499,7 @@ class GameMode(object):
             return
         for cell in self.playground.cells:
             self.disable_units(cell)
-        if self.turn_num > 2 and \
+        if self.player.tiles_in_hand() == 3 and \
                 isinstance(self.player.hand[0].tile, Order) and \
                 isinstance(self.player.hand[1].tile, Order) and \
                 isinstance(self.player.hand[2].tile, Order):
@@ -483,6 +507,9 @@ class GameMode(object):
             self.action_types[self.buttons['remove']] = []
         elif self.buttons['remove'] in self.action_types:
             del self.action_types[self.buttons['remove']]
+        if not self.last_player and not self.player.tiles:
+            # deck is over - last actions before the Final Battle
+            self.last_player = self.player
         for action_type in self.action_types:
             if action_type in self.playground.cells:
                 # actor is on the battlefield - mobility
@@ -496,7 +523,7 @@ class GameMode(object):
                     # placing new tile on the playground won't start the battle
                     self.action_types[action_type].extend(self.playground.get_free_cells())
                 elif isinstance(action_type.tile, Order) and \
-                            (action_type.tile.type != 'battle' or self.player.remove_in_turn):
+                            (action_type.tile.type != 'battle' or self.player.remove_in_turn and not self.last_player):
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
         if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:
