@@ -50,7 +50,7 @@ class Battle(object):
         self.actions = {}
 
         if init_phase == 1000:
-            print 'Let the Battle Begins!!!'
+            print 'Let the Battle Begin!!!'
             self.initiative_phase = 0
             for cell in self.battlefield.cells:
                 if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
@@ -86,7 +86,7 @@ class Battle(object):
         self.renderer.idle = False
         self.event(self.continue_game)
 
-    def add_choice(self, cell):
+    def add_choice(self, cell, initiative_ind, add_attack=False):
         if cell.tile.unique_attack:
             # make choice what actions unit will do in this phase
             self.actions[cell] = [self.buttons['apply'], self.buttons['confirm']]
@@ -97,7 +97,7 @@ class Battle(object):
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
-            self.event(self.give_damage_phase)
+            self.give_damage_phase()
 
     def choose_action_for_unit(self, (unit_cell, button)):
         del self.actions[unit_cell]
@@ -108,7 +108,7 @@ class Battle(object):
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
-            self.event(self.give_damage_phase)
+            self.give_damage_phase()
 
     def units_actions_in_phase(self, unit_actions):
         for cell in self.battlefield.cells:
@@ -123,25 +123,28 @@ class Battle(object):
                         if cell.tile.initiative[initiative_ind][1] and \
                                         self.initiative_phase == cell.tile.initiative[initiative_ind][0] + \
                                         initiative_modificator:
-                            unit_actions(cell)
-                            # disable attack in this phase
-                            cell.tile.initiative[initiative_ind][1] = False
+                            unit_actions(cell, initiative_ind, add_attack=False)
                             break
                     else:
                         additional_atacks = compute_additional_attacks(cell)
                         if additional_atacks > cell.tile.add_attacks_used:
                             for add_attack in range(additional_atacks):
                                 if self.initiative_phase == min_initiative - (add_attack + 1):
-                                    unit_actions(cell)
+                                    unit_actions(cell, initiative_ind, add_attack=True)
                                     # mark used additional attack
                                     cell.tile.add_attacks_used += 1
                                     break
 
-    def unit_attack(self, cell):
+    def unit_attack(self, cell, initiative_ind, add_attack=False):
         # gathering all buffs of attack strength
         damage_modificator = compute_attack(cell)
         # giving damage
         cell.tile.attack(cell, damage_modificator)
+        # mark initiative as used
+        if add_attack:
+            cell.tile.add_attacks_used += 1
+        else:
+            cell.tile.initiative[initiative_ind][1] = False
 
     def give_damage_phase(self):
         """

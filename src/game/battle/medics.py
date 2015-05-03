@@ -83,7 +83,7 @@ class Medicine(object):
         healed_damage = max(patient.tile.taken_damage, key=lambda x: x['value'])
         print armies[medic.tile.army_id]().name, 'Medic', '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
             'heals', armies[patient.tile.army_id]().name, patient.tile.name, \
-            '(' + 'cell', str(self.battlefield.cells.index(patient)) + ')', 'from', healed_damage, 'wounds'
+            '(' + 'cell', str(self.battlefield.cells.index(patient)) + ')', 'from', healed_damage['value'], 'wounds'
         patient.tile.taken_damage.remove(healed_damage)
         medic.tile = None
         self.event(self.resolve_medics)
