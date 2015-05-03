@@ -316,8 +316,11 @@ class GameMode(object):
                             whom.neighbours[retreat_ind % 6].tile is None:
                 # whom tile can retreat here
                 retreat_ways.append(whom.neighbours[retreat_ind % 6])
-        possible_retreats = {whom: retreat_ways}
-        self.pend_click(possible_retreats, self.retreat)
+        if len(retreat_ways) > 1:
+            possible_retreats = {whom: retreat_ways}
+            self.pend_click(possible_retreats, self.retreat)
+        else:
+            self.retreat((whom, retreat_ways[0]))
 
     def retreat(self, (who, where)):
         self.swap((who, where))

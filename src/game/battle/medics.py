@@ -68,8 +68,13 @@ class Medicine(object):
                 # unit is able to be healed by one of medics in list
                 damaged_units_to_heal[cell] = cell.tile.active_medics
         if damaged_units_to_heal:
-            # assign callback to dictionary
-            self.pend_click(damaged_units_to_heal, self.one_medic_resolve)
+            if len(damaged_units_to_heal.keys()) == 1 and \
+                            len(damaged_units_to_heal[damaged_units_to_heal.keys()[0]]) == 1:
+                self.one_medic_resolve((damaged_units_to_heal.keys()[0],
+                                        damaged_units_to_heal[damaged_units_to_heal.keys()[0]][0]))
+            else:
+                # assign callback to dictionary
+                self.pend_click(damaged_units_to_heal, self.one_medic_resolve)
         else:
             self.continue_battle()
 
