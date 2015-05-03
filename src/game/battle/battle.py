@@ -140,7 +140,9 @@ class Battle(object):
             cell.tile.add_attacks_used += 1
         else:
             cell.tile.initiative[initiative_ind][1] = False
-        # gathering all buffs of attack strength
+
+
+                        # gathering all buffs of attack strength
         damage_modificator = compute_attack(cell)
         # giving damage
         cell.tile.attack(cell, damage_modificator)
@@ -208,7 +210,11 @@ class Battle(object):
                     # reset "taken_damage"
                     cell.tile.taken_damage = []
                 else:
-                    print cell.tile.name, 'died from injuries'
+                    if not cell.tile.hp:
+                        print cell.tile.name, 'died because of natural causes'
+                        print 'Indeed, he was scattered by explosion. It\'s just natural he died'
+                    else:
+                        print cell.tile.name, 'died because of injuries'
                     # if died unit is net fighter release all units caught by him
                     self.release_disable_units(cell)
                     cell.tile = None

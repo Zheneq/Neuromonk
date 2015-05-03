@@ -116,7 +116,7 @@ class Moloch(Army):
         for neighbour in cell.neighbours:
             if neighbour is not None and neighbour.tile is not None:
                 neighbour.tile.taken_damage.append({'value': 1, 'type': 'explosion', 'instigator': cell})
-        cell.tile = None
+        cell.tile.hp = 0
 
 
 armies = {}

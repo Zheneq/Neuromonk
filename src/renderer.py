@@ -142,13 +142,14 @@ class TileRenderer:
             self.blit("../res/tile" + str(army_id) + "_selected.png")
         return self.tilepic
 
+
 class Renderer:
     def __init__(self, game):
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
-        self.screen = pygame.display.set_mode((1900, 1000))
+        self.screen = pygame.display.set_mode((1300, 750))
         self.screenrect = self.screen.get_rect()
-        self.scale = 0.38
+        self.scale = 0.3
         self.boardbackbuffer = None
         #
         self.idle = False

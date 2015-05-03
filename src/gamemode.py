@@ -446,7 +446,7 @@ class GameMode(object):
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
         self.player.remove_in_turn = False
-        if self.turn_num < 3:
+        if self.player.tiles_in_hand() < 3:
             self.player.remove_in_turn = True
         # create dictionary of actions
         self.action_types = {}
@@ -531,12 +531,6 @@ class GameMode(object):
 if __name__ == "__main__":
     game = GameMode(2)
 
-    # outpost_kicker1 = Unit(0, 5, (1,0,0,0,0,0), None, None, None, [[3, True]])
-    # outpost_kicker1.active = False
-    # outpost_kicker2 = Unit(0, 1, (1,0,0,0,0,0), None, None, None, [[4, True]])
-    # outpost_hq = Base(0, 5, [1,1,1,1,1,1], [[0, True]], {'initiative': [1,1,0,0,0,1], 'melee': [1,1,0,0,0,1]}, {})
-    # outpost_mothermodule = Module(0, 1, {'add_attacks': [2,0,0,0,0,0]}, {})
-    # outpost_medic = Medic(0, 1, [1,1,0,0,0,1])
     # moloch_medic1 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
     # moloch_medic2 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
     # moloch_medic3 = Medic(1, 1, [1, 1, 0, 0, 0, 1])
@@ -545,27 +539,27 @@ if __name__ == "__main__":
     # moloch_fat = Unit(1, 5, None, None, None, None, None, mobility=True)
     # moloch_greaver1 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
     # moloch_greaver2 = Unit(1, 1, (1, 0, 0, 0, 0, 0), None, None, None, [[2, True]], mobility=True)
-    # borgo_fighter = Unit(2, 1, (1, 1, 0, 0, 0, 0), None, None, None, [[3, True]])
+    # borgo_fighter1 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
+    # borgo_fighter2 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
+    # borgo_fighter3 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
+    # borgo_fighter4 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
+    # borgo_fighter5 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
+    # borgo_fighter6 = Unit(2, 1, 'fighter', (1, 1, 0, 0, 0, 0), None, None, None, [[1, True]])
     # moloch_netfighter = Unit(1, 1, None, None, None, [1,1,0,0,0,0], [[0, True]])
     # moloch_hq = Base(1, 5, [1,1,1,1,1,1], [[0, True]], {}, {})
     #
-    # game.playground.cells[0].tile = moloch_medic1
-    # game.playground.cells[0].turn = 2
-    # game.playground.cells[2].tile = moloch_medic2
-    # game.playground.cells[2].turn = 5
-    # game.playground.cells[1].tile = moloch_medic3
-    # game.playground.cells[1].turn = 3
-    # game.playground.cells[6].tile = moloch_medic4
-    # game.playground.cells[6].turn = 2
-    # game.playground.cells[5].tile = moloch_medic5
-    # game.playground.cells[5].turn = 1
-    # game.playground.cells[3].tile = moloch_greaver1
+    # game.playground.cells[1].tile = borgo_fighter1
+    # game.playground.cells[1].turn = 1
+    # game.playground.cells[2].tile = borgo_fighter2
+    # game.playground.cells[2].turn = 1
+    # game.playground.cells[3].tile = borgo_fighter3
     # game.playground.cells[3].turn = 1
-    # game.playground.cells[4].tile = moloch_greaver2
+    # game.playground.cells[4].tile = borgo_fighter4
     # game.playground.cells[4].turn = 1
-    # game.playground.cells[13].tile = borgo_fighter
-    # game.playground.cells[13].turn = 5
-    # game.playground.cells[15].tile = outpost_medic
-    # game.playground.cells[15].turn = 0
+    # game.playground.cells[5].tile = borgo_fighter5
+    # game.playground.cells[5].turn = 1
+    # game.playground.cells[6].tile = borgo_fighter6
+    # game.playground.cells[6].turn = 1
 
     game.start_game()
+
