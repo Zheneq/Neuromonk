@@ -136,15 +136,15 @@ class Battle(object):
                                     break
 
     def unit_attack(self, cell, initiative_ind, add_attack=False):
+        if add_attack:
+            cell.tile.add_attacks_used += 1
+        else:
+            cell.tile.initiative[initiative_ind][1] = False
         # gathering all buffs of attack strength
         damage_modificator = compute_attack(cell)
         # giving damage
         cell.tile.attack(cell, damage_modificator)
         # mark initiative as used
-        if add_attack:
-            cell.tile.add_attacks_used += 1
-        else:
-            cell.tile.initiative[initiative_ind][1] = False
 
     def give_damage_phase(self):
         """
