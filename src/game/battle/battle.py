@@ -1,7 +1,7 @@
 __author__ = 'dandelion'
 
-from tile import Unit, Base
-from armies import armies
+from src.game.common.tile import Unit, Base
+from src.game.common.armies import armies
 
 from buffs import compute_initiative, compute_attack, compute_additional_attacks
 from medics import Medicine

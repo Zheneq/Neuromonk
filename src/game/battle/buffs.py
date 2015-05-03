@@ -1,6 +1,6 @@
 __author__ = 'dandelion'
 
-from tile import Module
+from src.game.common.tile import Module
 
 
 def get_modificator(cell, mod_type):
