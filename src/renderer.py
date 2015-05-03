@@ -207,20 +207,20 @@ class Renderer:
                 cell.maskrect.center = ((gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0]) * self.scale,
                                         (gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1]) * self.scale + indent)
                 # rendering cell fx
-                if self.game.click_pending:
-                    if self.game.click_selected is not None:
-                        if cell in self.game.click_pending[self.game.click_selected]:
+                if self.game.clicker.click_pending:
+                    if self.game.clicker.click_selected is not None:
+                        if cell in self.game.clicker.click_pending[self.game.clicker.click_selected]:
                             cellpicrect = cell.gfx["highlighted"].get_rect()
                             cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
                                                   gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
                             pic.blit(cell.gfx["highlighted"], cellpicrect)
-                        if cell is self.game.click_selected:
-                            cellpicrect = self.game.click_selected.gfx["selected"].get_rect()
+                        if cell is self.game.clicker.click_selected:
+                            cellpicrect = self.game.clicker.click_selected.gfx["selected"].get_rect()
                             cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
                                                   gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
-                            pic.blit(self.game.click_selected.gfx["selected"], cellpicrect)
+                            pic.blit(self.game.clicker.click_selected.gfx["selected"], cellpicrect)
                     else:
-                        if cell in self.game.click_pending:
+                        if cell in self.game.clicker.click_pending:
                             cellpicrect = cell.gfx["highlighted"].get_rect()
                             cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
                                                   gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
@@ -250,32 +250,32 @@ class Renderer:
         rect.center = self.boardbackbuffer.get_rect().center
         self.boardbackbuffer.blit(grid.gfx, rect)
         # rendering cell fx
-        if self.game.click_pending:
-            if self.game.click_selected is not None:
-                for clickable in self.game.click_pending[self.game.click_selected]:
+        if self.game.clicker.click_pending:
+            if self.game.clicker.click_selected is not None:
+                for clickable in self.game.clicker.click_pending[self.game.clicker.click_selected]:
                     if clickable not in grid.cells: continue
                     cellpicrect = clickable.gfx["highlighted"].get_rect()
                     cellpicrect.center = (grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0],
                                           grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1])
                     self.boardbackbuffer.blit(clickable.gfx["highlighted"], cellpicrect)
-                if self.game.click_selected in grid.cells:
-                    cellpicrect = self.game.click_selected.gfx["selected"].get_rect()
-                    cellpicrect.center = (grid.gfx_indent[0] + self.game.click_selected.x * grid.gfx_multiplier[0],
-                                          grid.gfx_indent[1] + self.game.click_selected.y * grid.gfx_multiplier[1])
-                    self.boardbackbuffer.blit(self.game.click_selected.gfx["selected"], cellpicrect)
+                if self.game.clicker.click_selected in grid.cells:
+                    cellpicrect = self.game.clicker.click_selected.gfx["selected"].get_rect()
+                    cellpicrect.center = (grid.gfx_indent[0] + self.game.clicker.click_selected.x * grid.gfx_multiplier[0],
+                                          grid.gfx_indent[1] + self.game.clicker.click_selected.y * grid.gfx_multiplier[1])
+                    self.boardbackbuffer.blit(self.game.clicker.click_selected.gfx["selected"], cellpicrect)
             else:
-                for clickable in self.game.click_pending:
+                for clickable in self.game.clicker.click_pending:
                     if clickable not in grid.cells: continue
                     cellpicrect = clickable.gfx["highlighted"].get_rect()
                     cellpicrect.center = (grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0],
                                           grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1])
                     self.boardbackbuffer.blit(clickable.gfx["highlighted"], cellpicrect)
-        elif self.game.rot_pending:
-            if self.game.rot_pending in grid.cells:
-                cellpicrect = self.game.rot_pending.gfx["selected"].get_rect()
-                cellpicrect.center = (grid.gfx_indent[0] + self.game.rot_pending.x * grid.gfx_multiplier[0],
-                                      grid.gfx_indent[1] + self.game.rot_pending.y * grid.gfx_multiplier[1])
-                self.boardbackbuffer.blit(self.game.rot_pending.gfx["selected"], cellpicrect)
+        elif self.game.clicker.rot_pending:
+            if self.game.clicker.rot_pending in grid.cells:
+                cellpicrect = self.game.clicker.rot_pending.gfx["selected"].get_rect()
+                cellpicrect.center = (grid.gfx_indent[0] + self.game.clicker.rot_pending.x * grid.gfx_multiplier[0],
+                                      grid.gfx_indent[1] + self.game.clicker.rot_pending.y * grid.gfx_multiplier[1])
+                self.boardbackbuffer.blit(self.game.clicker.rot_pending.gfx["selected"], cellpicrect)
 
         # rendering tiles
         self.render_tiles(grid)
@@ -339,14 +339,14 @@ class Renderer:
     def render_objects(self):
         for obj in self.objects:
             self.screen.blit(obj.gfx["default"], obj.maskrect)
-            if self.game.click_pending:
-                if self.game.click_selected is not None:
-                    if obj in self.game.click_pending[self.game.click_selected]:
+            if self.game.clicker.click_pending:
+                if self.game.clicker.click_selected is not None:
+                    if obj in self.game.clicker.click_pending[self.game.clicker.click_selected]:
                         self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
-                    if obj is self.game.click_selected:
-                        self.screen.blit(self.game.click_selected.gfx["selected"], obj.maskrect)
+                    if obj is self.game.clicker.click_selected:
+                        self.screen.blit(self.game.clicker.click_selected.gfx["selected"], obj.maskrect)
                 else:
-                    if obj in self.game.click_pending:
+                    if obj in self.game.clicker.click_pending:
                         self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
 
     def make_cell(self, cell):

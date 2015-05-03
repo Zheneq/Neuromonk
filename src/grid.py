@@ -11,7 +11,7 @@ class Clickable(object):
         self.mask = None
         self.maskrect = None
         #
-        self.game.add_actor(self)
+        self.game.clicker.add_actor(self)
         self.invalidate()
 
     def invalidate(self):

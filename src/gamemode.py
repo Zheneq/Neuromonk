@@ -11,6 +11,93 @@ from player import Player
 from game.battle.battle import Battle
 
 
+class Clicker(object):
+    """
+    Mouse input parser
+    """
+
+    def __init__(self, game):
+        self.game = game
+        self.actors = []
+        self.rot_pending = None
+        self.click_pending = {}
+        self.click_callback = None
+        self.click_selected = None
+
+    def parse(self, pos):
+        # print "Click!"
+        clicked = self.locate(pos)
+        # for c in clicked:
+        #     if isinstance(c, Cell) and isinstance(c.tile, Tile):
+        #         print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
+        #     else:
+        #         print "\t" + "None"
+        if clicked:
+            self.select(clicked)
+
+    def parse_rot(self, pos):
+        if self.rot_pending:
+            self.rotate_tile(pos)
+
+    def add_actor(self, actor):
+        self.actors.append(actor)
+
+    def pend_click(self, cells, callback):
+        self.rot_pending = None
+        self.click_pending = cells
+        self.click_callback = callback
+
+    def pend_rotation(self, cell, callback):
+        self.click_pending = None
+        self.rot_pending = cell
+        self.click_callback = callback
+
+    def rotate_tile(self, mousepos):
+        x = self.rot_pending.maskrect.center[0] - mousepos[0]
+        y = self.rot_pending.maskrect.center[1] - mousepos[1]
+        self.rot_pending.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
+
+    def locate(self, pos):
+        result = []
+        for obj in self.actors:
+            try:
+                if obj.mask.get_at((pos[0] - obj.maskrect.left, pos[1] - obj.maskrect.top)):
+                    result.append(obj)
+            except IndexError:
+                pass
+        return result
+
+    def select(self, cells):
+        """
+        Common interface of selecting.
+        :param cells: cells clicked by player.
+        :return: nothing is returned.
+        """
+        if self.rot_pending:
+            self.rot_pending = None
+            self.game.event(self.click_callback)
+        else:
+            for cell in cells:
+                if self.click_selected is not None:
+                    # there is tile from dictionary selected by previous click
+                    if cell in self.click_pending[self.click_selected]:
+                        # there is pair (source, dist) of action
+                        self.game.event(self.click_callback, (self.click_selected, cell))
+                        # reset selection dictionary
+                        self.click_selected = None
+                        self.click_pending = {}
+                        break
+                if cell in self.click_pending:
+                    # if player doesn't need to select second actor
+                    if not self.click_pending[cell]:
+                        self.game.event(self.click_callback, (cell, None))
+                        self.click_selected = None
+                        self.click_pending = {}
+                    else:
+                        self.click_selected = cell
+                    break
+
+
 class GameMode(object):
     """
     Main game class. Controls game process.
@@ -25,17 +112,14 @@ class GameMode(object):
         self.players = []
         self.player = None
         self.last_player = None
-        self.actors = []
         self.active = False
         self.timers = {}
-        self.click_pending = {}
-        self.click_callback = None
-        self.click_selected = None
-        self.rot_pending = None
+        self.clicker = Clicker(self)
         self.renderer = Renderer(self)
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
         self.over = False
+        self.action_types = {}
         # DEBUG
         self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
                         'confirm': Button(self, None, 100, 550, .1)}
@@ -62,17 +146,9 @@ class GameMode(object):
                 if event.type == pygame.QUIT:
                     self.active = False
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    print "Click!"
-                    clicked = self.locate(event.pos)
-                    for c in clicked:
-                        if isinstance(c, Cell) and isinstance(c.tile, Tile):
-                            print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
-                        else:
-                            print "\t" + "None"
-                    if clicked:
-                        self.select(clicked)
-                if self.rot_pending and event.type == pygame.MOUSEMOTION:
-                    self.rotate_tile(event.pos)
+                    self.clicker.parse(event.pos)
+                if event.type == pygame.MOUSEMOTION:
+                    self.clicker.parse_rot(event.pos)
                 if event.type == self.EVENT_USEREVENT:
                     if event.parameters:
                         event.callback(event.parameters)
@@ -134,9 +210,6 @@ class GameMode(object):
         """
         pass
 
-    def add_actor(self, actor):
-        self.actors.append(actor)
-
     def set_timer(self, time, callback, repeat=False):
         """
         Set a timer.
@@ -164,31 +237,6 @@ class GameMode(object):
 
     def event(self, callback, parameters=()):
         pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
-
-    def pend_click(self, cells, callback):
-        self.rot_pending = None
-        self.click_pending = cells
-        self.click_callback = callback
-
-    def pend_rotation(self, cell, callback):
-        self.click_pending = None
-        self.rot_pending = cell
-        self.click_callback = callback
-
-    def rotate_tile(self, mousepos):
-        x = self.rot_pending.maskrect.center[0] - mousepos[0]
-        y = self.rot_pending.maskrect.center[1] - mousepos[1]
-        self.rot_pending.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
-
-    def locate(self, pos):
-        result = []
-        for obj in self.actors:
-            try:
-                if obj.mask.get_at((pos[0] - obj.maskrect.left, pos[1] - obj.maskrect.top)):
-                    result.append(obj)
-            except IndexError:
-                pass
-        return result
 
     def release_disable_units(self, cell):
         if isinstance(cell.tile, Unit) and cell.tile.nets:
@@ -237,7 +285,7 @@ class GameMode(object):
         for cell in self.playground.cells:
             if None not in cell.neighbours:
                 targets[cell] = []
-        self.pend_click(targets, self.airstrike)
+        self.clicker.pend_click(targets, self.airstrike)
 
     def airstrike(self, (target, empty)):
         base_cell = None
@@ -251,7 +299,7 @@ class GameMode(object):
             if cell.tile is not None and not isinstance(cell.tile, Base):
                 cell.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': base_cell})
         battle = Battle(self.playground,
-                        self.pend_click,
+                        self.clicker.pend_click,
                         self.buttons,
                         self.release_disable_units,
                         self.event,
@@ -275,7 +323,7 @@ class GameMode(object):
                                 neighbour.tile.army_id != self.player.army and \
                                 not isinstance(neighbour.tile, Base):
                         targets[neighbour] = []
-        self.pend_click(targets, self.grenade)
+        self.clicker.pend_click(targets, self.grenade)
 
     def grenade(self, (target, empty)):
         self.release_disable_units(target)
@@ -304,7 +352,7 @@ class GameMode(object):
                 if enemies:
                     pushes[cell] = enemies
         if pushes:
-            self.pend_click(pushes, self.pushback)
+            self.clicker.pend_click(pushes, self.pushback)
         else:
             self.event(self.tactic)
 
@@ -318,7 +366,7 @@ class GameMode(object):
                 retreat_ways.append(whom.neighbours[retreat_ind % 6])
         if len(retreat_ways) > 1:
             possible_retreats = {whom: retreat_ways}
-            self.pend_click(possible_retreats, self.retreat)
+            self.clicker.pend_click(possible_retreats, self.retreat)
         else:
             self.retreat((whom, retreat_ways[0]))
 
@@ -332,7 +380,7 @@ class GameMode(object):
             if cell.tile is not None and cell.tile.active and cell.tile.army_id == self.player.army:
                 maneuvers[cell] = cell.tile.maneuver_rate(cell)
         if maneuvers:
-            self.pend_click(maneuvers, self.march)
+            self.clicker.pend_click(maneuvers, self.march)
         else:
             self.event(self.tactic)
 
@@ -343,7 +391,7 @@ class GameMode(object):
             del self.action_types[who]
             self.action_types[where] = values
         self.swap((who, where))
-        self.pend_rotation(where, self.tactic)
+        self.clicker.pend_rotation(where, self.tactic)
 
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
@@ -353,36 +401,6 @@ class GameMode(object):
     def new_turn(self):
         self.player = self.player.next
         self.event(self.turn)
-
-    def select(self, cells):
-        """
-        Common interface of selecting.
-        :param cells: cells clicked by player.
-        :return: nothing is returned.
-        """
-        if self.rot_pending:
-            self.rot_pending = None
-            self.event(self.click_callback)
-        else:
-            for cell in cells:
-                if self.click_selected is not None:
-                    # there is tile from dictionary selected by previous click
-                    if cell in self.click_pending[self.click_selected]:
-                        # there is pair (source, dist) of action
-                        self.event(self.click_callback, (self.click_selected, cell))
-                        # reset selection dictionary
-                        self.click_selected = None
-                        self.click_pending = {}
-                        break
-                if cell in self.click_pending:
-                    # if player doesn't need to select second actor
-                    if not self.click_pending[cell]:
-                        self.event(self.click_callback, (cell, None))
-                        self.click_selected = None
-                        self.click_pending = {}
-                    else:
-                        self.click_selected = cell
-                    break
 
     def callback_dispatcher(self, (s, cell)):
         # DEBUG
@@ -434,7 +452,7 @@ class GameMode(object):
         print self.player.name + '\'s turn!'
         self.player.hand[0].tile = self.player.hq
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
-        self.pend_click(self.action_types, self.place_hq)
+        self.clicker.pend_click(self.action_types, self.place_hq)
 
     def turn(self):
         """
@@ -533,7 +551,7 @@ class GameMode(object):
         if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:
             # 3rd tile in hand needs to be removed
             self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
-        self.pend_click(self.action_types, self.callback_dispatcher)
+        self.clicker.pend_click(self.action_types, self.callback_dispatcher)
 
     def begin_battle(self, period=3000):
         """
@@ -544,7 +562,7 @@ class GameMode(object):
         # find max initiative
         # battle
         battle = Battle(self.playground,
-                        self.pend_click,
+                        self.clicker.pend_click,
                         self.buttons,
                         self.release_disable_units,
                         self.event,
