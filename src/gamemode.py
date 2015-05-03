@@ -460,7 +460,7 @@ class GameMode(object):
         :return: nothing is returned.
         """
         for player in self.players:
-            if player.hq is None:
+            if player.hq.hp <= player.hq.injuries:
                 print player.name + '\'s HQ is destroyed'
                 print 'Congratulations,', player.next.name + '!!!'
                 self.set_timer(3000, self.end_game)
