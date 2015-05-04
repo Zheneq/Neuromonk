@@ -59,9 +59,11 @@ class TileRenderer:
                     self.blit("../res/armor.png", i)
         # range
         if self.tile.range is not None:
+            modifier = ""
+            if self.tile.row_attack: modifier = "_penetrating"
             for i in xrange(len(self.tile.range)):
                 if self.tile.range[i]:
-                    self.blit("../res/range" + str(self.tile.range[i]) + ".png", i)
+                    self.blit("../res/range" + str(self.tile.range[i]) + modifier + ".png", i)
         # melee
         if self.tile.melee is not None:
             for i in xrange(len(self.tile.melee)):
@@ -76,22 +78,31 @@ class TileRenderer:
         # mobility
         if self.tile.mobile:
             self.blit("../res/mobility.png")
+        # unique attack
+        if self.tile.unique_attack:
+            self.blit("../res/spec_attack.png")
 
     def generate_tile_module(self):
         # links
-        bufftype = None
+        bufftypes = { "buff": [], "debuff": []}
         for buff in self.tile.buff.keys():
-            bufftype = "buff_" + buff
+            bufftypes["buff"].append(buff)
             self.generate_tile_module_links(self.tile.buff[buff])
         for debuff in self.tile.debuff.keys():
-            bufftype = "debuff_" + debuff
+            bufftypes["debuff"].append(debuff)
             self.generate_tile_module_links(self.tile.debuff[debuff])
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # module icons
         self.blit("../res/module.png")
-        if bufftype is not None:
-            self.blit("../res/module_" + bufftype + ".png")
+        # buff icon
+        line = ""
+        if bufftypes["buff"]:
+            for buff in bufftypes["buff"]: line += "_" + buff
+            self.blit("../res/module_buff" + line + ".png")
+        elif bufftypes["debuff"]:
+            for debuff in bufftypes["debuff"]: line += debuff
+            self.blit("../res/module_debuff" + line + ".png")
 
     def generate_tile_medic(self):
         # links
