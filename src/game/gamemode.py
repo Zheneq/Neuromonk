@@ -1,8 +1,8 @@
 __author__ = 'zheneq & dandelion'
 
 import pygame
-import math
 
+from src.game.common.clicker import Clicker
 from src.game.common.grid import Grid, Cell, Button
 from src.game.common.tile import *
 from src.game.common.renderer import Renderer
@@ -10,93 +10,7 @@ from src.game.common.player import Player
 
 from src.game.battle.battle import Battle
 
-
-class Clicker(object):
-    """
-    Mouse input parser
-    """
-
-    def __init__(self, game):
-        self.game = game
-        self.actors = []
-        self.rot_pending = None
-        self.click_pending = {}
-        self.click_callback = None
-        self.click_selected = None
-
-    def parse(self, pos):
-        # print "Click!"
-        clicked = self.locate(pos)
-        # for c in clicked:
-        #     if isinstance(c, Cell) and isinstance(c.tile, Tile):
-        #         print "\t" + str(type(c.tile)) + " " + str(c.tile.hp)
-        #     else:
-        #         print "\t" + "None"
-        if clicked:
-            self.select(clicked)
-
-    def parse_rot(self, pos):
-        if self.rot_pending:
-            self.rotate_tile(pos)
-
-    def add_actor(self, actor):
-        self.actors.append(actor)
-
-    def pend_click(self, cells, callback):
-        self.rot_pending = None
-        self.click_pending = cells
-        self.click_callback = callback
-
-    def pend_rotation(self, cell, callback):
-        self.click_pending = None
-        self.rot_pending = cell
-        self.click_callback = callback
-
-    def rotate_tile(self, mousepos):
-        x = self.rot_pending.maskrect.center[0] - mousepos[0]
-        y = self.rot_pending.maskrect.center[1] - mousepos[1]
-        self.rot_pending.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
-
-    def locate(self, pos):
-        result = []
-        for obj in self.actors:
-            try:
-                if obj.mask.get_at((pos[0] - obj.maskrect.left, pos[1] - obj.maskrect.top)):
-                    result.append(obj)
-            except IndexError:
-                pass
-        return result
-
-    def select(self, cells):
-        """
-        Common interface of selecting.
-        :param cells: cells clicked by player.
-        :return: nothing is returned.
-        """
-        if self.rot_pending:
-            self.rot_pending = None
-            self.game.event(self.click_callback)
-        else:
-            for cell in cells:
-                if self.click_selected is not None:
-                    # there is tile from dictionary selected by previous click
-                    if cell in self.click_pending[self.click_selected]:
-                        # there is pair (source, dist) of action
-                        self.game.event(self.click_callback, (self.click_selected, cell))
-                        # reset selection dictionary
-                        self.click_selected = None
-                        self.click_pending = {}
-                        break
-                if cell in self.click_pending:
-                    # if player doesn't need to select second actor
-                    if not self.click_pending[cell]:
-                        self.game.event(self.click_callback, (cell, None))
-                        self.click_selected = None
-                        self.click_pending = {}
-                    else:
-                        self.click_selected = cell
-                    break
-
+from src.game.tactic.orderhandler import OrderHandler
 
 class GameMode(object):
     """
@@ -220,20 +134,10 @@ class Neuroshima(GameMode):
         self.turn_num = 0
         self.over = False
         self.action_types = {}
+        self.orderhandler = OrderHandler(self)
         # DEBUG
         self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
                         'confirm': Button(self, None, 100, 550, .1)}
-
-    def swap(self, (a, b)):
-        print "test"
-        if b:
-            # release units disabled by nets of a.tile (if there are)
-            self.release_disable_units(a)
-            # move tile from a to b
-            a.tile, b.tile = b.tile, a.tile
-            a.turn, b.turn = 0, a.turn
-        else:
-            print "b is none"
 
     def begin_play(self):
         GameMode.begin_play(self)
@@ -248,11 +152,49 @@ class Neuroshima(GameMode):
         self.player = self.players[0]
 
         self.buttons['remove'].action = self.remove_tile_from_hand
-        self.buttons['apply'].action = self.resolve_order
+        self.buttons['apply'].action = self.orderhandler.resolve_order
         self.buttons['confirm'].action = self.new_turn
 
         self.place_all_hq()
         # self.turn()
+
+    def swap(self, (a, b)):
+        if b:
+            # release units disabled by nets of a.tile (if there are)
+            self.release_disable_units(a)
+            # move tile from a to b
+            a.tile, b.tile = b.tile, a.tile
+            a.turn, b.turn = 0, a.turn
+        else:
+            print "b is none"
+
+    def march(self, (who, where)):
+        if who in self.action_types and who is not where:
+            # move mobile unit - change cell in dictionary
+            values = self.action_types[who]
+            del self.action_types[who]
+            self.action_types[where] = values
+        self.swap((who, where))
+        self.clicker.pend_rotation(where, self.tactic)
+
+    def begin_battle(self, period=3000):
+        """
+        Computes units interaction during battle.
+        :return: nothing is returned.
+        """
+        # prepare to battle
+        # find max initiative
+        # battle
+        battle = Battle(self.playground,
+                        self.clicker.pend_click,
+                        self.buttons,
+                        self.release_disable_units,
+                        self.event,
+                        self.set_timer,
+                        period,
+                        self.renderer,
+                        self.new_turn)
+        self.set_timer(period, battle.battle_phase)
 
     def release_disable_units(self, cell):
         if isinstance(cell.tile, Unit) and cell.tile.nets:
@@ -283,131 +225,6 @@ class Neuroshima(GameMode):
                                 cell.neighbours[ind].tile.army_id != cell.tile.army_id:
                     # disable unit
                     cell.neighbours[ind].tile.active = False
-
-    def resolve_order(self, order):
-        if order.type == 'battle':
-            self.begin_battle()
-        elif order.type == 'airstrike':
-            self.begin_airstrike()
-        elif order.type == 'grenade':
-            self.begin_grenade()
-        elif order.type == 'move':
-            self.begin_march()
-        elif order.type == 'pushback':
-            self.begin_pushback()
-
-    def begin_airstrike(self):
-        targets = {}
-        for cell in self.playground.cells:
-            if None not in cell.neighbours:
-                targets[cell] = []
-        self.clicker.pend_click(targets, self.airstrike)
-
-    def airstrike(self, (target, empty)):
-        base_cell = None
-        for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.army_id == self.player.army and isinstance(cell.tile, Base):
-                base_cell = cell
-                break
-        if target.tile is not None and not isinstance(target.tile, Base):
-            target.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': base_cell})
-        for cell in target.neighbours:
-            if cell.tile is not None and not isinstance(cell.tile, Base):
-                cell.tile.taken_damage.append({'value': 1, 'type': 'pure', 'instigator': base_cell})
-        battle = Battle(self.playground,
-                        self.clicker.pend_click,
-                        self.buttons,
-                        self.release_disable_units,
-                        self.event,
-                        self.set_timer,
-                        2000,
-                        self.renderer,
-                        self.tactic,
-                        init_phase=0)
-        self.set_timer(2000, battle.take_damage_phase)
-
-    def begin_grenade(self):
-        targets = {}
-        for cell in self.playground.cells:
-            if cell.tile is not None and \
-                        isinstance(cell.tile, Base) and \
-                        cell.tile.army_id == self.player.army and \
-                        cell.tile.active:
-                for neighbour in cell.neighbours:
-                    if neighbour is not None and \
-                                neighbour.tile is not None and \
-                                neighbour.tile.army_id != self.player.army and \
-                                not isinstance(neighbour.tile, Base):
-                        targets[neighbour] = []
-        self.clicker.pend_click(targets, self.grenade)
-
-    def grenade(self, (target, empty)):
-        self.release_disable_units(target)
-        target.tile = None
-        self.event(self.tactic)
-
-    def begin_pushback(self):
-        pushes = {}
-        for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.active and cell.tile.army_id == self.player.army:
-                # if there is unit to push back we add cell in actions dictionary
-                enemies = []
-                for ind in xrange(len(cell.neighbours)):
-                    neighbour = cell.neighbours[ind]
-                    if neighbour is not None and \
-                                    neighbour.tile is not None and \
-                            neighbour.tile.active and \
-                                    neighbour.tile.army_id != self.player.army:
-                        # neighbour is enemy tile
-                        for retreat_ind in xrange(ind + 5, ind + 8):
-                            if neighbour.neighbours[retreat_ind % 6] is not None and \
-                                            neighbour.neighbours[retreat_ind % 6].tile is None:
-                                # neighbour tile can retreat here
-                                enemies.append(neighbour)
-                                break
-                if enemies:
-                    pushes[cell] = enemies
-        if pushes:
-            self.clicker.pend_click(pushes, self.pushback)
-        else:
-            self.event(self.tactic)
-
-    def pushback(self, (who, whom)):
-        retreat_ways = []
-        ind = who.neighbours.index(whom)
-        for retreat_ind in xrange(ind + 5, ind + 8):
-            if whom.neighbours[retreat_ind % 6] is not None and \
-                            whom.neighbours[retreat_ind % 6].tile is None:
-                # whom tile can retreat here
-                retreat_ways.append(whom.neighbours[retreat_ind % 6])
-        if len(retreat_ways) > 1:
-            possible_retreats = {whom: retreat_ways}
-            self.clicker.pend_click(possible_retreats, self.retreat)
-        else:
-            self.retreat((whom, retreat_ways[0]))
-
-    def retreat(self, (who, where)):
-        self.swap((who, where))
-        self.event(self.tactic)
-
-    def begin_march(self):
-        maneuvers = {}
-        for cell in self.playground.cells:
-            if cell.tile is not None and cell.tile.active and cell.tile.army_id == self.player.army:
-                maneuvers[cell] = cell.tile.maneuver_rate(cell)
-        if maneuvers:
-            self.clicker.pend_click(maneuvers, self.march)
-        else:
-            self.event(self.tactic)
-
-    def march(self, (who, where)):
-        if who in self.action_types and who is not where:
-            # move mobile unit - change cell in dictionary
-            values = self.action_types[who]
-            del self.action_types[who]
-            self.action_types[where] = values
-        self.swap((who, where))
-        self.clicker.pend_rotation(where, self.tactic)
 
     def remove_tile_from_hand(self, tile):
         self.player.remove_in_turn = True
@@ -454,7 +271,7 @@ class Neuroshima(GameMode):
                     self.march((s, cell))
 
     def place_hq(self, (who, where)):
-        self.swap((who, where))
+        self.march((who, where))
         self.event(self.next_hq)
 
     def next_hq(self):
@@ -483,7 +300,7 @@ class Neuroshima(GameMode):
                 return
         if self.over:
             print self.player.name + '\'s HQ:', self.player.hq.hp - self.player.hq.injuries
-            print self.player.next.name + '\'s HQ:', self.player.hq.hp - self.player.hq.injuries
+            print self.player.next.name + '\'s HQ:', self.player.next.hq.hp - self.player.next.hq.injuries
             if self.player.hq.hp - self.player.hq.injuries < self.player.next.hq.hp - self.player.next.hq.injuries:
                 print self.player.name + '\'s HQ is more damaged'
                 print 'Congratulations,', self.player.next.name + '!!!'
@@ -495,7 +312,7 @@ class Neuroshima(GameMode):
                 self.set_timer(3000, self.end_game)
                 return
             else:
-                #TODO implement additional turn
+                # TODO implement additional turn
                 print 'Both HQs are equally damaged'
                 print 'That\'s a draw('
                 self.set_timer(3000, self.end_game)
@@ -517,7 +334,7 @@ class Neuroshima(GameMode):
         for cell in self.playground.cells:
             if cell.tile is not None and \
                     cell.tile.active and \
-                    cell.tile.army_id == self.player.army and \
+                            cell.tile.army_id == self.player.army and \
                     cell.tile.mobile:
                 self.action_types[cell] = []
         for cell in self.player.hand:
@@ -558,37 +375,18 @@ class Neuroshima(GameMode):
                 # actor is in hand - it can be removed
                 self.action_types[action_type] = [self.buttons['remove']]
                 if isinstance(action_type.tile, Tile) and \
-                            (len(self.playground.get_free_cells()) > 1 or self.player.remove_in_turn):
+                        (len(self.playground.get_free_cells()) > 1 or self.player.remove_in_turn):
                     # this is tile - it can be placed on the battlefield
                     # placing new tile on the playground won't start the battle
                     self.action_types[action_type].extend(self.playground.get_free_cells())
                 elif isinstance(action_type.tile, Order) and \
-                            (action_type.tile.type != 'battle' or self.player.remove_in_turn and not self.last_player):
+                        (action_type.tile.type != 'battle' or self.player.remove_in_turn and not self.last_player):
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
         if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:
             # 3rd tile in hand needs to be removed
             self.action_types[self.player.get_hand()[0]] = [self.buttons['remove']]
         self.clicker.pend_click(self.action_types, self.callback_dispatcher)
-
-    def begin_battle(self, period=3000):
-        """
-        Computes units interaction during battle.
-        :return: nothing is returned.
-        """
-        # prepare to battle
-        # find max initiative
-        # battle
-        battle = Battle(self.playground,
-                        self.clicker.pend_click,
-                        self.buttons,
-                        self.release_disable_units,
-                        self.event,
-                        self.set_timer,
-                        period,
-                        self.renderer,
-                        self.new_turn)
-        self.set_timer(period, battle.battle_phase)
 
 
 if __name__ == "__main__":

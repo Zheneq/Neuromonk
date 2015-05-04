@@ -52,6 +52,13 @@ class Player(object):
                 cell.tile = None
                 break
 
+    def take_to_hand(self, tile):
+        for cell in self.hand:
+            if cell.tile is None:
+                cell.tile = tile
+                return cell
+
+
     def get_tiles(self, turn):
         turn = min(3, turn)
         num_tiles_to_get = min(turn - self.tiles_in_hand(), len(self.tiles))
