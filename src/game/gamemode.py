@@ -221,9 +221,11 @@ class Neuroshima(GameMode):
         if isinstance(cell.tile, Unit) and cell.tile.active and cell.tile.nets:
             for ind in xrange(len(cell.neighbours)):
                 if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
-                                cell.neighbours[ind] is not None and \
-                                cell.neighbours[ind].tile is not None and \
-                                cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                        cell.neighbours[ind] is not None and \
+                        cell.neighbours[ind].tile is not None and \
+                        cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
+                        not (cell.neighbours[ind].tile.nets and
+                             cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]):
                     # disable unit
                     cell.neighbours[ind].tile.active = False
 
