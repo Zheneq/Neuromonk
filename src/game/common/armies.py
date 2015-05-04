@@ -121,7 +121,7 @@ class Moloch(Army):
 
 class Hegemony(Army):
     def __init__(self, mode='dm'):
-        Army.__init__(self, 3, 'Moloch', mode)
+        Army.__init__(self, 3, 'Hegemony', mode)
         self.hq = Base(self.army_id, self.base_hp, 'HQ', [1,1,1,1,1,1], [[0, True]], {'melee': [1,1,1,1,1,1]}, {})
         for i in xrange(3):
             runner = Unit(self.army_id, 1, 'Runner', [1,0,0,0,0,0], None, None, None, [[2, True]], mobility=True)
@@ -136,7 +136,7 @@ class Hegemony(Army):
         for i in xrange(2):
             netfighter = Unit(self.army_id, 1, 'Netfighter', None, None, None, [1,0,0,0,0,0], None)
             self.army['netfighter' + str(i)] = netfighter
-        netmaser = Unit(self.army_id, 1, 'Netmaser', [0,1,0,0,0,0], None, None, [1,0,0,0,0,1], [[2, True]])
+        netmaser = Unit(self.army_id, 1, 'Netmaser', [1,0,0,0,0,0], None, None, [0,1,0,0,0,1], [[2, True]])
         self.army['netmaser'] = netmaser
         guard = Unit(self.army_id, 2, 'Guard', [1,1,0,0,0,1], None, None, None, [[2, True]])
         self.army['guard'] = guard
@@ -172,7 +172,7 @@ class Hegemony(Army):
 armies = {}
 armies[1] = Moloch
 armies[2] = Borgo
-armies[2] = Hegemony
+armies[3] = Hegemony
 
 
 if __name__ == '__main__':

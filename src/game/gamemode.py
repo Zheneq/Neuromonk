@@ -145,7 +145,7 @@ class Neuroshima(GameMode):
         # DEBUG
         Zq = Player('Zheneq', 1, 0, self)
         Zq.army_shuffle()
-        Dand = Player('Dandelion', 2, 1, self)
+        Dand = Player('Dandelion', 3, 1, self)
         Dand.army_shuffle()
         self.players = [Zq, Dand]
         self.players[0].next = self.players[1]
