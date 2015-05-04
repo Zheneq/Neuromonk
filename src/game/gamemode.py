@@ -225,7 +225,7 @@ class Neuroshima(GameMode):
                         cell.neighbours[ind].tile is not None and \
                         cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
                         not (cell.neighbours[ind].tile.nets and
-                             cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]):
+                             cell.neighbours[ind].tile.nets[(ind + 9 - cell.neighbours[ind].turn) % 6]):
                     # disable unit
                     cell.neighbours[ind].tile.active = False
 
