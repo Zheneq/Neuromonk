@@ -153,6 +153,8 @@ class Hegemony(Army):
         scout = Module(self.army_id, 1, 'Scout', {'initiative': [1,1,0,0,0,1]}, {})
         self.army['scout'] = scout
         #TODO transport
+        transport = Module(self.army_id, 1, 'Transport', {'mobility': [1,1,1,1,1,1]}, {}, immovable=True)
+        self.army['transport'] = transport
         #TODO quartermaster
         for i in xrange(5):
             battle = Order(self.army_id, 'battle')

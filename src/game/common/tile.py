@@ -19,7 +19,7 @@ class Tile(Hex):
     is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
     healing unit.
     """
-    def __init__(self, id, hp, name, mobility=False):
+    def __init__(self, id, hp, name, mobility=False, immovable=False):
         """
         Tile constructor.
         :param id: id of army this unit belongs to.
@@ -34,6 +34,7 @@ class Tile(Hex):
         self.hp = hp
         self.name = name
         self.mobile = mobility
+        self.immovable = immovable
         self.active = True
         self.injuries = 0
 
@@ -67,7 +68,7 @@ class Unit(Tile):
     Standard unit class. Besides of common tile info stores initiative, attack, armor and using nets.
     """
     def __init__(self, id, hp, name, melee, range, armor, nets, initiative,
-                 row_attack=False, melee_buff=True, range_buff=True, mobility=False, unique_action=None):
+                 row_attack=False, melee_buff=True, range_buff=True, mobility=False, unique_action=None, immovable=False):
         """
         Unit constructor.
         :param id: id of army this unit belongs to.
@@ -89,9 +90,10 @@ class Unit(Tile):
         :param range_buff: boolean flag set when unit can be influenced by range damage modificators.
         :param mobility: boolean flag set when unit is mobile.
         :param unique_action: unique action unit can do.
+        :param immovable: boolean flag set when unit can't move.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp, name, mobility=mobility)
+        Tile.__init__(self, id, hp, name, mobility=mobility, immovable=immovable)
         self.initiative = initiative
         self.melee = melee
         self.range = range
@@ -170,7 +172,7 @@ class Module(Tile):
     """
     Standard module class. Modules buff allies and debuff enemies
     """
-    def __init__(self, id, hp, name, buff, debuff, mobility=False):
+    def __init__(self, id, hp, name, buff, debuff, mobility=False, immovable=False):
         """
         Module constructor.
         :param id: id of army this module belongs to.
@@ -178,9 +180,10 @@ class Module(Tile):
         :param name: name of module.
         :param buff: dictionary of buffs of module. Key is type of bonus, value is list of bonus' values in directions.
         :param debuff: dictionary of debuffs of module. Similar to 'buff' parameter.
+        :param immovable: boolean flag set when unit can't move.
         :return: nothing is returned.
         """
-        Tile.__init__(self, id, hp, name, mobility=mobility)
+        Tile.__init__(self, id, hp, name, mobility=mobility, immovable=immovable)
         self.buff = buff
         self.debuff = debuff
 

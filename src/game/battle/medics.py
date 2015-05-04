@@ -24,7 +24,8 @@ class Medicine(object):
         for ind in xrange(len(cell.neighbours)):
             if cell.tile.direction[(ind + 6 - cell.turn) % 6] and \
                             cell.neighbours[ind] is not None and \
-                            cell.neighbours[ind].tile is not None:
+                            cell.neighbours[ind].tile is not None and \
+                            cell.neighbours[ind].tile.army_id == medic_cell.tile.army_id:
                 # this tile is connected to medic
                 neighbour = cell.neighbours[ind]
                 if neighbour is not medic_cell and medic_cell not in neighbour.tile.active_medics:

@@ -12,6 +12,7 @@ from src.game.battle.battle import Battle
 
 from src.game.tactic.orderhandler import OrderHandler
 
+
 class GameMode(object):
     """
     Main game class. Controls game process.
@@ -332,9 +333,11 @@ class Neuroshima(GameMode):
         # create dictionary of actions
         self.action_types = {}
         for cell in self.playground.cells:
+            # get 'mobility' bonuses
+
             if cell.tile is not None and \
                     cell.tile.active and \
-                            cell.tile.army_id == self.player.army and \
+                    cell.tile.army_id == self.player.army and \
                     cell.tile.mobile:
                 self.action_types[cell] = []
         for cell in self.player.hand:
