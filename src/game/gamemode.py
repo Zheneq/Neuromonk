@@ -1,3 +1,5 @@
+from src.game.battle.battle import Battle
+
 __author__ = 'zheneq & dandelion'
 
 import pygame
@@ -7,8 +9,6 @@ from src.game.common.grid import Grid, Cell, Button
 from src.game.common.tile import *
 from src.game.common.renderer import Renderer
 from src.game.common.player import Player
-
-from src.game.battle.battle import Battle
 
 from src.game.tactic.orderhandler import OrderHandler
 
@@ -339,7 +339,7 @@ class Neuroshima(GameMode):
 
             if cell.tile is not None and \
                     cell.tile.active and \
-                    cell.tile.army_id == self.player.army and \
+                            cell.tile.army_id == self.player.army and \
                     cell.tile.mobile:
                 self.action_types[cell] = []
         for cell in self.player.hand:
