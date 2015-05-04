@@ -142,6 +142,10 @@ class Unit(Tile):
         self.add_attacks_used = 0
         self.unique_attack = unique_action
         self.attack = self.usual_attack
+        self.convert = [None, None, None, None, None, None]
+        for ind in xrange(len(self.convert)):
+            if self.melee and self.melee[ind] or self.range and self.range[ind]:
+                self.convert[ind] = 'able'
 
     def damage(self, direction):
         """
@@ -150,14 +154,33 @@ class Unit(Tile):
         :return: returns dictionary with two keys: 'melee' and 'range'. Values are wounds.
         """
         result = {}
-        if self.melee:
-            result['melee'] = self.melee[direction % 6]
-        else:
-            result['melee'] = 0
-        if self.range:
-            result['range'] = self.range[direction % 6]
-        else:
+        if self.convert[direction % 6] is 'melee':
+            if self.melee:
+                result['melee'] = self.melee[direction % 6]
+            else:
+                result['melee'] = 0
+            if self.range:
+                # converted to melee
+                result['melee'] += self.range[direction % 6]
             result['range'] = 0
+        elif self.convert[direction % 6] is 'range':
+            if self.range:
+                result['range'] = self.range[direction % 6]
+            else:
+                result['range'] = 0
+            if self.melee:
+                # converted to range
+                result['range'] += self.melee[direction % 6]
+            result['melee'] = 0
+        else:
+            if self.melee:
+                result['melee'] = self.melee[direction % 6]
+            else:
+                result['melee'] = 0
+            if self.range:
+                result['range'] = self.range[direction % 6]
+            else:
+                result['range'] = 0
         return result
 
     def get_armor(self, direction):

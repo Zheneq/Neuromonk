@@ -337,6 +337,10 @@ class Neuroshima(GameMode):
         self.player.remove_in_turn = False
         if self.player.tiles_in_hand() < 3:
             self.player.remove_in_turn = True
+
+        #TODO DEBUG
+        # self.player.hand[0].tile = Order(self.player.army, 'battle')
+
         # reset units' support info
         for cell in self.playground.cells:
             # reset mobility

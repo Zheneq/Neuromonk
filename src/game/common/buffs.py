@@ -38,3 +38,4 @@ def compute_mobility(cell):
     :return: returns sum of all modificators
     """
     return cell.tile.get_modificator(cell, 'mobility')
+

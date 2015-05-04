@@ -1,6 +1,7 @@
 __author__ = 'dandelion'
 
-from src.game.common.tile import Unit, Base
+from src.game.common.grid import Button
+from src.game.common.tile import Unit, Base, Module, DisposableModule
 from src.game.common.armies import armies
 
 from src.game.common.buffs import compute_initiative, compute_attack, compute_additional_attacks
@@ -48,12 +49,20 @@ class Battle(object):
         self.continue_game = continue_game
 
         self.actions = {}
+        self.converting_unit = None
 
         if init_phase == 1000:
             print 'Let the Battle Begin!!!'
             self.initiative_phase = 0
             for cell in self.battlefield.cells:
+                # reset disposable modules
+                if cell.tile is not None and isinstance(cell.tile, DisposableModule):
+                    cell.tile.used = []
                 if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
+                    # reset unit converters
+                    for ind in xrange(len(cell.tile.convert)):
+                        if cell.tile.melee and cell.tile.melee[ind] or cell.tile.range and cell.tile.range[ind]:
+                            cell.tile.convert[ind] = 'able'
                     # reset additional attacks
                     cell.tile.add_attacks_used = 0
                     # reset initiative
@@ -75,7 +84,7 @@ class Battle(object):
         """
         print 'Battle phase', self.initiative_phase, 'begins'
         # phase of giving damage
-        self.make_choice()
+        self.resolve_converts()
 
     def end_battle(self):
         """
@@ -86,12 +95,100 @@ class Battle(object):
         self.renderer.idle = False
         self.event(self.continue_game)
 
+#-------------------------------resolving-converters-------------------------------------------
+
+    def get_converts(self, cell, initiative_ind, add_attack=False):
+        for ind in xrange(len(cell.neighbours)):
+            if cell.neighbours[ind] is not None and \
+                    cell.neighbours[ind].tile is not None and \
+                    cell.neighbours[ind].tile.active:
+                if isinstance(cell.neighbours[ind].tile, Module) and \
+                        not isinstance(cell.neighbours[ind].tile, DisposableModule) or \
+                        isinstance(cell.neighbours[ind].tile, DisposableModule) and \
+                        cell.tile not in cell.neighbours[ind].tile.used:
+                    buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)
+                    if 'convert' in buffs and buffs['convert']:
+                        if cell.neighbours[ind] not in self.actions:
+                            self.actions[cell.neighbours[ind]] = []
+                        self.actions[cell.neighbours[ind]].append(cell)
+
+    def resolve_converts(self):
+        self.actions = {}
+        self.units_actions_in_phase(self.get_converts)
+        if self.actions:
+            for module in self.actions:
+                self.actions[module].append(self.buttons['confirm'])
+            self.pend_click(self.actions, self.resolve_convert_for_unit)
+        else:
+            self.choose_actions()
+
+    def resolve_convert_for_unit(self, (converter_cell, unit_cell)):
+        if isinstance(unit_cell, Button):
+            # converter resolved
+            del self.actions[converter_cell]
+            if self.actions:
+                self.pend_click(self.actions, self.resolve_convert_for_unit)
+            else:
+                self.give_damage_phase()
+            return
+        else:
+            # mark unit as given bonus from converter if necessary
+            if isinstance(converter_cell.tile, DisposableModule):
+                converter_cell.tile.used.append(unit_cell.tile)
+            # mark converting unit
+            self.converting_unit = unit_cell
+            self.actions[converter_cell].remove(unit_cell)
+            if len(self.actions[converter_cell]) == 1:
+                # all units resolved - module resolved
+                del self.actions[converter_cell]
+            # find directions
+            directions = []
+            for ind in xrange(len(unit_cell.tile.convert)):
+                if unit_cell.neighbours[(ind + unit_cell.turn) % 6] is None or \
+                        unit_cell.tile.convert[ind] != 'able':
+                    continue
+                directions.append(unit_cell.neighbours[(ind + unit_cell.turn) % 6])
+            if len(directions) == 1:
+                self.choose_attack((unit_cell, directions[0]))
+            else:
+                self.pend_click({unit_cell: directions}, self.choose_attack)
+
+    def choose_attack(self, (unit_cell, direction)):
+        attack_types = []
+        if unit_cell.tile.melee and unit_cell.tile.melee[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
+            attack_types.append(self.buttons['confirm'])
+        if unit_cell.tile.range and unit_cell.tile.range[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
+            attack_types.append(self.buttons['melee'])
+        if len(attack_types) == 1:
+            self.convert_attack((direction, attack_types[0]))
+        else:
+            self.pend_click({direction: attack_types}, self.convert_attack)
+
+    def convert_attack(self, (direction, type)):
+        ind = (self.converting_unit.neighbours.index(direction) + 6 - self.converting_unit.turn) % 6
+        if type is self.buttons['apply']:
+            print armies[self.converting_unit.tile.army_id]().name, \
+                self.converting_unit.tile.name, 'converted his attack of direction', \
+                self.converting_unit.neighbours.index(direction), 'to melee'
+            self.converting_unit.tile.convert[ind] = 'melee'
+        else:
+            print armies[self.converting_unit.tile.army_id]().name, \
+                self.converting_unit.tile.name, 'converted his attack of direction', \
+                self.converting_unit.neighbours.index(direction), 'to range'
+            self.converting_unit.tile.convert[ind] = 'range'
+        if self.actions:
+            self.pend_click(self.actions, self.resolve_convert_for_unit)
+        else:
+            self.choose_actions()
+
+#-------------------------------Choosing-action-for-unit---------------------------------------
+
     def add_choice(self, cell, initiative_ind, add_attack=False):
         if cell.tile.unique_attack:
             # make choice what actions unit will do in this phase
             self.actions[cell] = [self.buttons['apply'], self.buttons['confirm']]
 
-    def make_choice(self):
+    def choose_actions(self):
         self.actions = {}
         self.units_actions_in_phase(self.add_choice)
         if self.actions:
@@ -108,7 +205,7 @@ class Battle(object):
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
-            self.give_damage_phase()
+            self.choose_actions()
 
     def units_actions_in_phase(self, unit_actions):
         for cell in self.battlefield.cells:

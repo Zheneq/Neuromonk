@@ -154,7 +154,8 @@ class Hegemony(Army):
         self.army['scout'] = scout
         transport = DisposableModule(self.army_id, 1, 'Transport', {'mobility': [1,1,1,1,1,1]}, {}, immovable=True)
         self.army['transport'] = transport
-        #TODO quartermaster
+        quartermaster = DisposableModule(self.army_id, 1, 'Quartermaster', {'convert': [1,0,0,0,0,0]}, {}, immovable=True)
+        self.army['quartermaster'] = quartermaster
         for i in xrange(5):
             battle = Order(self.army_id, 'battle')
             self.army['battle' + str(i)] = battle
