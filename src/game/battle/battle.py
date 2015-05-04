@@ -158,7 +158,7 @@ class Battle(object):
         if unit_cell.tile.melee and unit_cell.tile.melee[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
             attack_types.append(self.buttons['confirm'])
         if unit_cell.tile.range and unit_cell.tile.range[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
-            attack_types.append(self.buttons['melee'])
+            attack_types.append(self.buttons['apply'])
         if len(attack_types) == 1:
             self.convert_attack((direction, attack_types[0]))
         else:
