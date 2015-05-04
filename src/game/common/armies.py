@@ -119,9 +119,58 @@ class Moloch(Army):
         cell.tile.hp = 0
 
 
+class Hegemony(Army):
+    def __init__(self, mode='dm'):
+        Army.__init__(self, 3, 'Moloch', mode)
+        self.hq = Base(self.army_id, self.base_hp, 'HQ', [1,1,1,1,1,1], [[0, True]], {'melee': [1,1,1,1,1,1]}, {})
+        for i in xrange(3):
+            runner = Unit(self.army_id, 1, 'Runner', [1,0,0,0,0,0], None, None, None, [[2, True]], mobility=True)
+            self.army['runner' + str(i)] = runner
+        thug = Unit(self.army_id, 1, 'Thug', [2,1,0,0,0,1], None, None, None, [[2, True]])
+        self.army['thug'] = thug
+        for i in xrange(4):
+            ganger = Unit(self.army_id, 1, 'Ganger', [1,0,0,0,0,0], None, None, None, [[3, True]])
+            self.army['ganger' + str(i)] = ganger
+        gladiator = Unit(self.army_id, 2, 'Gladiator', [2,2,0,0,0,2], None, [1,1,0,0,0,1], None, [[1, True]])
+        self.army['gladiator'] = gladiator
+        for i in xrange(2):
+            netfighter = Unit(self.army_id, 1, 'Netfighter', None, None, None, [1,0,0,0,0,0], None)
+            self.army['netfighter' + str(i)] = netfighter
+        netmaser = Unit(self.army_id, 1, 'Netmaser', [0,1,0,0,0,0], None, None, [1,0,0,0,0,1], [[2, True]])
+        self.army['netmaser'] = netmaser
+        guard = Unit(self.army_id, 2, 'Guard', [1,1,0,0,0,1], None, None, None, [[2, True]])
+        self.army['guard'] = guard
+        for i in xrange(3):
+            universal = Unit(self.army_id, 1, 'Universal soldier', [1,0,0,0,0,0], [1,0,0,0,0,0], None, None, [[3, True]])
+            self.army['universal soldier' + str(i)] = universal
+        boss = Module(self.army_id, 1, 'Boss', {'melee': [1,1,0,0,0,0], 'initiative': [1,1,0,0,0,0]}, {})
+        self.army['boss'] = boss
+        for i in xrange(2):
+            officerI = Module(self.army_id, 1, 'Officer I', {'melee': [1,1,0,0,0,0]}, {})
+            self.army['officerI' + str(i)] = officerI
+        officerII = Module(self.army_id, 1, 'Officer II', {'melee': [1,1,0,0,0,1]}, {})
+        self.army['officerII'] = officerII
+        scout = Module(self.army_id, 1, 'Scout', {'initiative': [1,1,0,0,0,1]}, {})
+        self.army['scout'] = scout
+        #TODO transport
+        #TODO quartermaster
+        for i in xrange(5):
+            battle = Order(self.army_id, 'battle')
+            self.army['battle' + str(i)] = battle
+        for i in xrange(3):
+            move = Order(self.army_id, 'move')
+            self.army['move' + str(i)] = move
+        for i in xrange(2):
+            pushback = Order(self.army_id, 'pushback')
+            self.army['pushback' + str(i)] = pushback
+        sniper = Order(self.army_id, 'sniper')
+        self.army['sniper'] = sniper
+
+
 armies = {}
 armies[1] = Moloch
 armies[2] = Borgo
+armies[2] = Hegemony
 
 
 if __name__ == '__main__':

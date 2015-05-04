@@ -28,7 +28,6 @@ class Grenade(object):
             self.game.action_types[cell] = []
             self.game.event(self.game.tactic)
 
-
     def grenade(self, (target, empty)):
         self.game.release_disable_units(target)
         target.tile = None

@@ -4,6 +4,7 @@ from src.game.tactic.orders.march import March
 from src.game.tactic.orders.pushback import PushBack
 from src.game.tactic.orders.airstrike import AirStrike
 from src.game.tactic.orders.grenade import Grenade
+from src.game.tactic.orders.sniper import Sniper
 
 
 class OrderHandler(object):
@@ -16,6 +17,7 @@ class OrderHandler(object):
         self.pushback_order = PushBack(game)
         self.airstrike_order = AirStrike(game)
         self.grenade_order = Grenade(game)
+        self.sniper_order = Sniper(game)
 
     def resolve_order(self, order):
         if order.type == 'battle':
@@ -24,6 +26,8 @@ class OrderHandler(object):
             self.airstrike_order.begin_airstrike()
         elif order.type == 'grenade':
             self.grenade_order.begin_grenade()
+        elif order.type == 'sniper':
+            self.sniper_order.begin_sniper()
         elif order.type == 'move':
             self.march_order.begin_march()
         elif order.type == 'pushback':
