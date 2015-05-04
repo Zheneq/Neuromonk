@@ -79,7 +79,7 @@ class Clicker(object):
                         self.click_selected = None
                         self.click_pending = {}
                         break
-                if cell in self.click_pending:
+                if self.click_pending and cell in self.click_pending:
                     # if player doesn't need to select second actor
                     if not self.click_pending[cell]:
                         self.game.event(self.click_callback, (cell, None))
