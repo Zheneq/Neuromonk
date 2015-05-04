@@ -19,7 +19,8 @@ class Tile(Hex):
     is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
     healing unit.
     """
-    def __init__(self, id, hp, name, mobility=False, immovable=False):
+
+    def __init__(self, id, hp, name, mobility=0, immovable=False):
         """
         Tile constructor.
         :param id: id of army this unit belongs to.
@@ -33,7 +34,8 @@ class Tile(Hex):
         self.active_medics = []
         self.hp = hp
         self.name = name
-        self.mobile = mobility
+        self.default_mobility = mobility
+        self.mobility = 0
         self.immovable = immovable
         self.active = True
         self.injuries = 0
@@ -45,13 +47,47 @@ class Tile(Hex):
         """
         self.gfx = None
 
+    def get_modificator(self, cell, mod_type):
+        """
+        Gets all buffs and debuffs of type 'modtype' for 'cell'
+        :param cell: cell with tile, collecting bonuses.
+        :param mod_type: type of bonuses. Now can be 'melee', 'range', 'initiative' or 'add_attacks'.
+        :return: returns sum of all modificators
+        """
+        mod = 0
+        for ind in xrange(len(cell.neighbours)):
+            if cell.neighbours[ind] is not None and \
+                    cell.neighbours[ind].tile is not None and \
+                    cell.neighbours[ind].tile.active:
+                if isinstance(cell.neighbours[ind].tile, Module):
+                    # TODO add buffs from allies
+                    if cell.neighbours[ind].tile.army_id == cell.tile.army_id:  # it can buff
+                        if not (isinstance(cell.neighbours[ind].tile, DisposableModule) and
+                                cell.tile in cell.neighbours[ind].tile.used):
+                            buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)
+                            if mod_type in buffs and buffs[mod_type]:
+                                mod += buffs[mod_type]
+                                if isinstance(cell.neighbours[ind].tile, DisposableModule) and \
+                                        cell.tile not in cell.neighbours[ind].tile.used:
+                                    cell.neighbours[ind].tile.used.append(cell.tile)
+                    else:  # it can debuff
+                        if not (isinstance(cell.neighbours[ind].tile, DisposableModule) and
+                                cell.tile in cell.neighbours[ind].tile.used):
+                            debuffs = cell.neighbours[ind].tile.get_debuffs(ind - cell.neighbours[ind].turn)
+                            if mod_type in debuffs and debuffs[mod_type]:
+                                mod -= debuffs[mod_type]
+                                if isinstance(cell.neighbours[ind].tile, DisposableModule) and \
+                                        cell.tile not in cell.neighbours[ind].tile.used:
+                                    cell.neighbours[ind].tile.used.append(cell.tile)
+        return mod
+
     def maneuver_rate(self, cell, depth=1, result=None):
         if not result:
             result = [cell]
         if depth > 0:
             for neighbour in cell.neighbours:
                 if neighbour in result:
-                    #visited cell
+                    # visited cell
                     continue
                 else:
                     # unvisited cell
@@ -67,8 +103,9 @@ class Unit(Tile):
     """
     Standard unit class. Besides of common tile info stores initiative, attack, armor and using nets.
     """
+
     def __init__(self, id, hp, name, melee, range, armor, nets, initiative,
-                 row_attack=False, melee_buff=True, range_buff=True, mobility=False, unique_action=None, immovable=False):
+                 row_attack=False, melee_buff=True, range_buff=True, mobility=0, unique_action=None, immovable=False):
         """
         Unit constructor.
         :param id: id of army this unit belongs to.
@@ -172,7 +209,8 @@ class Module(Tile):
     """
     Standard module class. Modules buff allies and debuff enemies
     """
-    def __init__(self, id, hp, name, buff, debuff, mobility=False, immovable=False):
+
+    def __init__(self, id, hp, name, buff, debuff, mobility=0, immovable=False):
         """
         Module constructor.
         :param id: id of army this module belongs to.
@@ -210,11 +248,34 @@ class Module(Tile):
         return result
 
 
+class DisposableModule(Module):
+    """
+    Disposable module is module influencing each unit only once in turn.
+    """
+
+    def __init__(self, id, hp, name, buff, debuff, mobility=0, immovable=False):
+        """
+        Module constructor.
+        :param id: id of army this module belongs to.
+        :param hp: HP of module.
+        :param name: name of module.
+        :param buff: dictionary of buffs of module. Key is type of bonus, value is list of bonus' values in directions.
+        :param debuff: dictionary of debuffs of module. Similar to 'buff' parameter.
+        :param immovable: boolean flag set when unit can't move.
+        :return: nothing is returned.
+        """
+        Tile.__init__(self, id, hp, name, mobility=mobility, immovable=immovable)
+        self.buff = buff
+        self.debuff = debuff
+        self.used = []
+
+
 class Medic(Tile):
     """
     Medic class. Stores directions medic can heal allies.
     """
-    def __init__(self, id, hp, name, direction, mobility=False):
+
+    def __init__(self, id, hp, name, direction, mobility=0):
         """
         Medic constructor.
         :param id: id of army this medic belongs to.
@@ -231,7 +292,8 @@ class Base(Unit, Module):
     """
     Standard Headquarter class. HQ has features of unit (it can move and fight) and module (it can buff).
     """
-    def __init__(self, id, hp, name, melee, initiative, buff, debuff, melee_buff=True, mobility=False):
+
+    def __init__(self, id, hp, name, melee, initiative, buff, debuff, melee_buff=True, mobility=0):
         """
         Base constructor.
         :param id: id of army this unit belongs to.
@@ -247,8 +309,8 @@ class Base(Unit, Module):
         :param melee_buff: boolean flag set when HQ can be influenced by melee damage modificators.
         :return: nothing is returned.
         """
-        Unit.__init__(self, id, hp, name, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=False)
-        Module.__init__(self, id, hp, name, buff, debuff, mobility=False)
+        Unit.__init__(self, id, hp, name, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=mobility)
+        Module.__init__(self, id, hp, name, buff, debuff, mobility=mobility)
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ class Borgo(Army):
             brawler = Unit(self.army_id, 1, 'Brawler', [2,0,0,0,0,0], None, None, None, [[2, True]])
             self.army['brawler' + str(i)] = brawler
         for i in xrange(2):
-            assassin = Unit(self.army_id, 1, 'Assassin', None, [1,0,0,0,0,0], None, None, [[2, True]], mobility=True)
+            assassin = Unit(self.army_id, 1, 'Assassin', None, [1,0,0,0,0,0], None, None, [[2, True]], mobility=1)
             self.army['assassin' + str(i)] = assassin
         medic = Medic(self.army_id, 1, 'Medic', [1,1,0,0,0,1])
         self.army['medic'] = medic
@@ -124,7 +124,7 @@ class Hegemony(Army):
         Army.__init__(self, 3, 'Hegemony', mode)
         self.hq = Base(self.army_id, self.base_hp, 'HQ', [1,1,1,1,1,1], [[0, True]], {'melee': [1,1,1,1,1,1]}, {})
         for i in xrange(3):
-            runner = Unit(self.army_id, 1, 'Runner', [1,0,0,0,0,0], None, None, None, [[2, True]], mobility=True)
+            runner = Unit(self.army_id, 1, 'Runner', [1,0,0,0,0,0], None, None, None, [[2, True]], mobility=1)
             self.army['runner' + str(i)] = runner
         thug = Unit(self.army_id, 1, 'Thug', [2,1,0,0,0,1], None, None, None, [[2, True]])
         self.army['thug'] = thug
@@ -152,8 +152,7 @@ class Hegemony(Army):
         self.army['officerII'] = officerII
         scout = Module(self.army_id, 1, 'Scout', {'initiative': [1,1,0,0,0,1]}, {})
         self.army['scout'] = scout
-        #TODO transport
-        transport = Module(self.army_id, 1, 'Transport', {'mobility': [1,1,1,1,1,1]}, {}, immovable=True)
+        transport = DisposableModule(self.army_id, 1, 'Transport', {'mobility': [1,1,1,1,1,1]}, {}, immovable=True)
         self.army['transport'] = transport
         #TODO quartermaster
         for i in xrange(5):

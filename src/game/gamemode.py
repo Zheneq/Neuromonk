@@ -1,5 +1,3 @@
-from src.game.battle.battle import Battle
-
 __author__ = 'zheneq & dandelion'
 
 import pygame
@@ -9,6 +7,9 @@ from src.game.common.grid import Grid, Cell, Button
 from src.game.common.tile import *
 from src.game.common.renderer import Renderer
 from src.game.common.player import Player
+from src.game.common.buffs import compute_mobility
+
+from src.game.battle.battle import Battle
 
 from src.game.tactic.orderhandler import OrderHandler
 
@@ -224,7 +225,8 @@ class Neuroshima(GameMode):
                         cell.neighbours[ind] is not None and \
                         cell.neighbours[ind].tile is not None and \
                         cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                        not (cell.neighbours[ind].tile.nets and
+                        not (isinstance(cell.neighbours[ind].tile, Unit) and
+                             cell.neighbours[ind].tile.nets and
                              cell.neighbours[ind].tile.nets[(ind + 9 - cell.neighbours[ind].turn) % 6]):
                     # disable unit
                     cell.neighbours[ind].tile.active = False
@@ -271,6 +273,9 @@ class Neuroshima(GameMode):
                     return
                 else:
                     # marsh/mobility resolve
+                    if s in self.playground.cells:
+                        # mobility resolve - decrease tile's mobility
+                        s.tile.mobility -= 1
                     self.march((s, cell))
 
     def place_hq(self, (who, where)):
@@ -332,16 +337,16 @@ class Neuroshima(GameMode):
         self.player.remove_in_turn = False
         if self.player.tiles_in_hand() < 3:
             self.player.remove_in_turn = True
+        # reset units' support info
+        for cell in self.playground.cells:
+            # reset mobility
+            if cell.tile is not None and cell.tile.army_id == self.player.army:
+                cell.tile.mobility = cell.tile.default_mobility
+            # reset disposable modules
+            if cell.tile is not None and isinstance(cell.tile, DisposableModule):
+                cell.tile.used = []
         # create dictionary of actions
         self.action_types = {}
-        for cell in self.playground.cells:
-            # get 'mobility' bonuses
-
-            if cell.tile is not None and \
-                    cell.tile.active and \
-                            cell.tile.army_id == self.player.army and \
-                    cell.tile.mobile:
-                self.action_types[cell] = []
         for cell in self.player.hand:
             if cell.tile:
                 self.action_types[cell] = []
@@ -360,7 +365,14 @@ class Neuroshima(GameMode):
             self.begin_battle()
             return
         for cell in self.playground.cells:
+            # if 'cell' is netfighter disable enemies 'cell' attacks
             self.disable_units(cell)
+            if cell.tile is not None and cell.tile.army_id == self.player.army:
+                # if 'cell' is near transport increase 'cell' mobility
+                cell.tile.mobility += compute_mobility(cell)
+                # if unit is mobile add action
+                if not cell.tile.immovable and cell.tile.mobility > 0:
+                    self.action_types[cell] = []
         if self.player.tiles_in_hand() == 3 and \
                 isinstance(self.player.hand[0].tile, Order) and \
                 isinstance(self.player.hand[1].tile, Order) and \

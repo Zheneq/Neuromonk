@@ -76,7 +76,7 @@ class TileRenderer:
             for init in self.tile.initiative:
                 self.blit("../res/init" + str(init[0]) + ".png")
         # mobility
-        if self.tile.mobile:
+        if self.tile.default_mobility:
             self.blit("../res/mobility.png")
         # unique attack
         if self.tile.unique_attack:
