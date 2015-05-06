@@ -205,7 +205,7 @@ class Battle(object):
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
-            self.choose_actions()
+            self.give_damage_phase()
 
     def units_actions_in_phase(self, unit_actions):
         for cell in self.battlefield.cells:
