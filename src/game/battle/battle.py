@@ -1,10 +1,10 @@
 __author__ = 'dandelion'
 
-from src.game.common.grid import Button
-from src.game.common.tile import Unit, Base, Module, DisposableModule
-from src.game.common.armies import armies
+from game.common.grid import Button
+from game.common.tile import Unit, Base, Module, DisposableModule
+from game.common.armies import armies
 
-from src.game.common.buffs import compute_initiative, compute_attack, compute_additional_attacks
+from game.common.buffs import compute_initiative, compute_attack, compute_additional_attacks
 from medics import Medicine
 
 

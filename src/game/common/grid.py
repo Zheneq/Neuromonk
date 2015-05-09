@@ -1,6 +1,6 @@
 __author__ = 'Dandelion'
 
-from src.game.common.renderer import Renderer
+from game.common.renderer import Renderer
 
 
 class Clickable(object):

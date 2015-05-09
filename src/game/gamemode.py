@@ -3,16 +3,16 @@ __author__ = 'zheneq & dandelion'
 import pygame
 from copy import deepcopy
 
-from src.game.common.clicker import Clicker
-from src.game.common.grid import Grid, Cell, Button
-from src.game.common.tile import *
-from src.game.common.renderer import Renderer
-from src.game.common.player import Player
-from src.game.common.buffs import compute_mobility
+from game.common.clicker import Clicker
+from game.common.grid import Grid, Cell, Button
+from game.common.tile import *
+from game.common.renderer import Renderer
+from game.common.player import Player
+from game.common.buffs import compute_mobility
 
-from src.game.battle.battle import Battle
+from game.battle.battle import Battle
 
-from src.game.tactic.orderhandler import OrderHandler
+from game.tactic.orderhandler import OrderHandler
 
 
 class GameMode(object):
@@ -243,6 +243,10 @@ class Neuroshima(GameMode):
         self.event(self.tactic)
 
     def new_turn(self):
+        for cell in self.playground.cells:
+            # reset disposable modules
+            if cell.tile is not None and isinstance(cell.tile, DisposableModule):
+                cell.tile.used = []
         self.player = self.player.next
         self.event(self.turn)
 
@@ -372,9 +376,6 @@ class Neuroshima(GameMode):
             # reset mobility
             if cell.tile is not None and cell.tile.army_id == self.player.army:
                 cell.tile.mobility = cell.tile.default_mobility
-            # reset disposable modules
-            if cell.tile is not None and isinstance(cell.tile, DisposableModule):
-                cell.tile.used = []
         # create dictionary of actions
         self.action_types = {}
         for cell in self.player.hand:

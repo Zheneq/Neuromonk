@@ -2,8 +2,8 @@ __author__ = 'dandelion'
 
 import random
 
-from src.game.common.armies import *
-from src.game.common.grid import Cell
+from game.common.armies import *
+from game.common.grid import Cell
 
 
 class Player(object):

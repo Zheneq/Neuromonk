@@ -1,7 +1,8 @@
 __author__ = 'Zheneq'
+
 import pygame
 
-from src.game.common.tile import *
+from game.common.tile import *
 
 
 class TileRenderer:
