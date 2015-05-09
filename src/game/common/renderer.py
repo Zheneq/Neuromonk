@@ -172,10 +172,12 @@ class Renderer:
         #
         self.pics = {}
         self.pics["button"] = pygame.image.load("../res/button.png")
-        tile_gen = TileRenderer()
+        self.tile_gen = TileRenderer()
         self.pics["cell"] = pygame.image.load("../res/cell.png")
-        self.pics["button_high"] = self.pics["cell_high"] = tile_gen.generate_cell_fx(highlighted = True)
-        self.pics["button_sel"]  = self.pics["cell_sel"] = tile_gen.generate_cell_fx(selected = True)
+        self.pics["cellmask"] = pygame.mask.from_surface(self.pics["cell"])
+        self.pics["cellmaskrect"] = self.pics["cell"].get_rect()
+        self.pics["button_high"] = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
+        self.pics["button_sel"]  = self.pics["cell_sel"] = self.tile_gen.generate_cell_fx(selected = True)
 
     def tick(self, deltatime):
         """
@@ -210,8 +212,12 @@ class Renderer:
         indent = 0
         tile_gen = TileRenderer()
         for player in players:
-            pic = pygame.image.load("../res/player.png")
-            gfx_indent = pic.get_rect().center
+            # TODO: Initialize in proper place
+            player.gfx = pygame.image.load("../res/player.png")
+            player.gfx_indent = gfx_indent = player.gfx.get_rect().center
+            player.gfx_multiplier = self.game.playground.gfx_multiplier
+            #
+            pic = self.clone_pic(player.gfx)
             for cell in player.hand:
                 #
                 cell.mask = self.game.playground.cellmask
@@ -219,35 +225,11 @@ class Renderer:
                 cell.maskrect.center = ((gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0]) * self.scale,
                                         (gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1]) * self.scale + indent)
                 # rendering cell fx
-                if self.game.clicker.click_pending:
-                    if self.game.clicker.click_selected is not None:
-                        if cell in self.game.clicker.click_pending[self.game.clicker.click_selected]:
-                            cellpicrect = cell.gfx["highlighted"].get_rect()
-                            cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
-                                                  gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
-                            pic.blit(cell.gfx["highlighted"], cellpicrect)
-                        if cell is self.game.clicker.click_selected:
-                            cellpicrect = self.game.clicker.click_selected.gfx["selected"].get_rect()
-                            cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
-                                                  gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
-                            pic.blit(self.game.clicker.click_selected.gfx["selected"], cellpicrect)
-                    else:
-                        if cell in self.game.clicker.click_pending:
-                            cellpicrect = cell.gfx["highlighted"].get_rect()
-                            cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
-                                                  gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
-                            pic.blit(cell.gfx["highlighted"], cellpicrect)
+                self.render_cell_fx(pic, player, cell)
                 # rendering tiles
-                tile_gen = TileRenderer()
                 if cell.tile is None:
                     continue
-                if cell.turn not in cell.tile.gfx:
-                    cell.tile.gfx[cell.turn] = tile_gen.generate_tile(cell.tile, cell.turn)
-                tilepic = tile_gen.generate_tile_fx(cell.tile, cell.turn)
-                cellpicrect = tilepic.get_rect()
-                cellpicrect.center = (gfx_indent[0] + cell.x * self.game.playground.gfx_multiplier[0],
-                                      gfx_indent[1] + cell.y * self.game.playground.gfx_multiplier[1])
-                pic.blit(tilepic, cellpicrect)
+                pic.blit(*self.render_tile(player, cell))
             pic = pygame.transform.rotozoom(pic, 0.0, self.scale)
             rect = pic.get_rect()
             rect.left = 0
@@ -255,42 +237,34 @@ class Renderer:
             self.screen.blit(pic, rect)
             indent += rect.height
 
-    def render_board(self, grid):
-        self.boardbackbuffer = pygame.Surface((grid.gfx.get_rect().width, grid.gfx.get_rect().height))
-        rect = grid.gfx.get_rect()
-        self.boardbackbuffer = pygame.Surface((rect.width, rect.height))
-        rect.center = self.boardbackbuffer.get_rect().center
-        self.boardbackbuffer.blit(grid.gfx, rect)
-        # rendering cell fx
+    def render_cell_fx(self, target, container, cell):
         if self.game.clicker.click_pending:
             if self.game.clicker.click_selected is not None:
-                for clickable in self.game.clicker.click_pending[self.game.clicker.click_selected]:
-                    if clickable not in grid.cells: continue
-                    cellpicrect = clickable.gfx["highlighted"].get_rect()
-                    cellpicrect.center = (grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0],
-                                          grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1])
-                    self.boardbackbuffer.blit(clickable.gfx["highlighted"], cellpicrect)
-                if self.game.clicker.click_selected in grid.cells:
-                    cellpicrect = self.game.clicker.click_selected.gfx["selected"].get_rect()
-                    cellpicrect.center = (grid.gfx_indent[0] + self.game.clicker.click_selected.x * grid.gfx_multiplier[0],
-                                          grid.gfx_indent[1] + self.game.clicker.click_selected.y * grid.gfx_multiplier[1])
-                    self.boardbackbuffer.blit(self.game.clicker.click_selected.gfx["selected"], cellpicrect)
+                if cell in self.game.clicker.click_pending[self.game.clicker.click_selected]:
+                    self.render_cell_fx_sub(target, container, cell, "highlighted")
+                if cell is self.game.clicker.click_selected:
+                    self.render_cell_fx_sub(target, container, cell, "selected")
             else:
-                for clickable in self.game.clicker.click_pending:
-                    if clickable not in grid.cells: continue
-                    cellpicrect = clickable.gfx["highlighted"].get_rect()
-                    cellpicrect.center = (grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0],
-                                          grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1])
-                    self.boardbackbuffer.blit(clickable.gfx["highlighted"], cellpicrect)
-        elif self.game.clicker.rot_pending:
-            if self.game.clicker.rot_pending in grid.cells:
-                cellpicrect = self.game.clicker.rot_pending.gfx["selected"].get_rect()
-                cellpicrect.center = (grid.gfx_indent[0] + self.game.clicker.rot_pending.x * grid.gfx_multiplier[0],
-                                      grid.gfx_indent[1] + self.game.clicker.rot_pending.y * grid.gfx_multiplier[1])
-                self.boardbackbuffer.blit(self.game.clicker.rot_pending.gfx["selected"], cellpicrect)
+                if cell in self.game.clicker.click_pending:
+                    self.render_cell_fx_sub(target, container, cell, "highlighted")
 
+    def render_cell_fx_sub(self, target, container, cell, type):
+        rect = cell.gfx[type].get_rect()
+        rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
+                       container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
+        target.blit(cell.gfx[type], rect)
+
+    def render_board(self, grid):
+        self.boardbackbuffer = self.clone_pic(grid.gfx)
+        rect = grid.gfx.get_rect()
+        # rendering cell fx
+        for cell in grid.cells:
+            self.render_cell_fx(self.boardbackbuffer, grid, cell)
         # rendering tiles
-        self.render_tiles(grid)
+        for cell in grid.cells:
+            if cell.tile is None:
+                continue
+            self.boardbackbuffer.blit(*self.render_tile(grid, cell))
         # showing it on the screen
         self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
         rect = self.boardbackbuffer.get_rect()
@@ -298,18 +272,15 @@ class Renderer:
         rect.center = self.screenrect.center
         self.screen.blit(self.boardbackbuffer, rect)
 
-    def render_tiles(self, grid):
-        tile_gen = TileRenderer()
-        for cell in grid.cells:
-            if cell.tile is None:
-                continue
-            if cell.turn not in cell.tile.gfx:
-                cell.tile.gfx[cell.turn] = tile_gen.generate_tile(cell.tile, cell.turn)
-            pic = tile_gen.generate_tile_fx(cell.tile, cell.turn)
-            cellpicrect = pic.get_rect()
-            cellpicrect.center = (grid.gfx_indent[0] + cell.x * grid.gfx_multiplier[0],
-                                  grid.gfx_indent[1] + cell.y * grid.gfx_multiplier[1])
-            self.boardbackbuffer.blit(pic, cellpicrect)
+    def render_tile(self, container, cell):
+        if not cell.tile.gfx:
+            for turn in xrange(6):
+                cell.tile.gfx[turn] = self.tile_gen.generate_tile(cell.tile, turn)
+        pic = self.tile_gen.generate_tile_fx(cell.tile, cell.turn)
+        rect = pic.get_rect()
+        rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
+                       container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
+        return pic, rect
 
     def make_button(self, button):
         print "make button"
@@ -363,11 +334,11 @@ class Renderer:
 
     def make_cell(self, cell):
         cell.gfx = {}
-        cell.gfx["default"] = self.clone_pic(self.pics["cell"])
-        cell.gfx["highlighted"] = self.clone_pic(self.pics["cell_high"])
-        cell.gfx["selected"] = self.clone_pic(self.pics["cell_sel"])
-        cell.mask = pygame.mask.from_surface(cell.gfx["default"])
-        cell.maskrect = cell.gfx["default"].get_rect()
+        cell.gfx["default"] = self.pics["cell"]
+        cell.gfx["highlighted"] = self.pics["cell_high"]
+        cell.gfx["selected"] = self.pics["cell_sel"]
+        cell.mask = self.pics["cellmask"]
+        cell.maskrect = self.pics["cellmaskrect"]
 
     def clone_pic(self, surface):
         res = pygame.Surface((surface.get_rect().width, surface.get_rect().height), 0, surface)
