@@ -6,6 +6,13 @@ class Hex(object):
         self.army_id = id
         self.gfx = {}
 
+    def invalidate(self):
+        """
+        Refreshes visual representation of the tile
+        :return: nothing is returned.
+        """
+        self.gfx = {}
+
 
 class Order(Hex):
     def __init__(self, id, type):
@@ -39,13 +46,6 @@ class Tile(Hex):
         self.immovable = immovable
         self.active = True
         self.injuries = 0
-
-    def invalidate(self):
-        """
-        Refreshes visual representation of the tile
-        :return: nothing is returned.
-        """
-        self.gfx = None
 
     def get_modificator(self, cell, mod_type):
         """

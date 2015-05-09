@@ -253,6 +253,7 @@ class Neuroshima(GameMode):
             else:
                 # unlucky draw
                 self.player.refresh_hand()
+                self.save()
                 self.event(self.tactic)
         elif isinstance(s, Cell):
             # remove action from possible ones - it is done
@@ -297,7 +298,13 @@ class Neuroshima(GameMode):
 
     def save(self):
         self.playground_save = [{'tile': deepcopy(cell.tile), 'turn': cell.turn} for cell in self.playground.cells]
+        for cell_save in self.playground_save:
+            if cell_save['tile']:
+                cell_save['tile'].invalidate()
         self.player_hand_save = [deepcopy(cell.tile) for cell in self.player.hand]
+        for cell_save in self.player_hand_save:
+            if cell_save:
+                cell_save.invalidate()
 
     def load(self):
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
