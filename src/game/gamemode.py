@@ -1,6 +1,7 @@
 __author__ = 'zheneq & dandelion'
 
 import pygame
+from copy import deepcopy
 
 from src.game.common.clicker import Clicker
 from src.game.common.grid import Grid, Cell, Button
@@ -135,11 +136,15 @@ class Neuroshima(GameMode):
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
         self.over = False
+
+        self.playground_save = []
+        self.player_hand_save = []
+
         self.action_types = {}
         self.orderhandler = OrderHandler(self)
         # DEBUG
         self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
-                        'confirm': Button(self, None, 100, 550, .1)}
+                        'confirm': Button(self, None, 100, 550, .1), 'revoke': Button(self, None, 150, 550, .1)}
 
     def begin_play(self):
         GameMode.begin_play(self)
@@ -156,6 +161,7 @@ class Neuroshima(GameMode):
         self.buttons['remove'].action = self.remove_tile_from_hand
         self.buttons['apply'].action = self.orderhandler.resolve_order
         self.buttons['confirm'].action = self.new_turn
+        self.buttons['revoke'].action = self.load
 
         self.place_all_hq()
         # self.turn()
@@ -241,15 +247,9 @@ class Neuroshima(GameMode):
         self.event(self.turn)
 
     def callback_dispatcher(self, (s, cell)):
-        # DEBUG
         if isinstance(s, Button):
-            if s is self.buttons['confirm']:
-                if self.turn_num > 2 and not self.player.remove_in_turn:
-                    # must remove one first
-                    print 'You must remove one tile from hand first!'
-                    self.event(self.tactic)
-                else:
-                    s.action()
+            if s is self.buttons['confirm'] or s is self.buttons['revoke']:
+                s.action()
             else:
                 # unlucky draw
                 self.player.refresh_hand()
@@ -295,6 +295,18 @@ class Neuroshima(GameMode):
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)
 
+    def save(self):
+        self.playground_save = [{'tile': deepcopy(cell.tile), 'turn': cell.turn} for cell in self.playground.cells]
+        self.player_hand_save = [deepcopy(cell.tile) for cell in self.player.hand]
+
+    def load(self):
+        for cell, cell_save in zip(self.playground.cells, self.playground_save):
+            cell.tile = cell_save['tile']
+            cell.turn = cell_save['turn']
+        for cell, cell_save in zip(self.player.hand, self.player_hand_save):
+            cell.tile = cell_save
+        self.turn_init()
+
     def turn(self):
         """
         Initialize player's hand and actions he can make.
@@ -334,6 +346,11 @@ class Neuroshima(GameMode):
         print self.player.name + '\'s turn!'
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
+        self.save()
+        self.turn_init()
+
+    def turn_init(self):
+        # Input when revoking
         self.player.remove_in_turn = False
         if self.player.tiles_in_hand() < 3:
             self.player.remove_in_turn = True
@@ -354,6 +371,10 @@ class Neuroshima(GameMode):
         for cell in self.player.hand:
             if cell.tile:
                 self.action_types[cell] = []
+
+        #TODO DEBUG
+        self.action_types[self.buttons['revoke']] = []
+
         if self.player.remove_in_turn:
             self.action_types[self.buttons['confirm']] = []
         # fill dictionary values
@@ -369,7 +390,7 @@ class Neuroshima(GameMode):
             self.begin_battle()
             return
         for cell in self.playground.cells:
-            # if 'cell' is netfighter disable enemies 'cell' attacks
+            # if 'cell' is netfighter disable enemies 'cell'
             self.disable_units(cell)
             if cell.tile is not None and cell.tile.army_id == self.player.army:
                 # if 'cell' is near transport increase 'cell' mobility
