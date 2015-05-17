@@ -56,22 +56,23 @@ class Battle(object):
             self.initiative_phase = 0
             for cell in self.battlefield.cells:
                 # reset disposable modules
-                if cell.tile is not None and isinstance(cell.tile, DisposableModule):
+                if cell.tile is not None and isinstance(cell.tile.hex, DisposableModule):
                     cell.tile.used = []
-                if cell.tile is not None and isinstance(cell.tile, Unit) and cell.tile.initiative:
+                if cell.tile is not None and isinstance(cell.tile.hex, Unit) and cell.tile.hex.initiative:
                     # reset unit converters
                     for ind in xrange(len(cell.tile.convert)):
-                        if cell.tile.melee and cell.tile.melee[ind] or cell.tile.range and cell.tile.range[ind]:
+                        if cell.tile.hex.melee and cell.tile.hex.melee[ind] or \
+                                cell.tile.hex.range and cell.tile.hex.range[ind]:
                             cell.tile.convert[ind] = 'able'
                     # reset additional attacks
                     cell.tile.add_attacks_used = 0
                     # reset initiative
-                    for initiative_ind in xrange(len(cell.tile.initiative)):
-                        cell.tile.initiative[initiative_ind][1] = True
+                    for initiative_ind in xrange(len(cell.tile.hex.initiative)):
+                        cell.tile.hex.initiative[initiative_ind][1] = True
                     # find max initiative to start form
                     initiative_modificator = compute_initiative(cell)
-                    if cell.tile.initiative[0][0] + initiative_modificator > self.initiative_phase:
-                        self.initiative_phase = cell.tile.initiative[0][0] + initiative_modificator
+                    if cell.tile.hex.initiative[0][0] + initiative_modificator > self.initiative_phase:
+                        self.initiative_phase = cell.tile.hex.initiative[0][0] + initiative_modificator
             print 'Maximum initiative is', self.initiative_phase
             print ' '
         else:
@@ -82,7 +83,7 @@ class Battle(object):
         Actions during one initiative phase in battle.
         :return: nothing is returned.
         """
-        print 'Battle phase', self.initiative_phase, 'begins'
+        print 'Battle phase', self.initiative_phase, 'begins.'
         # phase of giving damage
         self.resolve_converts()
 
@@ -96,17 +97,17 @@ class Battle(object):
         self.event(self.continue_game)
 
 #-------------------------------resolving-converters-------------------------------------------
-
     def get_converts(self, cell, initiative_ind, add_attack=False):
         for ind in xrange(len(cell.neighbours)):
             if cell.neighbours[ind] is not None and \
                     cell.neighbours[ind].tile is not None and \
-                    cell.neighbours[ind].tile.active:
-                if isinstance(cell.neighbours[ind].tile, Module) and \
-                        not isinstance(cell.neighbours[ind].tile, DisposableModule) or \
-                        isinstance(cell.neighbours[ind].tile, DisposableModule) and \
-                        cell.tile not in cell.neighbours[ind].tile.used:
-                    buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)
+                    cell.neighbours[ind].tile.active and \
+                    cell.neighbours[ind].tile.hex.army_id == cell.tile.hex.army_id:
+                if isinstance(cell.neighbours[ind].tile.hex, Module) and \
+                        not isinstance(cell.neighbours[ind].tile.hex, DisposableModule) or \
+                        isinstance(cell.neighbours[ind].tile.hex, DisposableModule) and \
+                        cell.tile.hex not in cell.neighbours[ind].tile.used:
+                    buffs = cell.neighbours[ind].tile.hex.get_buffs(ind - cell.neighbours[ind].tile.turn)
                     if 'convert' in buffs and buffs['convert']:
                         if cell.neighbours[ind] not in self.actions:
                             self.actions[cell.neighbours[ind]] = []
@@ -134,7 +135,7 @@ class Battle(object):
         else:
             # mark unit as given bonus from converter if necessary
             if isinstance(converter_cell.tile, DisposableModule):
-                converter_cell.tile.used.append(unit_cell.tile)
+                converter_cell.tile.used.append(unit_cell.tile.hex)
             # mark converting unit
             self.converting_unit = unit_cell
             self.actions[converter_cell].remove(unit_cell)
@@ -144,10 +145,10 @@ class Battle(object):
             # find directions
             directions = []
             for ind in xrange(len(unit_cell.tile.convert)):
-                if unit_cell.neighbours[(ind + unit_cell.turn) % 6] is None or \
+                if unit_cell.neighbours[(ind + unit_cell.tile.turn) % 6] is None or \
                         unit_cell.tile.convert[ind] != 'able':
                     continue
-                directions.append(unit_cell.neighbours[(ind + unit_cell.turn) % 6])
+                directions.append(unit_cell.neighbours[(ind + unit_cell.tile.turn) % 6])
             if len(directions) == 1:
                 self.choose_attack((unit_cell, directions[0]))
             else:
@@ -155,9 +156,11 @@ class Battle(object):
 
     def choose_attack(self, (unit_cell, direction)):
         attack_types = []
-        if unit_cell.tile.melee and unit_cell.tile.melee[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
+        if unit_cell.tile.hex.melee and \
+                unit_cell.tile.hex.melee[(unit_cell.neighbours.index(direction) + 6 - unit_cell.tile.turn) % 6]:
             attack_types.append(self.buttons['confirm'])
-        if unit_cell.tile.range and unit_cell.tile.range[(unit_cell.neighbours.index(direction) + 6 - unit_cell.turn) % 6]:
+        if unit_cell.tile.hex.range and \
+                unit_cell.tile.hex.range[(unit_cell.neighbours.index(direction) + 6 - unit_cell.tile.turn) % 6]:
             attack_types.append(self.buttons['apply'])
         if len(attack_types) == 1:
             self.convert_attack((direction, attack_types[0]))
@@ -165,15 +168,15 @@ class Battle(object):
             self.pend_click({direction: attack_types}, self.convert_attack)
 
     def convert_attack(self, (direction, type)):
-        ind = (self.converting_unit.neighbours.index(direction) + 6 - self.converting_unit.turn) % 6
+        ind = (self.converting_unit.neighbours.index(direction) + 6 - self.converting_unit.tile.turn) % 6
         if type is self.buttons['apply']:
-            print armies[self.converting_unit.tile.army_id]().name, \
-                self.converting_unit.tile.name, 'converted his attack of direction', \
+            print armies[self.converting_unit.tile.hex.army_id]().name, \
+                self.converting_unit.tile.hex.name, 'converted his attack of direction', \
                 self.converting_unit.neighbours.index(direction), 'to melee'
             self.converting_unit.tile.convert[ind] = 'melee'
         else:
-            print armies[self.converting_unit.tile.army_id]().name, \
-                self.converting_unit.tile.name, 'converted his attack of direction', \
+            print armies[self.converting_unit.tile.hex.army_id]().name, \
+                self.converting_unit.tile.hex.name, 'converted his attack of direction', \
                 self.converting_unit.neighbours.index(direction), 'to range'
             self.converting_unit.tile.convert[ind] = 'range'
         if self.actions:
@@ -184,7 +187,7 @@ class Battle(object):
 #-------------------------------Choosing-action-for-unit---------------------------------------
 
     def add_choice(self, cell, initiative_ind, add_attack=False):
-        if cell.tile.unique_attack:
+        if cell.tile.hex.unique_attack:
             # make choice what actions unit will do in this phase
             self.actions[cell] = [self.buttons['apply'], self.buttons['confirm']]
 
@@ -199,9 +202,9 @@ class Battle(object):
     def choose_action_for_unit(self, (unit_cell, button)):
         del self.actions[unit_cell]
         if button is self.buttons['apply']:
-            unit_cell.tile.attack = unit_cell.tile.unique_attack
+            unit_cell.tile.attack = unit_cell.tile.hex.unique_attack
         else:
-            unit_cell.tile.attack = unit_cell.tile.usual_attack
+            unit_cell.tile.attack = unit_cell.tile.hex.usual_attack
         if self.actions:
             self.pend_click(self.actions, self.choose_action_for_unit)
         else:
@@ -209,16 +212,16 @@ class Battle(object):
 
     def units_actions_in_phase(self, unit_actions):
         for cell in self.battlefield.cells:
-            if cell.tile is not None and cell.tile.active and isinstance(cell.tile, Unit):
+            if cell.tile is not None and cell.tile.active and isinstance(cell.tile.hex, Unit):
                 # gathering all buffs of initiative and add. attacks
                 initiative_modificator = compute_initiative(cell)
                 min_initiative = 100
-                if cell.tile.initiative:
-                    for initiative_ind in xrange(len(cell.tile.initiative)):
-                        if cell.tile.initiative[initiative_ind][0] + initiative_modificator < min_initiative:
-                            min_initiative = cell.tile.initiative[initiative_ind][0]
-                        if cell.tile.initiative[initiative_ind][1] and \
-                                        self.initiative_phase == cell.tile.initiative[initiative_ind][0] + \
+                if cell.tile.hex.initiative:
+                    for initiative_ind in xrange(len(cell.tile.hex.initiative)):
+                        if cell.tile.hex.initiative[initiative_ind][0] + initiative_modificator < min_initiative:
+                            min_initiative = cell.tile.hex.initiative[initiative_ind][0]
+                        if cell.tile.hex.initiative[initiative_ind][1] and \
+                                        self.initiative_phase == cell.tile.hex.initiative[initiative_ind][0] + \
                                         initiative_modificator:
                             unit_actions(cell, initiative_ind, add_attack=False)
                             break
@@ -233,17 +236,15 @@ class Battle(object):
                                     break
 
     def unit_attack(self, cell, initiative_ind, add_attack=False):
+        # mark initiative as used
         if add_attack:
             cell.tile.add_attacks_used += 1
         else:
-            cell.tile.initiative[initiative_ind][1] = False
-
-
-                        # gathering all buffs of attack strength
+            cell.tile.hex.initiative[initiative_ind][1] = False
+        # gathering all buffs of attack strength
         damage_modificator = compute_attack(cell)
         # giving damage
         cell.tile.attack(cell, damage_modificator)
-        # mark initiative as used
 
     def give_damage_phase(self):
         """
@@ -262,11 +263,11 @@ class Battle(object):
         damage_to_units = {}
         for cell in self.battlefield.cells:
             if cell.tile is not None:
-                if isinstance(cell.tile, Base):
+                if isinstance(cell.tile.hex, Base):
                     # for every HQ remove damage taken from other HQ
                     cleaned_taken_damage = []
                     for damage in cell.tile.taken_damage:
-                        if not isinstance(damage['instigator'].tile, Base):
+                        if not isinstance(damage['instigator'].tile.hex, Base):
                             if damage['instigator'] not in damage_to_units:
                                 damage_to_units[damage['instigator']] = []
                             damage_to_units[damage['instigator']].append({'value': damage['value'],
@@ -283,11 +284,11 @@ class Battle(object):
                                                                       'target': cell})
         # print all actions of units in this phase
         for instigator in damage_to_units:
-            print armies[instigator.tile.army_id]().name, \
-                instigator.tile.name, \
+            print armies[instigator.tile.hex.army_id]().name, \
+                instigator.tile.hex.name, \
                 '(' + 'cell', str(self.battlefield.cells.index(instigator)) + ')', 'damaged:'
             for target in damage_to_units[instigator]:
-                print '\t' + armies[target['target'].tile.army_id]().name, target['target'].tile.name, \
+                print '\t' + armies[target['target'].tile.hex.army_id]().name, target['target'].tile.hex.name, \
                     '(' + 'cell', str(self.battlefield.cells.index(target['target'])) + ')', \
                     '(' + target['type'] + ',', target['value'], 'wounds' + ')'
         # resolve possible medic conflicts
@@ -302,16 +303,16 @@ class Battle(object):
         for cell in self.battlefield.cells:
             if cell.tile is not None:
                 damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
-                if cell.tile.hp - cell.tile.injuries > damage:
+                if cell.tile.hex.hp - cell.tile.injuries > damage:
                     cell.tile.injuries += damage
                     # reset "taken_damage"
                     cell.tile.taken_damage = []
                 else:
-                    if not cell.tile.hp:
-                        print cell.tile.name, 'died because of natural causes'
+                    if not cell.tile.hex.hp:
+                        print cell.tile.hex.name, 'died because of natural causes'
                         print 'Indeed, he was scattered by explosion. It\'s just natural he died'
                     else:
-                        print cell.tile.name, 'died because of injuries'
+                        print cell.tile.hex.name, 'died because of injuries'
                     # if died unit is net fighter release all units caught by him
                     self.release_disable_units(cell)
                     cell.tile = None

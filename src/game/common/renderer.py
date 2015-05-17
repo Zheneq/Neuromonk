@@ -39,8 +39,8 @@ class TileRenderer:
 
     def generate_tile_damage(self):
         # damage
-        if self.hex.injuries > 0:
-            self.blit("../res/hp" + str(self.hex.hp) + "_dmg" + str(self.hex.injuries) + ".png")
+        if self.tile.injuries > 0:
+            self.blit("../res/hp" + str(self.hex.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_base(self):
         self.generate_tile_module()

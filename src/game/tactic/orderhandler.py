@@ -20,6 +20,7 @@ class OrderHandler(object):
         self.sniper_order = Sniper(game)
 
     def resolve_order(self, order):
+        print '\t' + self.game.player.name, 'applies', order.type, 'order'
         if order.type == 'battle':
             self.game.begin_battle()
         elif order.type == 'airstrike':

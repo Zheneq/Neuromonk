@@ -1,7 +1,7 @@
 __author__ = 'zheneq & dandelion'
 
 import pygame
-from copy import deepcopy
+from copy import copy
 
 from game.common.clicker import Clicker
 from game.common.grid import Grid, Cell, Button
@@ -144,7 +144,7 @@ class Neuroshima(GameMode):
         self.orderhandler = OrderHandler(self)
         # DEBUG
         self.buttons = {'remove': Button(self, None, 0, 550, .1), 'apply': Button(self, None, 50, 550, .1),
-                        'confirm': Button(self, None, 100, 550, .1), 'revoke': Button(self, None, 150, 550, .1)}
+                        'revoke': Button(self, None, 100, 550, .1), 'confirm': Button(self, None, 150, 550, .1)}
 
     def begin_play(self):
         GameMode.begin_play(self)
@@ -184,7 +184,11 @@ class Neuroshima(GameMode):
         if who in self.player.hand:
             # placing tile on board
             print '\t' + self.player.name, 'places', who.tile.hex.name, \
-                'on the', str(self.playground.cells.index(where)), 'cell'
+                'to the', str(self.playground.cells.index(where)), 'cell'
+        else:
+            # moving mobile units
+            print '\t' + self.player.name, 'moves', who.tile.hex.name, \
+                'to the', str(self.playground.cells.index(where)), 'cell'
         self.swap((who, where))
         self.clicker.pend_rotation(where, self.tactic)
 
@@ -208,39 +212,45 @@ class Neuroshima(GameMode):
         self.set_timer(period, battle.battle_phase)
 
     def release_disable_units(self, cell):
-        if isinstance(cell.tile, Unit) and cell.tile.nets:
+        if isinstance(cell.tile.hex, Unit) and cell.tile.hex.nets:
             for ind in xrange(len(cell.neighbours)):
-                if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
-                                cell.neighbours[ind] is not None and \
-                                cell.neighbours[ind].tile is not None and \
-                                cell.neighbours[ind].tile.army_id != cell.tile.army_id:
+                if cell.tile.hex.nets[(ind + 6 - cell.tile.turn) % 6] and \
+                        cell.neighbours[ind] is not None and \
+                        cell.neighbours[ind].tile is not None and \
+                        cell.neighbours[ind].tile.hex.army_id != cell.tile.hex.army_id:
                     # release unit if there is no other net fighters
                     neighbour = cell.neighbours[ind]
                     for ind in xrange(len(neighbour.neighbours)):
                         if cell.neighbours[ind] is not None and \
-                                        cell.neighbours[ind].tile is not None and \
-                                        cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                                isinstance(cell.neighbours[ind].tile, Unit) and \
-                                cell.neighbours[ind].tile.nets and \
-                                cell.neighbours[ind].tile.nets[(ind + 9 - cell.turn) % 6]:
+                                    cell.neighbours[ind].tile is not None and \
+                                    cell.neighbours[ind].tile.hex.army_id != cell.tile.hex.army_id and \
+                                isinstance(cell.neighbours[ind].tile.hex, Unit) and \
+                                cell.neighbours[ind].tile.hex.nets and \
+                                cell.neighbours[ind].tile.hex.nets[(ind + 9 - cell.turn) % 6]:
                             break
                     else:
                         neighbour.tile.active = True
 
     def disable_units(self, cell):
-        if isinstance(cell.tile, Unit) and cell.tile.active and cell.tile.nets:
+        if cell.tile and isinstance(cell.tile.hex, Unit) and cell.tile.active and cell.tile.hex.nets:
             for ind in xrange(len(cell.neighbours)):
-                if cell.tile.nets[(ind + 6 - cell.turn) % 6] and \
+                if cell.tile.hex.nets[(ind + 6 - cell.tile.turn) % 6] and \
                         cell.neighbours[ind] is not None and \
                         cell.neighbours[ind].tile is not None and \
-                        cell.neighbours[ind].tile.army_id != cell.tile.army_id and \
-                        not (isinstance(cell.neighbours[ind].tile, Unit) and
-                             cell.neighbours[ind].tile.nets and
-                             cell.neighbours[ind].tile.nets[(ind + 9 - cell.neighbours[ind].turn) % 6]):
+                        cell.neighbours[ind].tile.hex.army_id != cell.tile.hex.army_id and \
+                        not (isinstance(cell.neighbours[ind].tile.hex, Unit) and
+                             cell.neighbours[ind].tile.hex.nets and
+                             cell.neighbours[ind].tile.hex.nets[(ind + 9 - cell.neighbours[ind].tile.turn) % 6]):
                     # disable unit
                     cell.neighbours[ind].tile.active = False
 
     def remove_tile_from_hand(self, tile):
+        name = ''
+        if isinstance(tile, Order):
+            name = tile.type
+        else:
+            name = tile.name
+        print '\t' + self.player.name, 'removed', name, 'from his hand'
         self.player.remove_in_turn = True
         self.action_types[self.buttons['confirm']] = []
         self.event(self.tactic)
@@ -248,7 +258,7 @@ class Neuroshima(GameMode):
     def new_turn(self):
         for cell in self.playground.cells:
             # reset disposable modules
-            if cell.tile is not None and isinstance(cell.tile, DisposableModule):
+            if cell.tile is not None and isinstance(cell.tile.hex, DisposableModule):
                 cell.tile.used = []
         self.player = self.player.next
         self.event(self.turn)
@@ -259,13 +269,14 @@ class Neuroshima(GameMode):
                 s.action()
             else:
                 # unlucky draw
+                print '\t' + self.player.name, 'refreshed hand.'
                 self.player.refresh_hand()
                 self.save()
                 self.event(self.tactic)
         elif isinstance(s, Cell):
             # remove action from possible ones - it is done
-            if isinstance(s.tile, Order) and \
-                            s.tile.type is 'battle' and \
+            if isinstance(s.tile.hex, Order) and \
+                            s.tile.hex.type is 'battle' and \
                             cell is self.buttons['apply'] and \
                             not self.player.remove_in_turn:
                 # must remove one before battle start
@@ -275,9 +286,9 @@ class Neuroshima(GameMode):
                 del self.action_types[s]
                 tile = s.tile
                 if isinstance(cell, Button):
-                    # it's an order - apply/remove
+                    # remove or apply (order)
                     self.player.remove_from_hand(tile)
-                    cell.action(tile)
+                    cell.action(tile.hex)
                     return
                 else:
                     # marsh/mobility resolve
@@ -299,26 +310,20 @@ class Neuroshima(GameMode):
 
     def place_all_hq(self):
         print self.player.name + ', please, place your HQ on the board.'
-        self.player.hand[0].tile = TileOnBoard(self.player.hq, 0)
+        self.player.hand[0].tile = self.player.hq
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)
 
     def save(self):
-        self.playground_save = [{'tile': deepcopy(cell.tile), 'turn': cell.turn} for cell in self.playground.cells]
-        for cell_save in self.playground_save:
-            if cell_save['tile']:
-                cell_save['tile'].invalidate()
-        self.player_hand_save = [deepcopy(cell.tile) for cell in self.player.hand]
-        for cell_save in self.player_hand_save:
-            if cell_save:
-                cell_save.invalidate()
+        self.playground_save = [copy(cell.tile) for cell in self.playground.cells]
+        self.player_hand_save = [copy(cell.tile) for cell in self.player.hand]
 
     def load(self):
+        print '\t' + self.player.name, 'revoked his actions.'
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
-            cell.tile = cell_save['tile']
-            if isinstance(cell.tile, Base) and cell.tile.army_id == self.player.army:
+            cell.tile = cell_save
+            if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
                 self.player.hq = cell.tile
-            cell.turn = cell_save['turn']
         for cell, cell_save in zip(self.player.hand, self.player_hand_save):
             cell.tile = cell_save
         self.turn_init()
@@ -329,20 +334,20 @@ class Neuroshima(GameMode):
         :return: nothing is returned.
         """
         for player in self.players:
-            if player.hq.hp <= player.hq.injuries:
-                print player.name + '\'s HQ is destroyed'
+            if player.hq.hex.hp <= player.hq.injuries:
+                print player.name + '\'s HQ is destroyed.'
                 print 'Congratulations,', player.next.name + '!!!'
                 self.set_timer(3000, self.end_game)
                 return
         if self.over:
-            print self.player.name + '\'s HQ:', self.player.hq.hp - self.player.hq.injuries
-            print self.player.next.name + '\'s HQ:', self.player.next.hq.hp - self.player.next.hq.injuries
-            if self.player.hq.hp - self.player.hq.injuries < self.player.next.hq.hp - self.player.next.hq.injuries:
+            print self.player.name + '\'s HQ:', self.player.hq.hex.hp - self.player.hq.injuries
+            print self.player.next.name + '\'s HQ:', self.player.next.hq.hex.hp - self.player.next.hq.injuries
+            if self.player.hq.hex.hp - self.player.hq.injuries < self.player.next.hq.hex.hp - self.player.next.hq.injuries:
                 print self.player.name + '\'s HQ is more damaged'
                 print 'Congratulations,', self.player.next.name + '!!!'
                 self.set_timer(3000, self.end_game)
                 return
-            elif self.player.hq.hp - self.player.hq.injuries > self.player.next.hq.hp - self.player.next.hq.injuries:
+            elif self.player.hq.hex.hp - self.player.hq.injuries > self.player.next.hq.hex.hp - self.player.next.hq.injuries:
                 print self.player.next.name + '\'s HQ is more damaged'
                 print 'Congratulations,', self.player.name + '!!!'
                 self.set_timer(3000, self.end_game)
@@ -372,13 +377,13 @@ class Neuroshima(GameMode):
             self.player.remove_in_turn = True
 
         #TODO DEBUG
-        # self.player.hand[0].tile = Order(self.player.army, 'battle')
+        # self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
 
         # reset units' support info
         for cell in self.playground.cells:
             # reset mobility
-            if cell.tile is not None and cell.tile.army_id == self.player.army:
-                cell.tile.mobility = cell.tile.default_mobility
+            if cell.tile is not None and cell.tile.hex.army_id == self.player.army:
+                cell.tile.mobility = cell.tile.hex.default_mobility
         # create dictionary of actions
         self.action_types = {}
         for cell in self.player.hand:
@@ -405,16 +410,16 @@ class Neuroshima(GameMode):
         for cell in self.playground.cells:
             # if 'cell' is netfighter disable enemies 'cell'
             self.disable_units(cell)
-            if cell.tile is not None and cell.tile.army_id == self.player.army:
+            if cell.tile is not None and cell.tile.hex.army_id == self.player.army:
                 # if 'cell' is near transport increase 'cell' mobility
                 cell.tile.mobility += compute_mobility(cell)
                 # if unit is mobile add action
-                if not cell.tile.immovable and cell.tile.mobility > 0:
+                if not cell.tile.hex.immovable and cell.tile.mobility > 0:
                     self.action_types[cell] = []
         if self.player.tiles_in_hand() == 3 and \
-                isinstance(self.player.hand[0].tile, Order) and \
-                isinstance(self.player.hand[1].tile, Order) and \
-                isinstance(self.player.hand[2].tile, Order):
+                isinstance(self.player.hand[0].tile.hex, Order) and \
+                isinstance(self.player.hand[1].tile.hex, Order) and \
+                isinstance(self.player.hand[2].tile.hex, Order):
             # unlucky draw
             self.action_types[self.buttons['remove']] = []
         elif self.buttons['remove'] in self.action_types:
@@ -429,13 +434,13 @@ class Neuroshima(GameMode):
             elif action_type in self.player.hand:
                 # actor is in hand - it can be removed
                 self.action_types[action_type] = [self.buttons['remove']]
-                if isinstance(action_type.tile, Tile) and \
+                if isinstance(action_type.tile.hex, Tile) and \
                         (len(self.playground.get_free_cells()) > 1 or self.player.remove_in_turn):
                     # this is tile - it can be placed on the battlefield
                     # placing new tile on the playground won't start the battle
                     self.action_types[action_type].extend(self.playground.get_free_cells())
-                elif isinstance(action_type.tile, Order) and \
-                        (action_type.tile.type != 'battle' or self.player.remove_in_turn and not self.last_player):
+                elif isinstance(action_type.tile.hex, Order) and \
+                        (action_type.tile.hex.type != 'battle' or self.player.remove_in_turn and not self.last_player):
                     # this is order - it can be applied
                     self.action_types[action_type].append(self.buttons['apply'])
         if self.turn_num > 2 and not self.player.remove_in_turn and self.player.tiles_in_hand() == 1:

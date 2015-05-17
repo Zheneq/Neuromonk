@@ -10,8 +10,8 @@ class March(object):
         for cell in self.game.playground.cells:
             if cell.tile is not None and \
                     cell.tile.active and \
-                    not cell.tile.immovable and \
-                    cell.tile.army_id == self.game.player.army:
+                    not cell.tile.hex.immovable and \
+                    cell.tile.hex.army_id == self.game.player.army:
                 maneuvers[cell] = cell.tile.maneuver_rate(cell)
         if maneuvers:
             self.game.clicker.pend_click(maneuvers, self.game.march)

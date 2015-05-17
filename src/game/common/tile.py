@@ -13,6 +13,9 @@ class Hex(object):
         """
         self.gfx = {}
 
+    def initialize_wrapper(self, wrapper):
+        pass
+
 
 class Order(Hex):
     def __init__(self, id, type):
@@ -41,57 +44,6 @@ class Tile(Hex):
         self.name = name
         self.default_mobility = mobility
         self.immovable = immovable
-
-    def get_modificator(self, cell, mod_type):
-        """
-        Gets all buffs and debuffs of type 'modtype' for 'cell'
-        :param cell: cell with tile, collecting bonuses.
-        :param mod_type: type of bonuses. Now can be 'melee', 'range', 'initiative' or 'add_attacks'.
-        :return: returns sum of all modificators
-        """
-        mod = 0
-        for ind in xrange(len(cell.neighbours)):
-            if cell.neighbours[ind] is not None and \
-                    cell.neighbours[ind].tile is not None and \
-                    cell.neighbours[ind].tile.active:
-                if isinstance(cell.neighbours[ind].tile, Module):
-                    # TODO add buffs from allies
-                    if cell.neighbours[ind].tile.army_id == cell.tile.army_id:  # it can buff
-                        if not (isinstance(cell.neighbours[ind].tile, DisposableModule) and
-                                cell.tile in cell.neighbours[ind].tile.used):
-                            buffs = cell.neighbours[ind].tile.get_buffs(ind - cell.neighbours[ind].turn)
-                            if mod_type in buffs and buffs[mod_type]:
-                                mod += buffs[mod_type]
-                                if isinstance(cell.neighbours[ind].tile, DisposableModule) and \
-                                        cell.tile not in cell.neighbours[ind].tile.used:
-                                    cell.neighbours[ind].tile.used.append(cell.tile)
-                    else:  # it can debuff
-                        if not (isinstance(cell.neighbours[ind].tile, DisposableModule) and
-                                cell.tile in cell.neighbours[ind].tile.used):
-                            debuffs = cell.neighbours[ind].tile.get_debuffs(ind - cell.neighbours[ind].turn)
-                            if mod_type in debuffs and debuffs[mod_type]:
-                                mod -= debuffs[mod_type]
-                                if isinstance(cell.neighbours[ind].tile, DisposableModule) and \
-                                        cell.tile not in cell.neighbours[ind].tile.used:
-                                    cell.neighbours[ind].tile.used.append(cell.tile)
-        return mod
-
-    def maneuver_rate(self, cell, depth=1, result=None):
-        if not result:
-            result = [cell]
-        if depth > 0:
-            for neighbour in cell.neighbours:
-                if neighbour in result:
-                    # visited cell
-                    continue
-                else:
-                    # unvisited cell
-                    if neighbour is not None and neighbour.tile is None:
-                        # free cell
-                        result.append(neighbour)
-                        self.maneuver_rate(neighbour, depth - 1, result)
-            return result
-        return result
 
 
 class Unit(Tile):
@@ -134,22 +86,24 @@ class Unit(Tile):
         self.row_attack = row_attack
         self.can_melee_buffed = melee_buff
         self.can_range_buffed = range_buff
-        self.add_attacks_used = 0
         self.unique_attack = unique_action
-        self.attack = self.usual_attack
-        self.convert = [None, None, None, None, None, None]
-        for ind in xrange(len(self.convert)):
-            if self.melee and self.melee[ind] or self.range and self.range[ind]:
-                self.convert[ind] = 'able'
 
-    def damage(self, direction):
+    def initialize_wrapper(self, wrapper):
+        wrapper.attack = self.usual_attack
+        wrapper.add_attacks_used = 0
+        wrapper.convert = [None, None, None, None, None, None]
+        for ind in xrange(len(wrapper.convert)):
+            if self.melee and self.melee[ind] or self.range and self.range[ind]:
+                wrapper.convert[ind] = 'able'
+
+    def damage(self, convert, direction):
         """
         Gets damage of unit in 'direction'
         :param direction: direction of attack.
         :return: returns dictionary with two keys: 'melee' and 'range'. Values are wounds.
         """
         result = {}
-        if self.convert[direction % 6] is 'melee':
+        if convert[direction % 6] is 'melee':
             if self.melee:
                 result['melee'] = self.melee[direction % 6]
             else:
@@ -158,7 +112,7 @@ class Unit(Tile):
                 # converted to melee
                 result['melee'] += self.range[direction % 6]
             result['range'] = 0
-        elif self.convert[direction % 6] is 'range':
+        elif convert[direction % 6] is 'range':
             if self.range:
                 result['range'] = self.range[direction % 6]
             else:
@@ -196,12 +150,12 @@ class Unit(Tile):
         :return: nothing is returned.
         """
         for ind in xrange(len(cell.neighbours)):
-            damage = self.damage(ind - cell.turn)
+            damage = self.damage(cell.tile.convert, ind - cell.tile.turn)
             if damage['melee'] > 0:
                 if self.can_melee_buffed and 'melee' in damage_modificator:
                     damage['melee'] += damage_modificator['melee']
                 if cell.neighbours[ind] is not None and cell.neighbours[ind].tile is not None:
-                    if cell.neighbours[ind].tile.army_id != self.army_id:
+                    if cell.neighbours[ind].tile.hex.army_id != self.army_id:
                         damage_to_unit = {'value': damage['melee'], 'type': 'melee', 'instigator': cell}
                         cell.neighbours[ind].tile.taken_damage.append(damage_to_unit)
             if damage['range'] > 0:
@@ -209,10 +163,10 @@ class Unit(Tile):
                     damage['range'] += damage_modificator['range']
                 neighbour = cell.neighbours[ind]
                 while neighbour is not None:
-                    if neighbour.tile is not None and neighbour.tile.army_id != self.army_id:
+                    if neighbour.tile is not None and neighbour.tile.hex.army_id != self.army_id:
                         range_damage = damage['range']
-                        if isinstance(neighbour.tile, Unit):
-                            range_damage -= neighbour.tile.get_armor(ind - neighbour.turn)
+                        if isinstance(neighbour.tile.hex, Unit):
+                            range_damage -= neighbour.tile.hex.get_armor(ind - neighbour.tile.turn)
                         if range_damage > 0:
                             damage_to_unit = {'value': range_damage,
                                               'type': 'range',
@@ -285,7 +239,9 @@ class DisposableModule(Module):
         Tile.__init__(self, id, hp, name, mobility=mobility, immovable=immovable)
         self.buff = buff
         self.debuff = debuff
-        self.used = []
+
+    def initialize_wrapper(self, wrapper):
+        wrapper.used = []
 
 
 class Medic(Tile):
@@ -344,6 +300,58 @@ class TileOnBoard(object):
         self.mobility = 0
         self.active = True
         self.injuries = 0
+        self.hex.initialize_wrapper(self)
+
+    def get_modificator(self, cell, mod_type):
+        """
+        Gets all buffs and debuffs of type 'modtype' for 'cell'
+        :param cell: cell with tile, collecting bonuses.
+        :param mod_type: type of bonuses. Now can be 'melee', 'range', 'initiative' or 'add_attacks'.
+        :return: returns sum of all modificators
+        """
+        mod = 0
+        for ind in xrange(len(cell.neighbours)):
+            if cell.neighbours[ind] is not None and \
+                    cell.neighbours[ind].tile is not None and \
+                    cell.neighbours[ind].tile.active:
+                if isinstance(cell.neighbours[ind].tile.hex, Module):
+                    # TODO add buffs from allies
+                    if cell.neighbours[ind].tile.hex.army_id == cell.tile.hex.army_id:  # it can buff
+                        if not (isinstance(cell.neighbours[ind].tile.hex, DisposableModule) and
+                                cell.tile.hex in cell.neighbours[ind].tile.used):
+                            buffs = cell.neighbours[ind].tile.hex.get_buffs(ind - cell.neighbours[ind].tile.turn)
+                            if mod_type in buffs and buffs[mod_type]:
+                                mod += buffs[mod_type]
+                                if isinstance(cell.neighbours[ind].tile.hex, DisposableModule) and \
+                                        cell.tile.hex not in cell.neighbours[ind].tile.used:
+                                    cell.neighbours[ind].tile.used.append(cell.tile.hex)
+                    else:  # it can debuff
+                        if not (isinstance(cell.neighbours[ind].tile.hex, DisposableModule) and
+                                cell.tile.hex in cell.neighbours[ind].tile.used):
+                            debuffs = cell.neighbours[ind].tile.hex.get_debuffs(ind - cell.neighbours[ind].tile.turn)
+                            if mod_type in debuffs and debuffs[mod_type]:
+                                mod -= debuffs[mod_type]
+                                if isinstance(cell.neighbours[ind].tile.hex, DisposableModule) and \
+                                        cell.tile.hex not in cell.neighbours[ind].tile.used:
+                                    cell.neighbours[ind].tile.used.append(cell.tile.hex)
+        return mod
+
+    def maneuver_rate(self, cell, depth=1, result=None):
+        if not result:
+            result = [cell]
+        if depth > 0:
+            for neighbour in cell.neighbours:
+                if neighbour in result:
+                    # visited cell
+                    continue
+                else:
+                    # unvisited cell
+                    if neighbour is not None and neighbour.tile is None:
+                        # free cell
+                        result.append(neighbour)
+                        self.maneuver_rate(neighbour, depth - 1, result)
+            return result
+        return result
 
 
 if __name__ == "__main__":

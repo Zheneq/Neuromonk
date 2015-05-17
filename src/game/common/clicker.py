@@ -48,7 +48,6 @@ class Clicker(object):
         x = self.rot_pending.maskrect.center[0] - mousepos[0]
         y = self.rot_pending.maskrect.center[1] - mousepos[1]
         self.rot_pending.tile.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
-        print 'with turn', self.rot_pending.tile.turn
 
     def locate(self, pos):
         result = []
@@ -67,6 +66,7 @@ class Clicker(object):
         :return: nothing is returned.
         """
         if self.rot_pending:
+            print '\twith turn', self.rot_pending.tile.turn
             self.rot_pending = None
             self.game.event(self.click_callback)
         else:

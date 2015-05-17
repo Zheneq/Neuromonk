@@ -20,7 +20,7 @@ class Player(object):
             self.tiles = self.army_dict.army.values()
         else:
             self.tiles = []
-        self.hq = self.army_dict.hq
+        self.hq = TileOnBoard(self.army_dict.hq, 0)
         self.hand = []
         for ind in xrange(3):
             self.hand.append(Cell(game))
@@ -29,7 +29,7 @@ class Player(object):
 
     def army_shuffle(self):
         """
-        Performs Fisher-Yates shuffle of tiles.
+         Performs Fisher-Yates shuffle of tiles.
         :return: nothing is returned.
         """
         for first in xrange(len(self.tiles)):

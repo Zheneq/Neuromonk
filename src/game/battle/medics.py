@@ -22,16 +22,16 @@ class Medicine(object):
         """
         # mark all units connected with medic in "cell" as able be healed by this medic
         for ind in xrange(len(cell.neighbours)):
-            if cell.tile.direction[(ind + 6 - cell.turn) % 6] and \
+            if cell.tile.hex.direction[(ind + 6 - cell.tile.turn) % 6] and \
                             cell.neighbours[ind] is not None and \
                             cell.neighbours[ind].tile is not None and \
-                            cell.neighbours[ind].tile.army_id == medic_cell.tile.army_id:
+                            cell.neighbours[ind].tile.hex.army_id == medic_cell.tile.hex.army_id:
                 # this tile is connected to medic
                 neighbour = cell.neighbours[ind]
                 if neighbour is not medic_cell and medic_cell not in neighbour.tile.active_medics:
                     neighbour.tile.active_medics.append(medic_cell)  # mark this tile
                     # if tile is another medic continue chain
-                    if isinstance(neighbour.tile, Medic) and neighbour.tile.active:
+                    if isinstance(neighbour.tile.hex, Medic) and neighbour.tile.active:
                         self.assign_medic(neighbour, medic_cell)
 
     def compute_medics(self):
@@ -40,9 +40,9 @@ class Medicine(object):
         :return: nothing is returned.
         """
         for cell in self.battlefield.cells:
-            if cell.tile is not None and cell.tile.active and isinstance(cell.tile, Medic):
+            if cell.tile is not None and cell.tile.active and isinstance(cell.tile.hex, Medic):
                 damage = reduce(lambda res, x: res + x['value'], cell.tile.taken_damage, 0)
-                if cell.tile.hp - cell.tile.injuries > damage:
+                if cell.tile.hex.hp - cell.tile.injuries > damage:
                     # medic can heal somebody who is connected to it
                     self.assign_medic(cell, cell)
 
@@ -70,7 +70,7 @@ class Medicine(object):
                 damaged_units_to_heal[cell] = cell.tile.active_medics
         if damaged_units_to_heal:
             if len(damaged_units_to_heal.keys()) == 1 and \
-                            len(damaged_units_to_heal[damaged_units_to_heal.keys()[0]]) == 1:
+                    len(damaged_units_to_heal[damaged_units_to_heal.keys()[0]]) == 1:
                 self.one_medic_resolve((damaged_units_to_heal.keys()[0],
                                         damaged_units_to_heal[damaged_units_to_heal.keys()[0]][0]))
             else:
@@ -87,8 +87,8 @@ class Medicine(object):
         #TODO choose wound (if it is important)
         # remove max damage from single instigator
         healed_damage = max(patient.tile.taken_damage, key=lambda x: x['value'])
-        print armies[medic.tile.army_id]().name, 'Medic', '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
-            'heals', armies[patient.tile.army_id]().name, patient.tile.name, \
+        print armies[medic.tile.hex.army_id]().name, 'Medic', '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
+            'heals', armies[patient.tile.hex.army_id]().name, patient.tile.hex.name, \
             '(' + 'cell', str(self.battlefield.cells.index(patient)) + ')', 'from', healed_damage['value'], 'wounds'
         patient.tile.taken_damage.remove(healed_damage)
         medic.tile = None

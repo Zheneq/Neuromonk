@@ -38,7 +38,6 @@ class Cell(Clickable):
     def __init__(self, game):
         Clickable.__init__(self, game)
         self.tile = None
-        self.turn = 0
         self.neighbours = [None for ind in xrange(6)]
 
     def next(self, ind):
