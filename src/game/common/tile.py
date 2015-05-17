@@ -37,15 +37,10 @@ class Tile(Hex):
         :return: nothing is returned.
         """
         Hex.__init__(self, id)
-        self.taken_damage = []
-        self.active_medics = []
         self.hp = hp
         self.name = name
         self.default_mobility = mobility
-        self.mobility = 0
         self.immovable = immovable
-        self.active = True
-        self.injuries = 0
 
     def get_modificator(self, cell, mod_type):
         """
@@ -334,6 +329,21 @@ class Base(Unit, Module):
         """
         Unit.__init__(self, id, hp, name, melee, None, None, None, initiative, melee_buff=melee_buff, mobility=mobility)
         Module.__init__(self, id, hp, name, buff, debuff, mobility=mobility)
+
+
+class TileOnBoard(object):
+    """
+    Wrapper for tile on the board. Contains support info that can change during the game.
+    """
+
+    def __init__(self, tile, turn):
+        self.tile = tile
+        self.turn = turn
+        self.taken_damage = []
+        self.active_medics = []
+        self.mobility = 0
+        self.active = True
+        self.injuries = 0
 
 
 if __name__ == "__main__":

@@ -172,7 +172,6 @@ class Neuroshima(GameMode):
             self.release_disable_units(a)
             # move tile from a to b
             a.tile, b.tile = b.tile, a.tile
-            a.turn, b.turn = 0, a.turn
         else:
             print "b is none"
 
@@ -272,7 +271,7 @@ class Neuroshima(GameMode):
                 del self.action_types[s]
                 tile = s.tile
                 if isinstance(cell, Button):
-                    # apply/remove
+                    # it's an order - apply/remove
                     self.player.remove_from_hand(tile)
                     cell.action(tile)
                     return
@@ -285,17 +284,17 @@ class Neuroshima(GameMode):
 
     def place_hq(self, (who, where)):
         self.march((who, where))
-        self.event(self.next_hq)
+        self.next_hq()
 
     def next_hq(self):
         self.player = self.player.next
         if self.player is self.players[0]:
-            self.event(self.turn)
+            self.turn()
         else:
-            self.event(self.place_all_hq)
+            self.place_all_hq()
 
     def place_all_hq(self):
-        print self.player.name + '\'s turn!'
+        print self.player.name + ', please, place your HQ on the board.'
         self.player.hand[0].tile = self.player.hq
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)

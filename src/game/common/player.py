@@ -2,6 +2,8 @@ __author__ = 'dandelion'
 
 import random
 
+from game.common.tile import TileOnBoard
+
 from game.common.armies import *
 from game.common.grid import Cell
 
@@ -55,16 +57,15 @@ class Player(object):
     def take_to_hand(self, tile):
         for cell in self.hand:
             if cell.tile is None:
-                cell.tile = tile
+                cell.tile = TileOnBoard(tile, 0)
                 return cell
-
 
     def get_tiles(self, turn):
         turn = min(3, turn)
         num_tiles_to_get = min(turn - self.tiles_in_hand(), len(self.tiles))
         self.hand.sort(key=lambda x: x.tile)
         for ind in xrange(num_tiles_to_get):
-            self.hand[ind].tile = self.tiles.pop()
+            self.hand[ind].tile = TileOnBoard(self.tiles.pop(), 0)
 
 
 if __name__ == '__main__':
