@@ -337,7 +337,7 @@ class TileOnBoard(object):
     """
 
     def __init__(self, tile, turn):
-        self.tile = tile
+        self.hex = tile
         self.turn = turn
         self.taken_damage = []
         self.active_medics = []

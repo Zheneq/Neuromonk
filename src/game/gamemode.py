@@ -181,6 +181,10 @@ class Neuroshima(GameMode):
             values = self.action_types[who]
             del self.action_types[who]
             self.action_types[where] = values
+        if who in self.player.hand:
+            # placing tile on board
+            print '\t' + self.player.name, 'places', who.tile.hex.name, \
+                'on the', str(self.playground.cells.index(where)), 'cell'
         self.swap((who, where))
         self.clicker.pend_rotation(where, self.tactic)
 
@@ -295,7 +299,7 @@ class Neuroshima(GameMode):
 
     def place_all_hq(self):
         print self.player.name + ', please, place your HQ on the board.'
-        self.player.hand[0].tile = self.player.hq
+        self.player.hand[0].tile = TileOnBoard(self.player.hq, 0)
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)
 

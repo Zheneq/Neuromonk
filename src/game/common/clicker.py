@@ -47,7 +47,8 @@ class Clicker(object):
     def rotate_tile(self, mousepos):
         x = self.rot_pending.maskrect.center[0] - mousepos[0]
         y = self.rot_pending.maskrect.center[1] - mousepos[1]
-        self.rot_pending.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
+        self.rot_pending.tile.turn = int(math.floor(11 + math.atan2(y, x) * 3 / math.pi)) % 6
+        print 'with turn', self.rot_pending.tile.turn
 
     def locate(self, pos):
         result = []
