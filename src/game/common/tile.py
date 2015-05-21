@@ -21,6 +21,7 @@ class Order(Hex):
     def __init__(self, id, type):
         Hex.__init__(self, id)
         self.type = type
+        self.name = type
 
 
 class Tile(Hex):

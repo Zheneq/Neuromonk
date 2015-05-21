@@ -158,6 +158,10 @@ class TileRenderer:
             self.blit("../res/tile" + str(army_id) + "_selected.png")
         return self.tilepic
 
+    def gen_tile(self, hex):
+        for turn in xrange(6):
+            hex.gfx[turn] = self.generate_tile(hex, turn)
+
 
 class Renderer:
     def __init__(self, game):
@@ -278,8 +282,7 @@ class Renderer:
 
     def render_tile(self, container, cell):
         if not cell.tile.hex.gfx:
-            for turn in xrange(6):
-                cell.tile.hex.gfx[turn] = self.tile_gen.generate_tile(cell.tile.hex, turn)
+            self.tile_gen.gen_tile(cell.tile.hex)
         pic = self.tile_gen.generate_tile_fx(cell.tile)
         rect = pic.get_rect()
         rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
