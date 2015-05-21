@@ -290,12 +290,17 @@ class Renderer:
         return pic, rect
 
     def make_button(self, button):
-        print "make button"
+        # print "make button"
         button.gfx = {}
         button.gfx["default"] = self.clone_pic(self.pics["button"])
         button.gfx["highlighted"] = self.clone_pic(self.pics["button_high"])
         button.gfx["selected"] = self.clone_pic(self.pics["button_sel"])
         for pic in button.gfx:
+            try:
+                gfx = pygame.image.load("../res/button_" + button.name + ".png")
+                button.gfx[pic].blit(gfx, gfx.get_rect())
+            except pygame.error:
+                print "Failed to load image for " + button.name + " button."
             button.gfx[pic] = pygame.transform.rotozoom(button.gfx[pic], 0.0, button.scale)
         button.mask = pygame.mask.from_surface(button.gfx["default"])
         button.maskrect = button.gfx["default"].get_rect()
