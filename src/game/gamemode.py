@@ -406,6 +406,9 @@ class Neuroshima(GameMode):
         """
         # if all battlefield is full begin the battle
         if not self.playground.get_free_cells():
+            for cell in self.playground.cells:
+                # if 'cell' is netfighter disable enemies 'cell'
+                self.disable_units(cell)
             self.begin_battle()
             return
         for cell in self.playground.cells:
