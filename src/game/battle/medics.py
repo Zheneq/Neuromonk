@@ -1,5 +1,7 @@
 __author__ = 'dandelion'
 
+from string import letters
+
 from game.common.tile import Medic
 from game.common.armies import armies
 
@@ -87,8 +89,9 @@ class Medicine(object):
         #TODO choose wound (if it is important)
         # remove max damage from single instigator
         healed_damage = max(patient.tile.taken_damage, key=lambda x: x['value'])
-        print armies[medic.tile.hex.army_id]().name, 'Medic', '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
-            'heals', armies[patient.tile.hex.army_id]().name, patient.tile.hex.name, \
+        print filter(lambda x: x in letters, str(armies[medic.tile.hex.army_id]).split('.')[-1]), 'Medic', \
+            '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
+            'heals', patient.tile.hex.name, \
             '(' + 'cell', str(self.battlefield.cells.index(patient)) + ')', 'from', healed_damage['value'], 'wounds'
         patient.tile.taken_damage.remove(healed_damage)
         medic.tile = None

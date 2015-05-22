@@ -377,8 +377,8 @@ class Neuroshima(GameMode):
             self.player.remove_in_turn = True
 
         #TODO DEBUG
-        self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
-        self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
+        # self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
+        # self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
 
         # reset units' support info
         for cell in self.playground.cells:

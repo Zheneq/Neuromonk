@@ -1,5 +1,7 @@
 __author__ = 'dandelion'
 
+from string import letters
+
 from game.common.grid import Button
 from game.common.tile import Unit, Base, Module, DisposableModule
 from game.common.armies import armies
@@ -284,11 +286,12 @@ class Battle(object):
                                                                       'target': cell})
         # print all actions of units in this phase
         for instigator in damage_to_units:
-            print armies[instigator.tile.hex.army_id]().name, \
+            print filter(lambda x: x in letters, str(armies[instigator.tile.hex.army_id]).split('.')[-1]), \
                 instigator.tile.hex.name, \
                 '(' + 'cell', str(self.battlefield.cells.index(instigator)) + ')', 'damaged:'
             for target in damage_to_units[instigator]:
-                print '\t' + armies[target['target'].tile.hex.army_id]().name, target['target'].tile.hex.name, \
+                print '\t' + filter(lambda x: x in letters, str(armies[target['target'].tile.hex.army_id]).split('.')[-1]), \
+                    target['target'].tile.hex.name, \
                     '(' + 'cell', str(self.battlefield.cells.index(target['target'])) + ')', \
                     '(' + target['type'] + ',', target['value'], 'wounds' + ')'
         # resolve possible medic conflicts
