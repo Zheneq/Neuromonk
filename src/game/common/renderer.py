@@ -158,6 +158,10 @@ class TileRenderer:
             self.blit("../res/tile" + str(army_id) + "_selected.png")
         return self.tilepic
 
+    def gen_tile(self, hex):
+        for turn in xrange(6):
+            hex.gfx[turn] = self.generate_tile(hex, turn)
+
 
 class Renderer:
     def __init__(self, game):
@@ -278,8 +282,7 @@ class Renderer:
 
     def render_tile(self, container, cell):
         if not cell.tile.hex.gfx:
-            for turn in xrange(6):
-                cell.tile.hex.gfx[turn] = self.tile_gen.generate_tile(cell.tile.hex, turn)
+            self.tile_gen.gen_tile(cell.tile.hex)
         pic = self.tile_gen.generate_tile_fx(cell.tile)
         rect = pic.get_rect()
         rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
@@ -287,12 +290,17 @@ class Renderer:
         return pic, rect
 
     def make_button(self, button):
-        print "make button"
+        # print "make button"
         button.gfx = {}
         button.gfx["default"] = self.clone_pic(self.pics["button"])
         button.gfx["highlighted"] = self.clone_pic(self.pics["button_high"])
         button.gfx["selected"] = self.clone_pic(self.pics["button_sel"])
         for pic in button.gfx:
+            try:
+                gfx = pygame.image.load("../res/button_" + button.name + ".png")
+                button.gfx[pic].blit(gfx, gfx.get_rect())
+            except pygame.error:
+                print "Failed to load image for " + button.name + " button."
             button.gfx[pic] = pygame.transform.rotozoom(button.gfx[pic], 0.0, button.scale)
         button.mask = pygame.mask.from_surface(button.gfx["default"])
         button.maskrect = button.gfx["default"].get_rect()

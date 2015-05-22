@@ -21,8 +21,9 @@ class Clickable(object):
 
 
 class Button(Clickable):
-    def __init__(self, game, action, x = 0, y = 0, scale = 1.0):
+    def __init__(self, game, action, x = 0, y = 0, scale = 1.0, name = "button"):
         self.scale = scale
+        self.name = name
         Clickable.__init__(self, game)
         self.x = x
         self.y = y

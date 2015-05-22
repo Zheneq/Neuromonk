@@ -1,6 +1,8 @@
 __author__ = 'dandelion'
 
 from tile import *
+from renderer import TileRenderer
+import pygame.image
 
 
 class Army(object):
@@ -13,6 +15,26 @@ class Army(object):
             self.base_hp = 13
         elif mode == 'dm':
             self.base_hp = 20
+
+    def get_hexes(self):
+        try:
+            self.load_hexes()
+        except pygame.error:
+            self.gen_hexes()
+
+    def gen_hexes(self):
+        # generate and save tile images
+        tr = TileRenderer()
+        for hex in self.army.itervalues():
+            tr.gen_tile(hex)
+            for pic in hex.gfx:
+                pygame.image.save(hex.gfx[pic], "../res/armies/" + self.name + "/" + hex.name + "_" + str(pic) + ".png")
+
+    def load_hexes(self):
+        # load tile images from files
+        for hex in self.army.itervalues():
+            for pic in xrange(6):
+                hex.gfx[pic] = pygame.image.load("../res/armies/" + self.name + "/" + hex.name + "_" + str(pic) + ".png")
 
 
 class Borgo(Army):
@@ -54,6 +76,8 @@ class Borgo(Army):
         for i in xrange(4):
             move = Order(self.army_id, 'move')
             self.army['move' + str(i)] = move
+
+        self.get_hexes()
 
 
 class Moloch(Army):
@@ -112,6 +136,8 @@ class Moloch(Army):
             pushback = Order(self.army_id, 'pushback')
             self.army['pushback' + str(i)] = pushback
 
+        self.get_hexes()
+
     def clown_explode(self, cell, damage_modificator):
         for neighbour in cell.neighbours:
             if neighbour is not None and neighbour.tile is not None:
@@ -167,6 +193,8 @@ class Hegemony(Army):
             self.army['pushback' + str(i)] = pushback
         sniper = Order(self.army_id, 'sniper')
         self.army['sniper'] = sniper
+
+        self.get_hexes()
 
 
 armies = {}
