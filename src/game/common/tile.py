@@ -2,8 +2,9 @@ __author__ = 'dandelion'
 
 
 class Hex(object):
-    def __init__(self, id):
+    def __init__(self, id, name):
         self.army_id = id
+        self.name = name
         self.gfx = {}
 
     def invalidate(self):
@@ -19,7 +20,7 @@ class Hex(object):
 
 class Order(Hex):
     def __init__(self, id, type):
-        Hex.__init__(self, id)
+        Hex.__init__(self, id, type)
         self.type = type
 
 
@@ -39,9 +40,8 @@ class Tile(Hex):
         :param mobility: ability to move without special order.
         :return: nothing is returned.
         """
-        Hex.__init__(self, id)
+        Hex.__init__(self, id, name)
         self.hp = hp
-        self.name = name
         self.default_mobility = mobility
         self.immovable = immovable
 

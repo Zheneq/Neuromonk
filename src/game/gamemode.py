@@ -226,7 +226,7 @@ class Neuroshima(GameMode):
                                     cell.neighbours[ind].tile.hex.army_id != cell.tile.hex.army_id and \
                                 isinstance(cell.neighbours[ind].tile.hex, Unit) and \
                                 cell.neighbours[ind].tile.hex.nets and \
-                                cell.neighbours[ind].tile.hex.nets[(ind + 9 - cell.turn) % 6]:
+                                cell.neighbours[ind].tile.hex.nets[(ind + 9 - cell.tile.turn) % 6]:
                             break
                     else:
                         neighbour.tile.active = True
@@ -377,7 +377,8 @@ class Neuroshima(GameMode):
             self.player.remove_in_turn = True
 
         #TODO DEBUG
-        # self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
+        self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
+        self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
 
         # reset units' support info
         for cell in self.playground.cells:
