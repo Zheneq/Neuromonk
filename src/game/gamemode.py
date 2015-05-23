@@ -374,8 +374,8 @@ class Neuroshima(GameMode):
             self.player.remove_in_turn = True
 
         #TODO DEBUG
-        # self.player.hand[0].tile = TileOnBoard(Unit(self.player.army, 1, 'Netfighter', None, None, None, [1,0,0,0,0,1], None), 0)
-        # self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
+        # self.player.hand[0].tile = TileOnBoard(DisposableModule(self.player.army, 1, 'Quartermaster', {'convert': [1,0,0,0,0,0]}, {}), 0)
+        # self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'battle'), 0)
 
         # reset units' support info
         for cell in self.playground.cells:
@@ -415,7 +415,7 @@ class Neuroshima(GameMode):
                 # if 'cell' is near transport increase 'cell' mobility
                 cell.tile.mobility += compute_mobility(cell)
                 # if unit is mobile add action
-                if not cell.tile.hex.immovable and cell.tile.mobility > 0:
+                if cell.tile.active and not cell.tile.hex.immovable and cell.tile.mobility > 0:
                     self.action_types[cell] = []
         if self.player.tiles_in_hand() == 3 and \
                 isinstance(self.player.hand[0].tile.hex, Order) and \

@@ -301,6 +301,7 @@ class TileOnBoard(object):
         self.mobility = 0
         self.active = True
         self.injuries = 0
+
         self.hex.initialize_wrapper(self)
 
     def get_modificator(self, cell, mod_type):

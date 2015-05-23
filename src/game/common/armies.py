@@ -142,7 +142,7 @@ class Moloch(Army):
         for neighbour in cell.neighbours:
             if neighbour is not None and neighbour.tile is not None:
                 neighbour.tile.taken_damage.append({'value': 1, 'type': 'explosion', 'instigator': cell})
-        cell.tile.hp = 0
+        cell.tile.hex.hp = 0
 
 
 class Hegemony(Army):
@@ -180,7 +180,7 @@ class Hegemony(Army):
         self.army['scout'] = scout
         transport = DisposableModule(self.army_id, 1, 'Transport', {'mobility': [1,1,1,1,1,1]}, {}, immovable=True)
         self.army['transport'] = transport
-        quartermaster = DisposableModule(self.army_id, 1, 'Quartermaster', {'convert': [1,0,0,0,0,0]}, {}, immovable=True)
+        quartermaster = DisposableModule(self.army_id, 1, 'Quartermaster', {'convert': [1,0,0,0,0,0]}, {})
         self.army['quartermaster'] = quartermaster
         for i in xrange(5):
             battle = Order(self.army_id, 'battle')
