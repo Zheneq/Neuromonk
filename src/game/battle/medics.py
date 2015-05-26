@@ -2,8 +2,8 @@ __author__ = 'dandelion'
 
 from string import letters
 
-from game.common.tile import Medic
-from game.common.armies import armies
+from src.game.common.tile import Medic
+from src.game.common.armies import armies
 
 
 class Medicine(object):

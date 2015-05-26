@@ -1,10 +1,10 @@
 __author__ = 'dandelion'
 
-from game.tactic.orders.march import March
-from game.tactic.orders.pushback import PushBack
-from game.tactic.orders.airstrike import AirStrike
-from game.tactic.orders.grenade import Grenade
-from game.tactic.orders.sniper import Sniper
+from src.game.tactic.orders.march import March
+from src.game.tactic.orders.pushback import PushBack
+from src.game.tactic.orders.airstrike import AirStrike
+from src.game.tactic.orders.grenade import Grenade
+from src.game.tactic.orders.sniper import Sniper
 
 
 class OrderHandler(object):

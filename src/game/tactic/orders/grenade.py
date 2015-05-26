@@ -1,6 +1,6 @@
 __author__ = 'dandelion'
 
-from game.common.tile import Base, Order
+from src.game.common.tile import Base, Order
 
 
 class Grenade(object):

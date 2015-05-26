@@ -2,11 +2,11 @@ __author__ = 'dandelion'
 
 from string import letters
 
-from game.common.grid import Button
-from game.common.tile import Unit, Base, Module, DisposableModule
-from game.common.armies import armies
+from src.game.common.grid import Button
+from src.game.common.tile import Unit, Base, Module, DisposableModule
+from src.game.common.armies import armies
 
-from game.common.buffs import compute_initiative, compute_attack, compute_additional_attacks
+from src.game.common.buffs import compute_initiative, compute_attack, compute_additional_attacks
 from medics import Medicine
 
 
@@ -23,7 +23,6 @@ class Battle(object):
                  event,
                  timer,
                  period,
-                 renderer,
                  continue_game,
                  init_phase=1000):
         """
@@ -35,7 +34,6 @@ class Battle(object):
         :param timer: function creating delay before action.
         :param period: time of delay in milliseconds.
         :param releaser: function releasing disable by net units.
-        :param renderer: for debug reasons (don't know why).
         :param continue_game: function continuing game after battle.
         :param init_phase: phase of battle in special cases (such as airstrike, sniper, grenade, etc.).
         """
@@ -47,7 +45,6 @@ class Battle(object):
         self.set_timer = timer
         self.period = period
         self.release_disable_units = releaser
-        self.renderer = renderer
         self.continue_game = continue_game
 
         self.actions = {}
@@ -94,8 +91,6 @@ class Battle(object):
         Finishes battle and continues game.
         :return: nothing is returned.
         """
-        # debug
-        self.renderer.idle = False
         self.event(self.continue_game)
 
 #-------------------------------resolving-converters-------------------------------------------

@@ -1,8 +1,8 @@
 __author__ = 'dandelion'
 
-from game.common.tile import Base
+from src.game.common.tile import Base
 
-from game.battle.battle import Battle
+from src.game.battle.battle import Battle
 
 
 class AirStrike(object):

@@ -2,18 +2,18 @@ __author__ = 'Zheneq'
 
 import pygame
 
-from game.common.tile import *
+from src.game.common.tile import *
 
 
 class TileRenderer:
     def __init__(self):
-        self.tilepic = pygame.image.load("../res/tile.png")
+        self.tilepic = pygame.image.load("res/tile.png")
         self.hex = None
         self.tile = None
         self.rotation = 0.0
 
     def generate_tile(self, tile, rotation = 0.0):
-        self.tilepic = pygame.image.load("../res/tile" + str(tile.army_id) + ".png")
+        self.tilepic = pygame.image.load("res/tile" + str(tile.army_id) + ".png")
         self.hex = tile
         self.tile = None
         self.rotation = -60.0 * rotation
@@ -35,55 +35,55 @@ class TileRenderer:
     def generate_tile_hp(self):
         # hp
         if self.hex.hp > 1:
-            self.blit("../res/hp" + str(self.hex.hp) + ".png")
+            self.blit("res/hp" + str(self.hex.hp) + ".png")
 
     def generate_tile_damage(self):
         # damage
         if self.tile.injuries > 0:
-            self.blit("../res/hp" + str(self.hex.hp) + "_dmg" + str(self.tile.injuries) + ".png")
+            self.blit("res/hp" + str(self.hex.hp) + "_dmg" + str(self.tile.injuries) + ".png")
 
     def generate_tile_base(self):
         self.generate_tile_module()
         self.generate_tile_unit()
 
     def generate_tile_order(self):
-        self.blit("../res/order_" + self.hex.type + ".png")
+        self.blit("res/order_" + self.hex.type + ".png")
 
     def generate_tile_unit(self):
         # nets
         if self.hex.nets is not None:
             for i in xrange(len(self.hex.nets)):
                 if self.hex.nets[i]:
-                    self.blit("../res/net_attack.png", i)
+                    self.blit("res/net_attack.png", i)
         # armor
         if self.hex.armor is not None:
             for i in xrange(len(self.hex.armor)):
                 if self.hex.armor[i]:
-                    self.blit("../res/armor.png", i)
+                    self.blit("res/armor.png", i)
         # range
         if self.hex.range is not None:
             modifier = ""
             if self.hex.row_attack: modifier = "_penetrating"
             for i in xrange(len(self.hex.range)):
                 if self.hex.range[i]:
-                    self.blit("../res/range" + str(self.hex.range[i]) + modifier + ".png", i)
+                    self.blit("res/range" + str(self.hex.range[i]) + modifier + ".png", i)
         # melee
         if self.hex.melee is not None:
             for i in xrange(len(self.hex.melee)):
                 if self.hex.melee[i]:
-                    self.blit("../res/melee" + str(self.hex.melee[i]) + ".png", i)
+                    self.blit("res/melee" + str(self.hex.melee[i]) + ".png", i)
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # initiative
         if self.hex.initiative is not None:
             for init in self.hex.initiative:
-                self.blit("../res/init" + str(init[0]) + ".png")
+                self.blit("res/init" + str(init[0]) + ".png")
         # mobility
         if self.hex.default_mobility:
-            self.blit("../res/mobility.png")
+            self.blit("res/mobility.png")
         # unique attack
         if self.hex.unique_attack:
-            self.blit("../res/spec_attack.png")
+            self.blit("res/spec_attack.png")
 
     def generate_tile_module(self):
         # links
@@ -97,15 +97,15 @@ class TileRenderer:
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # module icons
-        self.blit("../res/module.png")
+        self.blit("res/module.png")
         # buff icon
         line = ""
         if bufftypes["buff"]:
             for buff in bufftypes["buff"]: line += "_" + buff
-            self.blit("../res/module_buff" + line + ".png")
+            self.blit("res/module_buff" + line + ".png")
         elif bufftypes["debuff"]:
             for debuff in bufftypes["debuff"]: line += debuff
-            self.blit("../res/module_debuff" + line + ".png")
+            self.blit("res/module_debuff" + line + ".png")
 
     def generate_tile_medic(self):
         # links
@@ -113,16 +113,16 @@ class TileRenderer:
         # rotation
         self.tilepic = pygame.transform.rotozoom(self.tilepic, self.rotation, 1.0)
         # medic icons
-        self.blit("../res/module.png")
-        self.blit("../res/unique_medic.png")
+        self.blit("res/module.png")
+        self.blit("res/unique_medic.png")
 
     def generate_tile_module_links(self, links):
         for i in xrange(len(links)):
             if links[i] == 0: continue
-            self.blit("../res/module_link.png", i)
+            self.blit("res/module_link.png", i)
 
     def generate_tile_net(self):
-        self.blit("../res/net.png")
+        self.blit("res/net.png")
 
     def blit(self, filename, rotation = 0):
         pic = pygame.image.load(filename)
@@ -153,9 +153,9 @@ class TileRenderer:
         # TODO: Size of the surface shouldn't be a numerical constant
         self.tilepic = pygame.Surface((500, 500), pygame.SRCALPHA)
         if highlighted:
-            self.blit("../res/tile" + str(army_id) + "_selection.png")
+            self.blit("res/tile" + str(army_id) + "_selection.png")
         if selected:
-            self.blit("../res/tile" + str(army_id) + "_selected.png")
+            self.blit("res/tile" + str(army_id) + "_selected.png")
         return self.tilepic
 
     def gen_tile(self, hex):
@@ -179,9 +179,9 @@ class Renderer:
         self.objects = []
         #
         self.pics = {}
-        self.pics["button"] = pygame.image.load("../res/button.png")
+        self.pics["button"] = pygame.image.load("res/button.png")
         self.tile_gen = TileRenderer()
-        self.pics["cell"] = pygame.image.load("../res/cell.png")
+        self.pics["cell"] = pygame.image.load("res/cell.png")
         self.pics["cellmask"] = pygame.mask.from_surface(self.pics["cell"])
         self.pics["cellmaskrect"] = self.pics["cell"].get_rect()
         self.pics["button_high"] = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
@@ -221,7 +221,7 @@ class Renderer:
         tile_gen = TileRenderer()
         for player in players:
             # TODO: Initialize in proper place
-            player.gfx = pygame.image.load("../res/player.png")
+            player.gfx = pygame.image.load("res/player.png")
             player.gfx_indent = gfx_indent = player.gfx.get_rect().center
             player.gfx_multiplier = self.game.playground.gfx_multiplier
             #
@@ -297,7 +297,7 @@ class Renderer:
         button.gfx["selected"] = self.clone_pic(self.pics["button_sel"])
         for pic in button.gfx:
             try:
-                gfx = pygame.image.load("../res/button_" + button.name + ".png")
+                gfx = pygame.image.load("res/button_" + button.name + ".png")
                 button.gfx[pic].blit(gfx, gfx.get_rect())
             except pygame.error:
                 print "Failed to load image for " + button.name + " button."
@@ -308,7 +308,7 @@ class Renderer:
         self.objects.append(button)
 
     def make_board(self, grid):
-        cellpic = pygame.image.load("../res/cell.png")
+        cellpic = pygame.image.load("res/cell.png")
         cellpicrect = cellpic.get_rect()
         grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
                                    (grid.radius * 2 + 1) * cellpicrect.height))

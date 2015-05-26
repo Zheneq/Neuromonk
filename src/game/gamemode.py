@@ -3,16 +3,16 @@ __author__ = 'zheneq & dandelion'
 import pygame
 from copy import copy
 
-from game.common.clicker import Clicker
-from game.common.grid import Grid, Cell, Button
-from game.common.tile import *
-from game.common.renderer import Renderer
-from game.common.player import Player
-from game.common.buffs import compute_mobility
+from src.game.common.clicker import Clicker
+from src.game.common.grid import Grid, Cell, Button
+from src.game.common.tile import *
+from src.game.common.renderer import Renderer
+from src.game.common.player import Player
+from src.game.common.buffs import compute_mobility
 
-from game.battle.battle import Battle
+from src.game.battle.battle import Battle
 
-from game.tactic.orderhandler import OrderHandler
+from src.game.tactic.orderhandler import OrderHandler
 
 
 class GameMode(object):
@@ -204,7 +204,6 @@ class Neuroshima(GameMode):
                         self.event,
                         self.set_timer,
                         period,
-                        self.renderer,
                         self.new_turn)
         self.set_timer(period, battle.battle_phase)
 

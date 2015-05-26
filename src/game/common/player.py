@@ -2,10 +2,10 @@ __author__ = 'dandelion'
 
 import random
 
-from game.common.tile import TileOnBoard
+from src.game.common.tile import TileOnBoard
 
-from game.common.armies import *
-from game.common.grid import Cell
+from src.game.common.armies import *
+from src.game.common.grid import Cell
 
 
 class Player(object):
