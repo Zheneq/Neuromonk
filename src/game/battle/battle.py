@@ -228,8 +228,6 @@ class Battle(object):
                             for add_attack in range(additional_atacks):
                                 if self.initiative_phase == min_initiative - (add_attack + 1):
                                     unit_actions(cell, 0, add_attack=True)
-                                    # mark used additional attack
-                                    cell.tile.add_attacks_used += 1
                                     break
 
     def unit_attack(self, cell, initiative_ind, add_attack=False):

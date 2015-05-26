@@ -1,11 +1,11 @@
 __author__ = 'dandelion'
 
 from src.game.gamemode import Neuroshima
+from src.game.battle.battle import Battle
 from src.game.common.tile import *
 
 
 class TestBattle(object):
-
     def test_simple_battle(self):
         self.game = Neuroshima(2)
 
@@ -22,13 +22,13 @@ class TestBattle(object):
 
         self.game.playground.cells[5].tile = hegemony_hq
         self.game.playground.cells[14].tile = hegemony_netmaster
+        self.game.disable_units(self.game.playground.cells[14])
 
-        self.game.begin_battle()
+        self.game.start_game(self.game.begin_battle, [], {'continuer': self.game.end_game, 'period': 1})
 
         # check state
 
         # Moloch hunter-killer
-        assert self.game.playground.cells[4].tile.active
         assert self.game.playground.cells[4].tile is None
         # Moloch mother module
         assert self.game.playground.cells[3].tile.active
@@ -42,3 +42,4 @@ class TestBattle(object):
         # Moloch HQ
         assert not self.game.playground.cells[13].tile.active
         assert self.game.playground.cells[13].tile.injuries == 0
+

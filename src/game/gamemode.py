@@ -29,14 +29,14 @@ class GameMode(object):
         self.clicker = Clicker(self)
         self.renderer = renderer(self)
 
-    def start_game(self):
+    def start_game(self, start, args, kwargs):
         """
         Launches the main cycle.
         :return: nothing is returned.
         """
         pygame.init()
         self.active = True
-        self.begin_play()
+        self.begin_play(start, args, kwargs)
         pygame.time.set_timer(self.EVENT_TICKER, 50)
         time = pygame.time.get_ticks()
         while self.active:
@@ -78,7 +78,7 @@ class GameMode(object):
         """
         self.active = False
 
-    def begin_play(self):
+    def begin_play(self, start, args, kwargs):
         pass
 
     def tick(self, deltatime):
@@ -148,8 +148,8 @@ class Neuroshima(GameMode):
                         'revoke': Button(self, self.load, 100, 550, .1, 'revoke'),
                         'confirm': Button(self, self.new_turn, 150, 550, .1, 'confirm')}
 
-    def begin_play(self):
-        GameMode.begin_play(self)
+    def begin_play(self, start, args, kwargs):
+        GameMode.begin_play(self, start, args, kwargs)
         # DEBUG
         Zq = Player('Zheneq', 1, 0, self)
         Zq.army_shuffle()
@@ -160,7 +160,7 @@ class Neuroshima(GameMode):
         self.players[1].next = self.players[0]
         self.player = self.players[0]
 
-        self.place_all_hq()
+        start(*args, **kwargs)
         # self.turn()
 
     def swap(self, (a, b)):
@@ -189,7 +189,7 @@ class Neuroshima(GameMode):
         self.swap((who, where))
         self.clicker.pend_rotation(where, self.tactic)
 
-    def begin_battle(self, period=3000):
+    def begin_battle(self, continuer='default', period=3000):
         """
         Computes units interaction during battle.
         :return: nothing is returned.
@@ -197,6 +197,8 @@ class Neuroshima(GameMode):
         # prepare to battle
         # find max initiative
         # battle
+        if continuer is 'defailt':
+            continuer = self.new_turn
         battle = Battle(self.playground,
                         self.clicker.pend_click,
                         self.buttons,
@@ -204,7 +206,7 @@ class Neuroshima(GameMode):
                         self.event,
                         self.set_timer,
                         period,
-                        self.new_turn)
+                        continuer)
         self.set_timer(period, battle.battle_phase)
 
     def release_disable_units(self, cell):
