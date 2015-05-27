@@ -83,7 +83,38 @@ class TestBattle(object):
         self.game.playground.cells[8].tile = hegemony_universal1
         self.game.playground.cells[11].tile = hegemony_universal2
 
-        self.game.start_game(self.game.begin_battle, [], {'continuer': self.game.end_game, 'period': 1})
+        # actions during the whole battle
+        actions = []
+        # phase 2
+        # apply QM1 for Universal1
+        actions.append([self.game.playground.cells[2], self.game.playground.cells[8]])
+        # convert attack of Universal1 to range
+        actions.append([self.game.playground.cells[2],self.game.buttons['confirm']])
+        # confirm QM1
+        # choose other cell by mistake, then correct
+        actions.append([self.game.playground.cells[12], self.game.playground.cells[2], self.game.buttons['confirm']])
+        # confirm QM2
+        actions.append([self.game.playground.cells[12], self.game.buttons['confirm']])
+        # choose usual attack for Clown1
+        actions.append([self.game.playground.cells[4], self.game.buttons['confirm']])
+        # choose usual attack for Clown2
+        actions.append([self.game.playground.cells[16], self.game.buttons['confirm']])
+        # heal Meat by Med2
+        actions.append([self.game.playground.cells[17], self.game.playground.cells[9]])
+        # phase 1
+        # apply QM1 for Archer
+        actions.append([self.game.playground.cells[2], self.game.playground.cells[0]])
+        # apply QM1 for Universal2
+        actions.append([self.game.playground.cells[2], self.game.playground.cells[11]])
+        # choose convert direction as 5
+        actions.append([self.game.playground.cells[11], self.game.playground.cells[2]])
+        # apply QM2 for Universal2
+        actions.append([self.game.playground.cells[12], self.game.playground.cells[11]])
+        # choose usual attack for Clown2
+        actions.append([self.game.playground.cells[16], self.game.buttons['apply']])
+        # phase 0 - no interaction
+
+        self.game.start_game(self.game.begin_battle, [], {'continuer': self.game.end_game, 'period': 1}, test_actions=actions)
 
         # check state
 

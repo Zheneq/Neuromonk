@@ -16,6 +16,9 @@ class Clicker(object):
         self.click_callback = None
         self.click_selected = None
 
+    def test(self, test_actions):
+        self.test_actions = test_actions
+
     def parse(self, pos):
         # print "Click!"
         clicked = self.locate(pos)
@@ -38,6 +41,14 @@ class Clicker(object):
         self.rot_pending = None
         self.click_pending = cells
         self.click_callback = callback
+        if hasattr(self, 'test_actions'):
+            # testmode = emulate user actions
+            if not self.test_actions:
+                raise ValueError('Trouble: test actions are unknown')
+            action = self.test_actions[0]
+            self.test_actions.remove(action)
+            for actor in action:
+                self.select([actor])
 
     def pend_rotation(self, cell, callback):
         self.click_pending = None

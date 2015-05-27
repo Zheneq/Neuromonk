@@ -29,7 +29,7 @@ class GameMode(object):
         self.clicker = Clicker(self)
         self.renderer = renderer(self)
 
-    def start_game(self, start, args, kwargs):
+    def start_game(self, start, args, kwargs, interaction=True):
         """
         Launches the main cycle.
         :return: nothing is returned.
@@ -50,10 +50,11 @@ class GameMode(object):
             for event in events:
                 if event.type == pygame.QUIT:
                     self.active = False
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self.clicker.parse(event.pos)
-                if event.type == pygame.MOUSEMOTION:
-                    self.clicker.parse_rot(event.pos)
+                if (interaction):
+                    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        self.clicker.parse(event.pos)
+                    if event.type == pygame.MOUSEMOTION:
+                        self.clicker.parse_rot(event.pos)
                 if event.type == self.EVENT_USEREVENT:
                     if event.parameters:
                         event.callback(event.parameters)
@@ -147,6 +148,13 @@ class Neuroshima(GameMode):
                         'apply': Button(self, self.orderhandler.resolve_order, 50, 550, .1, 'apply'),
                         'revoke': Button(self, self.load, 100, 550, .1, 'revoke'),
                         'confirm': Button(self, self.new_turn, 150, 550, .1, 'confirm')}
+
+    def start_game(self, start, args, kwargs, test_actions=None):
+        if test_actions:
+            self.clicker.test(test_actions)
+            GameMode.start_game(self, start, args, kwargs, interaction=False)
+        else:
+            GameMode.start_game(self, start, args, kwargs)
 
     def begin_play(self, start, args, kwargs):
         GameMode.begin_play(self, start, args, kwargs)
