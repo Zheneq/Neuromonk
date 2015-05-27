@@ -58,11 +58,6 @@ class Battle(object):
                 if cell.tile is not None and isinstance(cell.tile.hex, DisposableModule):
                     cell.tile.used = []
                 if cell.tile is not None and isinstance(cell.tile.hex, Unit) and cell.tile.hex.initiative:
-                    # reset unit converters
-                    for ind in xrange(len(cell.tile.convert)):
-                        if cell.tile.hex.melee and cell.tile.hex.melee[ind] or \
-                                cell.tile.hex.range and cell.tile.hex.range[ind]:
-                            cell.tile.convert[ind] = 'able'
                     # reset additional attacks
                     cell.tile.add_attacks_used = 0
                     # reset initiative
@@ -82,6 +77,13 @@ class Battle(object):
         Actions during one initiative phase in battle.
         :return: nothing is returned.
         """
+        for cell in self.battlefield.cells:
+            if cell.tile is not None and isinstance(cell.tile.hex, Unit) and cell.tile.hex.initiative:
+                # reset unit converters
+                for ind in xrange(len(cell.tile.convert)):
+                    if cell.tile.hex.melee and cell.tile.hex.melee[ind] or \
+                            cell.tile.hex.range and cell.tile.hex.range[ind]:
+                        cell.tile.convert[ind] = 'able'
         print 'Battle phase', self.initiative_phase, 'begins.'
         # phase of giving damage
         self.resolve_converts()
@@ -127,11 +129,11 @@ class Battle(object):
             if self.actions:
                 self.pend_click(self.actions, self.resolve_convert_for_unit)
             else:
-                self.give_damage_phase()
+                self.choose_actions()
             return
         else:
             # mark unit as given bonus from converter if necessary
-            if isinstance(converter_cell.tile, DisposableModule):
+            if isinstance(converter_cell.tile.hex, DisposableModule):
                 converter_cell.tile.used.append(unit_cell.tile.hex)
             # mark converting unit
             self.converting_unit = unit_cell
