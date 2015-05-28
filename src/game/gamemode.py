@@ -50,7 +50,7 @@ class GameMode(object):
             for event in events:
                 if event.type == pygame.QUIT:
                     self.active = False
-                if (interaction):
+                if interaction:
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         self.clicker.parse(event.pos)
                     if event.type == pygame.MOUSEMOTION:
@@ -68,7 +68,8 @@ class GameMode(object):
             # ticking actors
             deltatime = time - prevtime
             self.tick(deltatime)
-            self.renderer.tick(deltatime)
+            if interaction:
+                self.renderer.tick(deltatime)
         # unintialization
         pygame.quit()
 
@@ -159,9 +160,9 @@ class Neuroshima(GameMode):
     def begin_play(self, start, args, kwargs):
         GameMode.begin_play(self, start, args, kwargs)
         # DEBUG
-        Zq = Player('Zheneq', 1, 0, self)
+        Zq = Player('Player1', 1, 0, self)
         Zq.army_shuffle()
-        Dand = Player('Dandelion', 3, 1, self)
+        Dand = Player('Player2', 3, 1, self)
         Dand.army_shuffle()
         self.players = [Zq, Dand]
         self.players[0].next = self.players[1]

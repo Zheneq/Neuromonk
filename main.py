@@ -45,7 +45,7 @@ if __name__ == "__main__":
         game.playground.cells[8].tile = hegemony_universal
 
         game.start_game(game.begin_battle, [], {'continuer': game.end_game, 'period': 1})
-        # game.start_game(game.place_all_hq)
+        # game.start_game(game.place_all_hq, [], {})
     finally:
         # statprof.stop()
         # statprof.display()

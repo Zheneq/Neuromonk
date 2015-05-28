@@ -54,6 +54,14 @@ class Clicker(object):
         self.click_pending = None
         self.rot_pending = cell
         self.click_callback = callback
+        if hasattr(self, 'test_actions'):
+            # testmode = emulate user actions
+            if not self.test_actions:
+                raise ValueError('Trouble: test actions are unknown')
+            action = self.test_actions[0]
+            self.test_actions.remove(action)
+            self.rot_pending.tile.turn = action
+            self.select(None)
 
     def rotate_tile(self, mousepos):
         x = self.rot_pending.maskrect.center[0] - mousepos[0]

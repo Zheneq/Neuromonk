@@ -23,7 +23,7 @@ class TestBattle(object):
         self.game.playground.cells[14].tile = hegemony_netmaster
         self.game.disable_units(self.game.playground.cells[14])
 
-        self.game.start_game(self.game.begin_battle, [], {'continuer': self.game.end_game, 'period': 1})
+        self.game.start_game(self.game.begin_battle, [], {'continuer': self.game.end_game, 'period': 1}, test_actions=['blank'])
 
         # check state
 
