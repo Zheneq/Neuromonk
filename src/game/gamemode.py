@@ -206,7 +206,7 @@ class Neuroshima(GameMode):
         # prepare to battle
         # find max initiative
         # battle
-        if continuer is 'defailt':
+        if continuer is 'default':
             continuer = self.new_turn
         battle = Battle(self.playground,
                         self.clicker.pend_click,
@@ -282,14 +282,8 @@ class Neuroshima(GameMode):
                 self.event(self.tactic)
         elif isinstance(s, Cell):
             # remove action from possible ones - it is done
-            if isinstance(s.tile.hex, Order) and \
-                            s.tile.hex.type is 'battle' and \
-                            cell is self.buttons['apply'] and \
-                            not self.player.remove_in_turn:
-                # must remove one before battle start
-                print 'You must remove one tile from hand first!'
-                self.event(self.tactic)
-            else:
+            if not (isinstance(s.tile.hex, Order) and s.tile.hex.type is 'battle' and \
+                    cell is self.buttons['apply'] and not self.player.remove_in_turn):
                 del self.action_types[s]
                 tile = s.tile
                 if isinstance(cell, Button):
@@ -326,7 +320,7 @@ class Neuroshima(GameMode):
         self.player_hand_save = [copy(cell.tile) for cell in self.player.hand]
 
     def load(self):
-        print '\t' + self.player.name, 'revoked his actions.'
+        print '\t' + self.player.name, 'revokes his actions.'
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
             cell.tile = cell_save
             if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
