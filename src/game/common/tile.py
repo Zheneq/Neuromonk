@@ -298,7 +298,10 @@ class TileOnBoard(object):
         self.turn = turn
         self.taken_damage = []
         self.active_medics = []
-        self.mobility = 0
+        if hasattr(self.hex, 'default_mobility'):
+            self.mobility = self.hex.default_mobility
+        else:
+            self.mobility = 0
         self.active = True
         self.injuries = 0
 
