@@ -380,12 +380,13 @@ class Neuroshima(GameMode):
     def turn_init(self):
         # Input when revoking
         self.player.remove_in_turn = False
-        if self.player.tiles_in_hand() < 3:
+        if self.turn_num < 3 or self.player.tiles_in_hand() < 3:
             self.player.remove_in_turn = True
 
         #TODO DEBUG
-        # self.player.hand[0].tile = TileOnBoard(DisposableModule(self.player.army, 1, 'Quartermaster', {'convert': [1,0,0,0,0,0]}, {}), 0)
-        # self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'battle'), 0)
+        # self.player.hand[0].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
+        # self.player.hand[1].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
+        # self.player.hand[2].tile = TileOnBoard(Order(self.player.army, 'move'), 0)
 
         # reset units' support info
         for cell in self.playground.cells:

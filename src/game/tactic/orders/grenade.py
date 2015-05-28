@@ -30,7 +30,7 @@ class Grenade(object):
 
     def grenade(self, (target, empty)):
         print '\t\t' + self.game.player.name, 'thrown grenade to the', str(self.game.playground.cells.index(target)), 'cell.'
-        print '\t\t' + target.tile.name, 'is destroyed.'
+        print '\t\t' + target.tile.hex.name, 'is destroyed.'
         self.game.release_disable_units(target)
         target.tile = None
         self.game.event(self.game.tactic)

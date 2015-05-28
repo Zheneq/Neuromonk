@@ -38,7 +38,6 @@ class Sniper(object):
                         self.game.event,
                         self.game.set_timer,
                         2000,
-                        self.game.renderer,
                         self.game.tactic,
                         init_phase=0)
         self.game.set_timer(2000, battle.take_damage_phase)
