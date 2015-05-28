@@ -12,8 +12,8 @@ Contents:
    :maxdepth: 2
 
 
-Neuroshima Hex API
-==================
+Gamemode API
+============
 .. automodule:: src.game.gamemode
    :members:
 

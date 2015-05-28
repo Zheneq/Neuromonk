@@ -17,10 +17,14 @@ from src.game.tactic.orderhandler import OrderHandler
 
 class GameMode(object):
     """
-    Main game class. Controls game process.
+    Main class of abstract board game. Controls game process.
     """
+
+    #:
     EVENT_TICKER = pygame.USEREVENT
+    #:
     EVENT_USEREVENT = pygame.USEREVENT + 1
+    #:
     EVENT_MAX = pygame.USEREVENT + 2
 
     def __init__(self, renderer):
@@ -32,7 +36,11 @@ class GameMode(object):
     def start_game(self, start, args, kwargs, interaction=True):
         """
         Launches the main cycle.
-        :return: nothing is returned.
+
+        :param function start: Function that begins game after initialization in :py:meth
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+        :param bool interaction: Whether game is interactive or not. Needs for test reasons.
         """
         pygame.init()
         self.active = True
@@ -42,19 +50,21 @@ class GameMode(object):
         while self.active:
             prevtime = time
             time = pygame.time.get_ticks()
-            # processing events
             pygame.event.pump()
             events = [pygame.event.wait()]
             events.extend(pygame.event.get())
-            # print "Events:"
+            # processing events
             for event in events:
                 if event.type == pygame.QUIT:
                     self.active = False
                 if interaction:
+                    # All user actions embodying game process
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         self.clicker.parse(event.pos)
                     if event.type == pygame.MOUSEMOTION:
+                        # uses in rotation
                         self.clicker.parse_rot(event.pos)
+                # common event type. Used for game logic and drawing gameboard
                 if event.type == self.EVENT_USEREVENT:
                     if event.parameters:
                         event.callback(event.parameters)
@@ -70,37 +80,48 @@ class GameMode(object):
             self.tick(deltatime)
             if interaction:
                 self.renderer.tick(deltatime)
-        # unintialization
         pygame.quit()
 
     def end_game(self):
         """
         Immediately stops the game.
-        :return: nothing is returned.
         """
         self.active = False
 
     def begin_play(self, start, args, kwargs):
+        """
+        Abstract game initializer. Must be overridden in particular game.
+
+        :param function start: Function that begins game after initialization
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+        """
         pass
 
     def tick(self, deltatime):
         """
         Subroutine executed every tick.
+
         :param deltatime: Time since last tick (in milliseconds)
-        :return: nothing is returned.
         """
         pass
 
     def event(self, callback, parameters=()):
+        """
+        Creates event that will be handeled in main loop in :py:meth
+
+        :param function callback: Callback for event
+        :param tuple parameters: Tuple of parameters for *callback()* given as first parameter
+        """
         pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def set_timer(self, time, callback, repeat=False):
         """
-        Set a timer.
-        :param time: Time in milliseconds. If 0, timer is unset
-        :param callback: Function to call when the timer is fired
-        :param repeat: Bool flag set when timer should be fired repeatedly
-        :return: nothing is returned.
+        Sets a timer.
+        
+        :param int time: Time in milliseconds. If 0, timer is unset
+        :param function callback: Function to call when the timer is fired
+        :param bool repeat: Bool flag set when timer should be fired repeatedly
         """
         # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
         # which one will be unset is unknown.
