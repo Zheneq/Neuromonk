@@ -20,8 +20,9 @@ from src.game.tactic.orderhandler import OrderHandler
 
 class GameMode(object):
     """
-    Main game class. Controls game process.
+    Main class of abstract board game. Controls game process.
     """
+
     EVENT_TICKER = pygame.USEREVENT
     EVENT_USEREVENT = pygame.USEREVENT + 1
     EVENT_MAX = pygame.USEREVENT + 2
@@ -41,9 +42,18 @@ class GameMode(object):
         self.renderer = renderer(self)
 
     def start_game(self, start, args, kwargs, interaction=True):
-        """
-        Launches the main cycle.
-        :return: nothing is returned.
+        """Starts board game main loop.
+        Initializes PyGame structures, then initializes game values (:py:meth:`begin_play()`) and enters the game loop.
+
+        :param function start: Function that begins game after initialization in :py:meth:`begin_play()`
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+        :param bool interaction: Whether game is interactive or not. Needs for test reasons.
+
+        In main loop different game events are caught and handled (such as :py:attr:`PyGame.MOUSEBUTTONUP` or
+        :py:attr:`PyGame.USEREVENT`). Mouse events are used for players' actions handling while others are used for
+        drawing gameboard and performing game logic. Game ends when either game logic finishes or event
+        :py:attr:`PyGame.QUIT` happens.
         """
         pygame.init()
         self.active = True
@@ -53,19 +63,21 @@ class GameMode(object):
         while self.active:
             prevtime = time
             time = pygame.time.get_ticks()
-            # processing events
             pygame.event.pump()
             events = [pygame.event.wait()]
             events.extend(pygame.event.get())
-            # print "Events:"
+            # processing events
             for event in events:
                 if event.type == pygame.QUIT:
                     self.active = False
                 if interaction:
+                    # All user actions embodying game process
                     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         self.clicker.parse(event.pos)
                     if event.type == pygame.MOUSEMOTION:
+                        # uses in rotation
                         self.clicker.parse_rot(event.pos)
+                # common event type. Used for game logic and drawing gameboard
                 if event.type == self.EVENT_USEREVENT:
                     if event.parameters:
                         event.callback(event.parameters)
@@ -81,37 +93,47 @@ class GameMode(object):
             self.tick(deltatime)
             if interaction:
                 self.renderer.tick(deltatime)
-        # unintialization
         pygame.quit()
 
     def end_game(self):
-        """
-        Immediately stops the game.
-        :return: nothing is returned.
-        """
+        """Immediately stops the game."""
         self.active = False
 
     def begin_play(self, start, args, kwargs):
+        """Initializes abstract game values.
+        Sets game values (such as players' info), then starts the game. Must be overridden in particular game.
+
+        :param function start: Function that begins game after initialization
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+        """
         pass
 
     def tick(self, deltatime):
-        """
+        """Game tick.
         Subroutine executed every tick.
+
         :param deltatime: Time since last tick (in milliseconds)
-        :return: nothing is returned.
         """
         pass
 
     def event(self, callback, parameters=()):
+        """Creates game event.
+        Created events will be handeled in main loop of :py:meth;`start_game()`
+
+        :param function callback: Callback for event
+        :param tuple parameters: Tuple of parameters for *callback()* given as first parameter
+        """
         pygame.event.post(pygame.event.Event(self.EVENT_USEREVENT, {"callback": callback, "parameters": parameters}))
 
     def set_timer(self, time, callback, repeat=False):
-        """
-        Set a timer.
-        :param time: Time in milliseconds. If 0, timer is unset
-        :param callback: Function to call when the timer is fired
-        :param repeat: Bool flag set when timer should be fired repeatedly
-        :return: nothing is returned.
+        """Sets a timer.
+
+        :param int time: Time in milliseconds. If 0, timer is unset
+        :param function callback: Function to call when the timer is fired
+        :param bool repeat: Bool flag set when timer should be fired repeatedly
+
+        Game rises `callback()` event every `time` milliseconds. If `repeat` is ``False``, the event is risen only once.
         """
         # COMMENT: Several timers may be set for one callback. When unsetting a timer with this function,
         # which one will be unset is unknown.
@@ -133,15 +155,10 @@ class GameMode(object):
 
 class Neuroshima(GameMode):
     """
-    Main game class. Controls game process.
+    Main Neuroshima Hex game class. Controls game process.
     """
 
     def __init__(self, grid_radius):
-        """
-        Initializes necessary data.
-        :param grid_radius: radius of battlefield.
-        :return: nothing is returned.
-        """
         GameMode.__init__(self, Renderer)
         self.players = []
         self.player = None
@@ -163,6 +180,21 @@ class Neuroshima(GameMode):
                         'confirm': Button(self, self.new_turn, 275, 615, .3, 'confirm')}
 
     def start_game(self, start, args, kwargs, test_actions=None):
+        """Starts Neuroshima Hex main loop.
+        Overridden base method :py:meth:`GameMode.start_game()`. Added test mode.
+
+        :param function start: Function that begins game after initialization in :py:meth
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+        :param list test_actions: List of emulated players actions during the whole game. Used for testing
+
+        Optional `test_actions` is a list of distinct players' actions. Each player's action is a list of actors that
+        player has selected to perform one action in game logic. For example, placing tile from hand to board needs
+        pressing on 2 actors: cell with tile on hand and free cell in the board. So, player actions will look like
+        `[hand_cell, free_board_cell]`
+
+        If `test_actions` is not ``None``, interaction with players is disabled because there are emulated actions.
+        """
         if test_actions:
             self.clicker.test(test_actions)
             GameMode.start_game(self, start, args, kwargs, interaction=False)
@@ -170,8 +202,20 @@ class Neuroshima(GameMode):
             GameMode.start_game(self, start, args, kwargs)
 
     def begin_play(self, start, args, kwargs):
-        GameMode.begin_play(self, start, args, kwargs)
+        """Initializes Neuroshima Hex main info.
+        Overridden base method :py:meth:`GameMode.begin_play()`.
+        Initializes players names and armies, order of turns. After that starts game.
 
+        :param function start: Function that begins game after initialization in :py:meth
+        :param list args: Arguments for function *start()* given as first parameter
+        :param dict kwargs: Key word arguments for function *start()* given as first parameter
+
+        Function `start()` is the first action in game. It can either be some test function or unique beginning of the
+        game process that is described in game rules.
+
+        Standard action starting the game is placing players' HQs on the board (:py:meth:`place_all_hq()`)
+        """
+        GameMode.begin_play(self, start, args, kwargs)
         self.players = [Player('Moloch', 1, 0, self), Player('Hegemony', 3, 1, self)]
         for p in self.players:
             p.army_shuffle()
@@ -180,20 +224,31 @@ class Neuroshima(GameMode):
         self.player = self.players[0]
 
         start(*args, **kwargs)
-        # self.turn()
 
     def swap(self, (a, b)):
+        """Swaps tiles between cells.
+
+        :param Cell a: one cell
+        :param Cell b: another cell
+        """
         if b:
-            # release units disabled by nets of a.tile (if there are)
             self.release_disable_units(a)
-            # move tile from a to b
+            # move tile from a to b - uses in placing tile on board and/or resolving moving orders
             a.tile, b.tile = b.tile, a.tile
         else:
             print "b is none"
 
     def march(self, (who, where)):
+        """Performs placing tile on board or March order.
+
+        :param Cell who: Old place for tile
+        :param Cell where: New place for tile. Must be the same cell as `who` or some free cell.
+
+        Updates action dictionary if `who` is actor and then :py:meth:`swap()` tiles in cells.
+        """
         if who in self.action_types and who is not where:
-            # move mobile unit - change cell in dictionary
+            # move mobile unit - actor in action dict is changed
+            # actor cell in dictionary must be updated for further handling actions
             values = self.action_types[who]
             del self.action_types[who]
             self.action_types[where] = values
@@ -206,16 +261,18 @@ class Neuroshima(GameMode):
             print '\t' + self.player.name, 'moves', who.tile.hex.name, \
                 'to the', str(self.playground.cells.index(where)), 'cell'
         self.swap((who, where))
+        # link rotation events with rotation callback
         self.clicker.pend_rotation(where, self.tactic)
 
     def begin_battle(self, continuer='default', period=3000):
+        """Computes units interaction during battle.
+        Creates instance `Battle()` for battle and launches first battle phase.
+
+        :param function continuer: Function that runs after the end of the battle
+        :param int period: Periods between battle phases (in milliseconds)
+
+        Standard`continuer()` is :py:meth:`new_turn()`
         """
-        Computes units interaction during battle.
-        :return: nothing is returned.
-        """
-        # prepare to battle
-        # find max initiative
-        # battle
         if continuer is 'default':
             continuer = self.new_turn
         self.battle = Battle(self.playground,
@@ -229,13 +286,19 @@ class Neuroshima(GameMode):
         self.set_timer(period, self.battle.battle_phase)
 
     def release_disable_units(self, cell):
+        """Releases all enemy tiles disabled by the tile in `cell`.
+
+        :param Cell cell: cell with Unit that can use nets
+
+        It's used when the net-unit goes away from `cell` or dies.
+        """
         if isinstance(cell.tile.hex, Unit) and cell.tile.hex.nets:
             for ind in xrange(len(cell.neighbours)):
                 if cell.tile.hex.nets[(ind + 6 - cell.tile.turn) % 6] and \
                         cell.neighbours[ind] is not None and \
                         cell.neighbours[ind].tile is not None and \
                         cell.neighbours[ind].tile.hex.army_id != cell.tile.hex.army_id:
-                    # release unit if there is no other net fighters
+                    # release unit if there is no other net fighters catching unit
                     neighbour = cell.neighbours[ind]
                     for ind in xrange(len(neighbour.neighbours)):
                         if cell.neighbours[ind] is not None and \
@@ -249,6 +312,12 @@ class Neuroshima(GameMode):
                         neighbour.tile.active = True
 
     def disable_units(self, cell):
+        """Disables all enemy units catched by the tile in `cell`.
+
+        :param Cell cell: cell with Unit that can use nets
+
+        It's used when net-unit goes or is plased to the `cell`. Also enemy unit can go under the net-unit's nets.
+        """
         if cell.tile and isinstance(cell.tile.hex, Unit) and cell.tile.active and cell.tile.hex.nets:
             for ind in xrange(len(cell.neighbours)):
                 if cell.tile.hex.nets[(ind + 6 - cell.tile.turn) % 6] and \
@@ -262,6 +331,11 @@ class Neuroshima(GameMode):
                     cell.neighbours[ind].tile.active = False
 
     def remove_tile_from_hand(self, tile):
+        """Removes tile from player's hand.
+        Marks player as returned tile and allows him to finish his turn (nexessary after first and second game turns).
+
+        :param Tile tile: Tile that needs to be removed
+        """
         name = ''
         if isinstance(tile, Order):
             name = tile.type
@@ -273,6 +347,9 @@ class Neuroshima(GameMode):
         self.event(self.tactic)
 
     def new_turn(self):
+        """Starts new turn.
+        Switches player to the next, resets support info in DisposableModules on the board and starts new turn.
+        """
         for cell in self.playground.cells:
             # reset disposable modules
             if cell.tile is not None and isinstance(cell.tile.hex, DisposableModule):
@@ -281,6 +358,12 @@ class Neuroshima(GameMode):
         self.event(self.turn)
 
     def callback_dispatcher(self, (s, cell)):
+        """Handles common players' choices.
+        Specifies callback for every player's choice.
+
+        :param Cell s: Actor
+        :param Cell/Button cell: Action
+        """
         if isinstance(s, Button):
             if s is self.buttons['confirm'] or s is self.buttons['revoke']:
                 s.action()
@@ -304,15 +387,23 @@ class Neuroshima(GameMode):
                 else:
                     # marsh/mobility resolve
                     if s in self.playground.cells:
-                        # mobility resolve - decrease tile's mobility
+                        # mobility resolve - decrease tile's mobility - unit made one move action
                         s.tile.mobility -= 1
                     self.march((s, cell))
 
     def place_hq(self, (who, where)):
+        """Places player's HQ to the board.
+
+        :param Cell who: cell on player's hand with HQ
+        :param Cell where: Free cell on the board
+        """
         self.march((who, where))
         self.next_hq()
 
     def next_hq(self):
+        """Switches to the next player for placing his HQ.
+        If all HQ are placed on the board, starts first :py:meth:`turn()`
+        """
         self.player = self.player.next
         if self.player is self.players[0]:
             self.turn()
@@ -320,29 +411,43 @@ class Neuroshima(GameMode):
             self.place_all_hq()
 
     def place_all_hq(self):
+        """Prepares for placing HQ to the board.
+        Fills action dictionary with HQs and list of free cells on the board to place them. Then links action dictionary
+        with :py:meth:`place_hq()` as callback.
+        """
         print self.player.name + ', please, place your HQ on the board.'
         self.player.hand[0].tile = self.player.hq
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)
 
     def save(self):
+        """Saves the board and player;s hand.
+        It's used for revoking player's actions in turn.
+        """
         self.playground_save = [copy(cell.tile) for cell in self.playground.cells]
         self.player_hand_save = [copy(cell.tile) for cell in self.player.hand]
 
     def load(self):
+        """Loads the board and players's hand.
+        It's used in revokes of player's actions during his turn. Also restores pointers to players' HQs.
+        After loading begins turn again.
+        """
         print '\t' + self.player.name, 'revokes his actions.'
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
-            cell.tile = cell_save
+            cell.tile = copy(cell_save)
             if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
                 self.player.hq = cell.tile
+            if cell.tile and isinstance(cell.tile.hex, DisposableModule) and cell.tile.hex.army_id == self.player.army:
+                # reset disposable module usages
+                cell.tile.used = []
         for cell, cell_save in zip(self.player.hand, self.player_hand_save):
-            cell.tile = cell_save
+            cell.tile = copy(cell_save)
         self.turn_init()
 
     def turn(self):
-        """
-        Initialize player's hand and actions he can make.
-        :return: nothing is returned.
+        """Starts new turn.
+        Check winning conditions, then gives necessary amount of tiles to current player's hand,
+        player:py:meth:`save()` game state and initializes player's turn info (:py:meth:`turn_init()`).
         """
         for player in self.players:
             if player.hq.hex.hp <= player.hq.injuries:
@@ -370,7 +475,6 @@ class Neuroshima(GameMode):
                 self.set_timer(3000, self.end_game)
                 return
         if self.last_player and self.last_player is self.player:
-            # Final Battle
             print 'The Final Battle begins!'
             self.over = True
             self.begin_battle()
@@ -382,6 +486,10 @@ class Neuroshima(GameMode):
         self.turn_init()
 
     def turn_init(self):
+        """Initializes turn info.
+        Initializes action dictionary for player and resets tiles' all temporary info to defaults. Then initializes
+        values for action dictionary (:py:meth:`tactic()`)
+        """
         # Input when revoking
         self.player.remove_in_turn = False
         if self.turn_num < 3 or self.player.tiles_in_hand() < 3:
@@ -412,14 +520,13 @@ class Neuroshima(GameMode):
         self.tactic()
 
     def tactic(self):
-        """
-        Constructs values for keys in dictionary of player's actions.
-        :return: nothing is returned.
+        """Initializes values for action dictionary.
+        Constructs values for keys in dictionary of player's actions. Then links action dictionary with standard
+        :py:meth:`callback_dispatcher()`.
         """
         # if all battlefield is full begin the battle
         if not self.playground.get_free_cells():
             for cell in self.playground.cells:
-                # if 'cell' is netfighter disable enemies 'cell'
                 self.disable_units(cell)
             self.begin_battle()
             return
