@@ -254,12 +254,16 @@ class Neuroshima(GameMode):
             self.action_types[where] = values
         if who in self.player.hand:
             # placing tile on board
-            print '\t' + self.player.name, 'places', who.tile.hex.name, \
-                'to the', str(self.playground.cells.index(where)), 'cell'
+            print _("\t %(player)s places %(hex)s to cell %(index)d") %\
+                  { "player": _(self.player.name),
+                    "hex": _(who.tile.hex.name),
+                    "index": self.playground.cells.index(where) }
         else:
             # moving mobile units
-            print '\t' + self.player.name, 'moves', who.tile.hex.name, \
-                'to the', str(self.playground.cells.index(where)), 'cell'
+            print _("\t %(player)s moves %(hex)s to cell %(index)d") %\
+                  { "player": _(self.player.name),
+                    "hex": _(who.tile.hex.name),
+                    "index": self.playground.cells.index(where) }
         self.swap((who, where))
         # link rotation events with rotation callback
         self.clicker.pend_rotation(where, self.tactic)
@@ -341,7 +345,9 @@ class Neuroshima(GameMode):
             name = tile.type
         else:
             name = tile.name
-        print '\t' + self.player.name, 'removed', name, 'from his hand'
+        print _("\t %(player)s removes %(hex)s from his hand") %\
+              { 'player': self.player.name,
+                'hex': _(name) }
         self.player.remove_in_turn = True
         self.action_types[self.buttons['confirm']] = []
         self.event(self.tactic)
@@ -369,7 +375,7 @@ class Neuroshima(GameMode):
                 s.action()
             else:
                 # unlucky draw
-                print '\t' + self.player.name, 'refreshed hand.'
+                print _("\t %(player)s refreshes his hand.") % { 'player': self.player.name }
                 self.player.refresh_hand()
                 self.save()
                 self.event(self.tactic)
@@ -415,7 +421,7 @@ class Neuroshima(GameMode):
         Fills action dictionary with HQs and list of free cells on the board to place them. Then links action dictionary
         with :py:meth:`place_hq()` as callback.
         """
-        print self.player.name + ', please, place your HQ on the board.'
+        print _("\t %(player)s , please, place your HQ.") % { 'player': self.player.name }
         self.player.hand[0].tile = self.player.hq
         self.action_types = {self.player.hand[0]: self.playground.get_free_cells()}
         self.clicker.pend_click(self.action_types, self.place_hq)
@@ -432,7 +438,7 @@ class Neuroshima(GameMode):
         It's used in revokes of player's actions during his turn. Also restores pointers to players' HQs.
         After loading begins turn again.
         """
-        print '\t' + self.player.name, 'revokes his actions.'
+        print _("\t %(player)s revokes his actions.") % { 'player': self.player.name }
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
             cell.tile = copy(cell_save)
             if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
@@ -451,35 +457,39 @@ class Neuroshima(GameMode):
         """
         for player in self.players:
             if player.hq.hex.hp <= player.hq.injuries:
-                print player.name + '\'s HQ is destroyed.'
-                print 'Congratulations,', player.next.name + '!!!'
+                print _("\t %(player)s's HQ is destroyed.") % { 'player': player.name }
+                print _("\t Congratulations, %(player)s!") % { 'player':  player.next.name }
                 self.set_timer(3000, self.end_game)
                 return
         if self.over:
-            print self.player.name + '\'s HQ:', self.player.hq.hex.hp - self.player.hq.injuries
-            print self.player.next.name + '\'s HQ:', self.player.next.hq.hex.hp - self.player.next.hq.injuries
+            print _("\t %(player)s's HQ: %(hp)d hp.") %\
+                  { 'player': self.player.name,
+                    'hp': self.player.hq.hex.hp - self.player.hq.injuries }
+            print _("\t %(player)s's HQ: %(hp)d hp.") %\
+                  {'player': self.player.next.name,
+                   'hp': self.player.next.hq.hex.hp - self.player.next.hq.injuries }
             if self.player.hq.hex.hp - self.player.hq.injuries < self.player.next.hq.hex.hp - self.player.next.hq.injuries:
-                print self.player.name + '\'s HQ is more damaged'
-                print 'Congratulations,', self.player.next.name + '!!!'
+                print _("\t %(player)s's HQ is more damaged.") % { 'player': self.player.name }
+                print _("\t Congratulations, %(player)s!") % { 'player':  self.player.next.name }
                 self.set_timer(3000, self.end_game)
                 return
             elif self.player.hq.hex.hp - self.player.hq.injuries > self.player.next.hq.hex.hp - self.player.next.hq.injuries:
-                print self.player.next.name + '\'s HQ is more damaged'
-                print 'Congratulations,', self.player.name + '!!!'
+                print _("\t %(player)s's HQ is more damaged.") % { 'player': self.player.next.name }
+                print  _("\t Congratulations, %(player)s!") % { 'player':  self.player.name }
                 self.set_timer(3000, self.end_game)
                 return
             else:
                 # TODO implement additional turn
-                print 'Both HQs are equally damaged'
-                print 'That\'s a draw('
+                print _(" HQs are equally damaged.")
+                print _("That\'s a draw(")
                 self.set_timer(3000, self.end_game)
                 return
         if self.last_player and self.last_player is self.player:
-            print 'The Final Battle begins!'
+            print _("The Final Battle begins!")
             self.over = True
             self.begin_battle()
             return
-        print self.player.name + '\'s turn!'
+        print _("%s's turn!") % self.player.name
         self.turn_num += 1
         self.player.get_tiles(self.turn_num)
         self.save()
