@@ -277,7 +277,7 @@ class Renderer:
         self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
         rect = self.boardbackbuffer.get_rect()
         # rect.center = (self.screenrect.center[0] * 1.33, self.screenrect.center[1])
-        rect.center = self.screenrect.center
+        rect.left, rect.top = grid.gfx_location
         self.screen.blit(self.boardbackbuffer, rect)
 
     def render_tile(self, container, cell):
@@ -312,6 +312,8 @@ class Renderer:
         cellpicrect = cellpic.get_rect()
         grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
                                    (grid.radius * 2 + 1) * cellpicrect.height))
+        # positioning the board on screen
+        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale, 0)
         grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
         grid.gfx_indent = grid.gfx.get_rect().center
         # cell mask
@@ -327,9 +329,9 @@ class Renderer:
             clickable.mask = grid.cellmask
             clickable.maskrect = temppic.get_rect()
             clickable.maskrect.center = ((grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0]) * self.scale +
-                                    (self.screenrect.width - grid.gfx.get_rect().width * self.scale) / 2,
-                                    (grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1]) * self.scale +
-                                    (self.screenrect.height - grid.gfx.get_rect().height * self.scale) / 2)
+                                         grid.gfx_location[0],
+                                         (grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1]) * self.scale +
+                                         grid.gfx_location[1])
 
     def render_objects(self):
         for obj in self.objects:
