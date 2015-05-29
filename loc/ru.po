@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-29 13:17+0300\n"
+"POT-Creation-Date: 2015-05-29 15:19+0300\n"
 "PO-Revision-Date: 2015-05-29 12:38+0300\n"
 "Last-Translator: Dandelion <dandelion@dandelion-k50id>\n"
 "Language-Team: Russian\n"
@@ -19,10 +19,77 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: ../src/game/battle/battle.py:55
+msgid "Let the Battle Begin!!!"
+msgstr ""
+
+#: ../src/game/battle/battle.py:71
+#, python-format
+msgid "Maximum initiative is %d"
+msgstr ""
+
+#: ../src/game/battle/battle.py:88
+#, python-format
+msgid "Battle phase %d begins."
+msgstr ""
+
+#: ../src/game/battle/battle.py:174
+#, python-format
+msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to melee"
+msgstr ""
+
+#: ../src/game/battle/battle.py:180
+#, python-format
+msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to range"
+msgstr ""
+
+#: ../src/game/battle/battle.py:288
+#, python-format
+msgid "%(army)s %(hex)s (cell %(index)d) damaged:"
+msgstr ""
+
+#: ../src/game/battle/battle.py:293
+#, python-format
+msgid "\t%(army)s %(hex)s (cell %(index)d) (%(type)s, %(value)d wounds)"
+msgstr ""
+
+#: ../src/game/battle/battle.py:317
+#, python-format
+msgid ""
+"%s died because of natural causes.\n"
+"Indeed, he was scattered by explosion. It's just natural he died"
+msgstr ""
+
+#: ../src/game/battle/battle.py:320
+#, python-format
+msgid "%s died."
+msgstr ""
+
+#: ../src/game/battle/medics.py:92
+#, python-format
+msgid ""
+"%(army)s %(hex)s (cell %(index)d) saves %(other_hex)s (cell %(other_index)d "
+"from %(damage)d wounds.)"
+msgstr ""
+
+#: ../src/game/battle/medics.py:94
+msgid "Medic"
+msgstr ""
+
 #: ../src/game/common/armies.py:26
 msgid "en"
 msgstr "ru"
 
+#: ../src/game/common/clicker.py:88
+#, python-format
+msgid "\twith turn %d"
+msgstr ""
+
 #: ../src/game/common/renderer.py:172
 msgid "Loading Neuroshima HEX! 3.0..."
 msgstr "Загрузка игры Neuroshima HEX! 3.0..."
+
+#: ../src/game/common/renderer.py:327
+#, python-format
+msgid "Failed to load image for %s button."
+msgstr ""
