@@ -3,6 +3,8 @@ __author__ = 'dandelion'
 from tile import *
 from renderer import TileRenderer
 import pygame.image
+import gettext
+import os
 
 
 class Army(object):
@@ -21,7 +23,7 @@ class Army(object):
             self.load_hexes()
         except pygame.error:
             self.gen_hexes()
-        self.gfx_status = pygame.image.load("res/localized/ru/status_" + self.name + ".png")
+        self.gfx_status = pygame.image.load(os.path.join("res", "localized", _("en"), "status_" + self.name + ".png"))
 
     def gen_hexes(self):
         # generate and save tile images
@@ -29,13 +31,13 @@ class Army(object):
         for hex in self.army.itervalues():
             tr.gen_tile(hex)
             for pic in hex.gfx:
-                pygame.image.save(hex.gfx[pic], "res/armies/" + self.name + "/" + hex.name + "_" + str(pic) + ".png")
+                pygame.image.save(hex.gfx[pic], os.path.join("res", "armies", self.name, hex.name + "_" + str(pic) + ".png"))
 
     def load_hexes(self):
         # load tile images from files
         for hex in self.army.itervalues():
             for pic in xrange(6):
-                hex.gfx[pic] = pygame.image.load("res/armies/" + self.name + "/" + hex.name + "_" + str(pic) + ".png")
+                hex.gfx[pic] = pygame.image.load(os.path.join("res", "armies", self.name, hex.name + "_" + str(pic) + ".png"))
 
 
 class Borgo(Army):

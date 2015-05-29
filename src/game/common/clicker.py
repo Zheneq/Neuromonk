@@ -85,7 +85,7 @@ class Clicker(object):
         :return: nothing is returned.
         """
         if self.rot_pending:
-            print '\twith turn', self.rot_pending.tile.turn
+            print _("\twith turn %d") % self.rot_pending.tile.turn
             self.rot_pending = None
             self.game.event(self.click_callback)
         else:

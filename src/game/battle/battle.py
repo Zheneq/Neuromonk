@@ -52,7 +52,7 @@ class Battle(object):
         self.converting_unit = None
 
         if init_phase == 1000:
-            print 'Let the Battle Begin!!!'
+            print _("Let the Battle Begin!!!")
             self.initiative_phase = 0
             for cell in self.battlefield.cells:
                 # reset disposable modules
@@ -68,7 +68,7 @@ class Battle(object):
                     initiative_modificator = compute_initiative(cell)
                     if cell.tile.hex.initiative[0][0] + initiative_modificator > self.initiative_phase:
                         self.initiative_phase = cell.tile.hex.initiative[0][0] + initiative_modificator
-            print 'Maximum initiative is', self.initiative_phase
+            print _("Maximum initiative is %d") % self.initiative_phase
             print ' '
         else:
             self.initiative_phase = init_phase
@@ -85,7 +85,7 @@ class Battle(object):
                     if cell.tile.hex.melee and cell.tile.hex.melee[ind] or \
                             cell.tile.hex.range and cell.tile.hex.range[ind]:
                         cell.tile.convert[ind] = 'able'
-        print 'Battle phase', self.initiative_phase, 'begins.'
+        print _("Battle phase %d begins.") % self.initiative_phase
         # phase of giving damage
         self.resolve_converts()
 
@@ -171,14 +171,16 @@ class Battle(object):
     def convert_attack(self, (direction, type)):
         ind = (self.converting_unit.neighbours.index(direction) + 6 - self.converting_unit.tile.turn) % 6
         if type is self.buttons['apply']:
-            print armies[self.converting_unit.tile.hex.army_id]().name, \
-                self.converting_unit.tile.hex.name, 'converted his attack of direction', \
-                self.converting_unit.neighbours.index(direction), 'to melee'
+            print _("%(army)s %(hex)s converted his attack of direction %(dir)d to melee") % \
+                  { 'army': _(filter(lambda x: x in letters, str(armies[self.converting_unit.tile.hex.army_id]).split('.')[-1])),
+                    'hex': _(self.converting_unit.tile.hex.name),
+                    'dir': self.converting_unit.neighbours.index(direction) }
             self.converting_unit.tile.convert[ind] = 'melee'
         else:
-            print armies[self.converting_unit.tile.hex.army_id]().name, \
-                self.converting_unit.tile.hex.name, 'converted his attack of direction', \
-                self.converting_unit.neighbours.index(direction), 'to range'
+            print _("%(army)s %(hex)s converted his attack of direction %(dir)d to range") % \
+                  { 'army': _(filter(lambda x: x in letters, str(armies[self.converting_unit.tile.hex.army_id]).split('.')[-1])),
+                    'hex': _(self.converting_unit.tile.hex.name),
+                    'dir': self.converting_unit.neighbours.index(direction) }
             self.converting_unit.tile.convert[ind] = 'range'
         if self.actions:
             self.pend_click(self.actions, self.resolve_convert_for_unit)
@@ -283,14 +285,17 @@ class Battle(object):
                                                                       'target': cell})
         # print all actions of units in this phase
         for instigator in damage_to_units:
-            print filter(lambda x: x in letters, str(armies[instigator.tile.hex.army_id]).split('.')[-1]), \
-                instigator.tile.hex.name, \
-                '(' + 'cell', str(self.battlefield.cells.index(instigator)) + ')', 'damaged:'
+            print _("%(army)s %(hex)s (cell %(index)d) damaged:") %\
+                  { 'army': _(filter(lambda x: x in letters, str(armies[instigator.tile.hex.army_id]).split('.')[-1])),
+                    'hex': _(instigator.tile.hex.name),
+                    'index': self.battlefield.cells.index(instigator) }
             for target in damage_to_units[instigator]:
-                print '\t' + filter(lambda x: x in letters, str(armies[target['target'].tile.hex.army_id]).split('.')[-1]), \
-                    target['target'].tile.hex.name, \
-                    '(' + 'cell', str(self.battlefield.cells.index(target['target'])) + ')', \
-                    '(' + target['type'] + ',', target['value'], 'wounds' + ')'
+                print _("\t%(army)s %(hex)s (cell %(index)d) (%(type)s, %(value)d wounds)") %\
+                      { 'army': _(filter(lambda x: x in letters, str(armies[target['target'].tile.hex.army_id]).split('.')[-1])),
+                        'hex': _(target['target'].tile.hex.name),
+                        'index': self.battlefield.cells.index(target['target']),
+                        'type': _(target['type']),
+                        'value': target['value'] }
         # resolve possible medic conflicts
         medicine = Medicine(self.battlefield, self.pend_click, self.compute_injuries, self.event)
         medicine.resolve_medics()
@@ -309,10 +314,10 @@ class Battle(object):
                     cell.tile.taken_damage = []
                 else:
                     if not cell.tile.hex.hp:
-                        print cell.tile.hex.name, 'died because of natural causes'
-                        print 'Indeed, he was scattered by explosion. It\'s just natural he died'
+                        print _("%s died because of natural causes.\n" +
+                                "Indeed, he was scattered by explosion. It's just natural he died") % cell.tile.hex.name
                     else:
-                        print cell.tile.hex.name, 'died because of injuries'
+                        print _("%s died.") % cell.tile.hex.name
                     # if died unit is net fighter release all units caught by him
                     self.release_disable_units(cell)
                     cell.tile = None

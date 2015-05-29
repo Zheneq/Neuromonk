@@ -324,7 +324,7 @@ class Renderer:
                 gfx = pygame.image.load("res/button_" + button.name + ".png")
                 button.gfx[pic].blit(gfx, gfx.get_rect())
             except pygame.error:
-                print "Failed to load image for " + button.name + " button."
+                print _("Failed to load image for %s button.") % button.name
             button.gfx[pic] = pygame.transform.rotozoom(button.gfx[pic], 0.0, button.scale)
         button.mask = pygame.mask.from_surface(button.gfx["default"])
         button.maskrect = button.gfx["default"].get_rect()
