@@ -8,10 +8,7 @@ class Hex(object):
         self.gfx = {}
 
     def invalidate(self):
-        """
-        Refreshes visual representation of the tile
-        :return: nothing is returned.
-        """
+        """Refreshes visual representation of the tile."""
         self.gfx = {}
 
     def initialize_wrapper(self, wrapper):

@@ -3,27 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Neuroshima Hex's documentation!
-==========================================
+GameMode
+========
 
-Contents:
-
-.. toctree::
-   :maxdepth: 1
-
-   index
+This is the main module of the project. It contains the essence of the game process. API of GameMode is represented by 2 classes: :py:class:`src.game.gamemode.GameMode()` and :py:class:`src.game.gamemode.Neuroshima()`. Former, :py:class:`src.game.gamemode.GameMode()`, implements abstract board game logic while latter, :py:class:`src.game.gamemode.Neuroshima()`, is inherited from the former one and determines details of Neurshima Hex game process.
 
 
-Gamemode API
+GameMode API
 ============
 .. automodule:: src.game.gamemode
    :members:
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

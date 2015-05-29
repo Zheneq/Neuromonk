@@ -119,7 +119,7 @@ class GameMode(object):
 
     def event(self, callback, parameters=()):
         """Creates game event.
-        Created events will be handeled in main loop of :py:meth;`start_game()`
+        Created events will be handeled in main loop of :py:meth:`start_game()`
 
         :param function callback: Callback for event
         :param tuple parameters: Tuple of parameters for *callback()* given as first parameter

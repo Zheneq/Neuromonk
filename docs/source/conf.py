@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Neuroshima Hex'
+project = u'Neuroshima Hex PC'
 copyright = u'2015, Eugene Pedan && Anton Babichev'
 
 # The version info for the project you're documenting, acts as replacement for
