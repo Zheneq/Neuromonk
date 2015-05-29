@@ -232,6 +232,14 @@ class Renderer:
             player.gfx_multiplier = self.game.playground.gfx_multiplier
             #
             pic = player.gfx.copy()
+            #
+            hp_bar_height = 20
+            clip = pic.get_rect()
+            clip.top, clip.left = clip.height - hp_bar_height, 0
+            clip.width *= 1 - float(player.hq.injuries) / player.hq.hex.hp
+            clip.height = hp_bar_height
+            pic.fill((255, 80, 80), clip)
+            #
             for cell in player.hand:
                 #
                 cell.mask = self.game.playground.cellmask
