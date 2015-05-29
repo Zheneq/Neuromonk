@@ -16,11 +16,12 @@ class Army(object):
         elif mode == 'dm':
             self.base_hp = 20
 
-    def get_hexes(self):
+    def get_resourses(self):
         try:
             self.load_hexes()
         except pygame.error:
             self.gen_hexes()
+        self.gfx_status = pygame.image.load("res/localized/ru/status_" + self.name + ".png")
 
     def gen_hexes(self):
         # generate and save tile images
@@ -77,7 +78,7 @@ class Borgo(Army):
             move = Order(self.army_id, 'move')
             self.army['move' + str(i)] = move
 
-        self.get_hexes()
+        self.get_resourses()
 
 
 class Moloch(Army):
@@ -136,7 +137,7 @@ class Moloch(Army):
             pushback = Order(self.army_id, 'pushback')
             self.army['pushback' + str(i)] = pushback
 
-        self.get_hexes()
+        self.get_resourses()
 
     def clown_explode(self, cell, damage_modificator):
         for neighbour in cell.neighbours:
@@ -194,7 +195,7 @@ class Hegemony(Army):
         sniper = Order(self.army_id, 'sniper')
         self.army['sniper'] = sniper
 
-        self.get_hexes()
+        self.get_resourses()
 
 
 armies = {}

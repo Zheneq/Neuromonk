@@ -155,6 +155,7 @@ class Neuroshima(GameMode):
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
         self.over = False
+        self.battle = None
 
         self.playground_save = []
         self.player_hand_save = []
@@ -162,10 +163,10 @@ class Neuroshima(GameMode):
         self.action_types = {}
         self.orderhandler = OrderHandler(self)
         # DEBUG
-        self.buttons = {'remove': Button(self, self.remove_tile_from_hand, 0, 550, .1, 'remove'),
-                        'apply': Button(self, self.orderhandler.resolve_order, 50, 550, .1, 'apply'),
-                        'revoke': Button(self, self.load, 100, 550, .1, 'revoke'),
-                        'confirm': Button(self, self.new_turn, 150, 550, .1, 'confirm')}
+        self.buttons = {'remove': Button(self, self.remove_tile_from_hand, 75, 450, .3, 'remove'),
+                        'apply': Button(self, self.orderhandler.resolve_order, 275, 450, .3, 'apply'),
+                        'revoke': Button(self, self.load, 75, 615, .3, 'revoke'),
+                        'confirm': Button(self, self.new_turn, 275, 615, .3, 'confirm')}
 
     def start_game(self, start, args, kwargs, test_actions=None):
         """Starts Neuroshima Hex main loop.
@@ -204,13 +205,9 @@ class Neuroshima(GameMode):
         Standard action starting the game is placing players' HQs on the board (:py:meth:`place_all_hq()`)
         """
         GameMode.begin_play(self, start, args, kwargs)
-        # DEBUG
-        Zq = Player('Player1', 1, 0, self)
-        Zq.army_shuffle()
-        Dand = Player('Player2', 3, 1, self)
-        Dand.army_shuffle()
-
-        self.players = [Zq, Dand]
+        self.players = [Player('Moloch', 1, 0, self), Player('Hegemony', 3, 1, self)]
+        for p in self.players:
+            p.army_shuffle()
         self.players[0].next = self.players[1]
         self.players[1].next = self.players[0]
         self.player = self.players[0]
@@ -267,15 +264,15 @@ class Neuroshima(GameMode):
         """
         if continuer is 'default':
             continuer = self.new_turn
-        battle = Battle(self.playground,
-                        self.clicker.pend_click,
-                        self.buttons,
-                        self.release_disable_units,
-                        self.event,
-                        self.set_timer,
-                        period,
-                        continuer)
-        self.set_timer(period, battle.battle_phase)
+        self.battle = Battle(self.playground,
+                             self.clicker.pend_click,
+                             self.buttons,
+                             self.release_disable_units,
+                             self.event,
+                             self.set_timer,
+                             period,
+                             continuer)
+        self.set_timer(period, self.battle.battle_phase)
 
     def release_disable_units(self, cell):
         """Releases all enemy tiles disabled by the tile in `cell`.

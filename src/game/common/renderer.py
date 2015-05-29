@@ -167,9 +167,10 @@ class Renderer:
     def __init__(self, game):
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
-        self.screen = pygame.display.set_mode((1300, 750))
+        self.screen = pygame.display.set_mode((1200, 800))
+        pygame.display.set_caption("Loading Neuroshima HEX! 3.0...")
         self.screenrect = self.screen.get_rect()
-        self.scale = 0.3
+        self.scale = 0.33
         self.boardbackbuffer = None
         #
         self.idle = False
@@ -179,13 +180,17 @@ class Renderer:
         self.objects = []
         #
         self.pics = {}
-        self.pics["button"] = pygame.image.load("res/button.png")
         self.tile_gen = TileRenderer()
-        self.pics["cell"] = pygame.image.load("res/cell.png")
-        self.pics["cellmask"] = pygame.mask.from_surface(self.pics["cell"])
+        self.pics["button"]       = pygame.image.load("res/button.png")
+        self.pics["cell"]         = pygame.image.load("res/cell.png")
+        self.pics["cellmask"]     = pygame.mask.from_surface(self.pics["cell"])
         self.pics["cellmaskrect"] = self.pics["cell"].get_rect()
-        self.pics["button_high"] = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
-        self.pics["button_sel"]  = self.pics["cell_sel"] = self.tile_gen.generate_cell_fx(selected = True)
+        self.pics["button_high"]  = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
+        self.pics["button_sel"]   = self.pics["cell_sel"] = self.tile_gen.generate_cell_fx(selected = True)
+
+        for i in xrange(6):
+            self.pics["status_battle_phase_" + str(i)] =\
+                pygame.image.load("res/localized/ru/status_battle_phase_" + str(i) + ".png")
 
     def tick(self, deltatime):
         """
@@ -209,8 +214,9 @@ class Renderer:
             # print "FPS: %d" % self.fps
             self.fps = 0
         if not self.idle:
-            self.screen.fill((240, 240, 240))
+            self.screen.fill((0, 0, 0))
             self.render_board(self.game.playground)
+            self.render_status()
             self.render_players(self.game.players)
             self.render_objects()
             pygame.display.flip()
@@ -225,7 +231,15 @@ class Renderer:
             player.gfx_indent = gfx_indent = player.gfx.get_rect().center
             player.gfx_multiplier = self.game.playground.gfx_multiplier
             #
-            pic = self.clone_pic(player.gfx)
+            pic = player.gfx.copy()
+            #
+            hp_bar_height = 20
+            clip = pic.get_rect()
+            clip.top, clip.left = clip.height - hp_bar_height, 0
+            clip.width *= 1 - float(player.hq.injuries) / player.hq.hex.hp
+            clip.height = hp_bar_height
+            pic.fill((255, 80, 80), clip)
+            #
             for cell in player.hand:
                 #
                 cell.mask = self.game.playground.cellmask
@@ -262,8 +276,17 @@ class Renderer:
                        container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
         target.blit(cell.gfx[type], rect)
 
+    def render_status(self):
+        if self.game.battle and self.game.battle.active:
+            statusbar = self.pics["status_battle_phase_" + max((str(self.game.battle.initiative_phase), 5))]  # .copy()
+        else:
+            statusbar = self.game.player.army_dict.gfx_status  # .copy()
+        rect = statusbar.get_rect()
+        rect.left, rect.top = (self.screenrect.width - rect.width - 50, 0)
+        self.screen.blit(statusbar, rect)
+
     def render_board(self, grid):
-        self.boardbackbuffer = self.clone_pic(grid.gfx)
+        self.boardbackbuffer = grid.gfx.copy()
         rect = grid.gfx.get_rect()
         # rendering cell fx
         for cell in grid.cells:
@@ -277,7 +300,7 @@ class Renderer:
         self.boardbackbuffer = pygame.transform.rotozoom(self.boardbackbuffer, 0.0, self.scale)
         rect = self.boardbackbuffer.get_rect()
         # rect.center = (self.screenrect.center[0] * 1.33, self.screenrect.center[1])
-        rect.center = self.screenrect.center
+        rect.left, rect.top = grid.gfx_location
         self.screen.blit(self.boardbackbuffer, rect)
 
     def render_tile(self, container, cell):
@@ -292,9 +315,9 @@ class Renderer:
     def make_button(self, button):
         # print "make button"
         button.gfx = {}
-        button.gfx["default"] = self.clone_pic(self.pics["button"])
-        button.gfx["highlighted"] = self.clone_pic(self.pics["button_high"])
-        button.gfx["selected"] = self.clone_pic(self.pics["button_sel"])
+        button.gfx["default"] = self.pics["button"].copy()
+        button.gfx["highlighted"] = self.pics["button_high"].copy()
+        button.gfx["selected"] = self.pics["button_sel"].copy()
         for pic in button.gfx:
             try:
                 gfx = pygame.image.load("res/button_" + button.name + ".png")
@@ -310,8 +333,10 @@ class Renderer:
     def make_board(self, grid):
         cellpic = pygame.image.load("res/cell.png")
         cellpicrect = cellpic.get_rect()
-        grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
+        grid.gfx = pygame.Surface(((grid.radius * 2) * cellpicrect.width,
                                    (grid.radius * 2 + 1) * cellpicrect.height))
+        # positioning the board on screen
+        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale - 40, 100)
         grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
         grid.gfx_indent = grid.gfx.get_rect().center
         # cell mask
@@ -327,9 +352,9 @@ class Renderer:
             clickable.mask = grid.cellmask
             clickable.maskrect = temppic.get_rect()
             clickable.maskrect.center = ((grid.gfx_indent[0] + clickable.x * grid.gfx_multiplier[0]) * self.scale +
-                                    (self.screenrect.width - grid.gfx.get_rect().width * self.scale) / 2,
-                                    (grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1]) * self.scale +
-                                    (self.screenrect.height - grid.gfx.get_rect().height * self.scale) / 2)
+                                         grid.gfx_location[0],
+                                         (grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1]) * self.scale +
+                                         grid.gfx_location[1])
 
     def render_objects(self):
         for obj in self.objects:
@@ -351,7 +376,3 @@ class Renderer:
         cell.gfx["selected"] = self.pics["cell_sel"]
         cell.mask = self.pics["cellmask"]
         cell.maskrect = self.pics["cellmaskrect"]
-
-    # TODO: Remove this
-    def clone_pic(self, surface):
-        return surface.copy()
