@@ -167,7 +167,7 @@ class Renderer:
     def __init__(self, game):
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
-        self.screen = pygame.display.set_mode((1300, 750))
+        self.screen = pygame.display.set_mode((1200, 700))
         self.screenrect = self.screen.get_rect()
         self.scale = 0.3
         self.boardbackbuffer = None
