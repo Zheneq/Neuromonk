@@ -89,10 +89,13 @@ class Medicine(object):
         #TODO choose wound (if it is important)
         # remove max damage from single instigator
         healed_damage = max(patient.tile.taken_damage, key=lambda x: x['value'])
-        print filter(lambda x: x in letters, str(armies[medic.tile.hex.army_id]).split('.')[-1]), 'Medic', \
-            '(' + 'cell', str(self.battlefield.cells.index(medic)) + ')', \
-            'heals', patient.tile.hex.name, \
-            '(' + 'cell', str(self.battlefield.cells.index(patient)) + ')', 'from', healed_damage['value'], 'wounds'
+        print _("%(army)s %(hex)s (cell %(index)d) saves %(other_hex)s (cell %(other_index)d from %(damage)d wounds.)") %\
+                  { 'army': filter(lambda x: x in letters, str(armies[medic.tile.hex.army_id]).split('.')[-1]),
+                    'hex': _("Medic"),
+                    'index': self.battlefield.cells.index(medic),
+                    'other_hex': _(patient.tile.hex.name),
+                    'other_index': self.battlefield.cells.index(patient),
+                    'damage': healed_damage['value'] }
         patient.tile.taken_damage.remove(healed_damage)
         medic.tile = None
         self.event(self.resolve_medics)

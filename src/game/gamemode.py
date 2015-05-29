@@ -32,7 +32,7 @@ class GameMode(object):
         self.timers = {}
 
         bindir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        for localedir in bindir, None:
+        for localedir in os.path.join(bindir, 'loc'), None:
             localefile = gettext.find('game', localedir)
             if localefile:
                 break

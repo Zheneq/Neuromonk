@@ -165,6 +165,8 @@ class TileRenderer:
 
 
 class Renderer:
+    """Rendering class for Neuroshima game."""
+
     def __init__(self, game):
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
@@ -194,18 +196,17 @@ class Renderer:
                 pygame.image.load("res/localized/ru/status_battle_phase_" + str(i) + ".png")
 
     def tick(self, deltatime):
-        """
-        Subroutine executed every tick
-        :param deltatime: Time since last tick (in milliseconds)
-        :return: nothing is returned.
+        """Subroutine executed every tick.
+
+        :param int deltatime: Milliseconds since last tick
         """
         self.render(deltatime)
 
     def render(self, deltatime):
-        """
-        Rendering subroutine
-        :param deltatime: Time since last tick (in milliseconds)
-        :return: nothing is returned.
+        """Rendering subroutine.
+        Renders all game parts onto the screen.
+
+        :param int deltatime: Milliseconds since last tick
         """
         self.deltatime += deltatime
         self.fps += 1
@@ -223,7 +224,44 @@ class Renderer:
             pygame.display.flip()
             # self.idle = True
 
+    def render_cell_fx(self, target, container, cell):
+        """Effect renderer.
+        Used for rendering cell effects (like highlighting or selection).
+
+        :param pygame.Surface target: Surface to draw on
+        :param object container: Parent object. It must have `gfx_indent` (point of origin) and `gfx_multiplier` (unit) attributes
+        :param grid.Cell cell: Cell effects for which we are rendering
+        """
+        if self.game.clicker.click_pending:
+            if self.game.clicker.click_selected is not None:
+                if cell in self.game.clicker.click_pending[self.game.clicker.click_selected]:
+                    self.render_cell_fx_sub(target, container, cell, "highlighted")
+                if cell is self.game.clicker.click_selected:
+                    self.render_cell_fx_sub(target, container, cell, "selected")
+            else:
+                if cell in self.game.clicker.click_pending:
+                    self.render_cell_fx_sub(target, container, cell, "highlighted")
+
+    def render_cell_fx_sub(self, target, container, cell, type):
+        """Effect renderer subroutine.
+        Used for rendering cell effects (like highlighting or selection).
+
+        :param pygame.Surface target: Surface to draw on
+        :param object container: Parent object. It must have `gfx_indent` (point of origin) and `gfx_multiplier` (unit) attributes
+        :param grid.Cell cell: Cell effects for which we are rendering
+        :param string type: Effect type. Used as index in `cell.gfx` dict
+        """
+        rect = cell.gfx[type].get_rect()
+        rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
+                       container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
+        target.blit(cell.gfx[type], rect)
+
     def render_players(self, players):
+        """Rendering subroutine.
+        Renders players' hands and hps.
+
+        :param list players: Players in game
+        """
         indent = 0
         tile_gen = TileRenderer()
         for player in players:
@@ -260,24 +298,10 @@ class Renderer:
             self.screen.blit(pic, rect)
             indent += rect.height
 
-    def render_cell_fx(self, target, container, cell):
-        if self.game.clicker.click_pending:
-            if self.game.clicker.click_selected is not None:
-                if cell in self.game.clicker.click_pending[self.game.clicker.click_selected]:
-                    self.render_cell_fx_sub(target, container, cell, "highlighted")
-                if cell is self.game.clicker.click_selected:
-                    self.render_cell_fx_sub(target, container, cell, "selected")
-            else:
-                if cell in self.game.clicker.click_pending:
-                    self.render_cell_fx_sub(target, container, cell, "highlighted")
-
-    def render_cell_fx_sub(self, target, container, cell, type):
-        rect = cell.gfx[type].get_rect()
-        rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
-                       container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
-        target.blit(cell.gfx[type], rect)
-
     def render_status(self):
+        """Rendering subroutine.
+        Renders status bar (whose turn / which phase of battle is it now).
+        """
         if self.game.battle and self.game.battle.active:
             statusbar = self.pics["status_battle_phase_" + max((str(self.game.battle.initiative_phase), 5))]  # .copy()
         else:
@@ -287,6 +311,11 @@ class Renderer:
         self.screen.blit(statusbar, rect)
 
     def render_board(self, grid):
+        """Rendering subroutine.
+        Renders game board.
+
+        :param Grid grid: Board to render
+        """
         self.boardbackbuffer = grid.gfx.copy()
         rect = grid.gfx.get_rect()
         # rendering cell fx
@@ -305,6 +334,13 @@ class Renderer:
         self.screen.blit(self.boardbackbuffer, rect)
 
     def render_tile(self, container, cell):
+        """Tile rendering subroutine.
+        Renders the tile (and generates it if needed) and prepares it for rendering on parent object.
+
+        :param object container: Parent object. It must have `gfx_indent` (point of origin) and `gfx_multiplier` (unit) attributes
+        :param cell: Cell the tile is placed on
+        :return: (pygame.Surface, pygame.rect): All needed data for blitting the tile to the parent object
+        """
         if not cell.tile.hex.gfx:
             self.tile_gen.gen_tile(cell.tile.hex)
         pic = self.tile_gen.generate_tile_fx(cell.tile)
@@ -313,8 +349,28 @@ class Renderer:
                        container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
         return pic, rect
 
+    def render_objects(self):
+        """Rendering subroutine.
+        Renders all free object (not nested in any container).
+        """
+        for obj in self.objects:
+            self.screen.blit(obj.gfx["default"], obj.maskrect)
+            if self.game.clicker.click_pending:
+                if self.game.clicker.click_selected is not None:
+                    if obj in self.game.clicker.click_pending[self.game.clicker.click_selected]:
+                        self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
+                    if obj is self.game.clicker.click_selected:
+                        self.screen.blit(self.game.clicker.click_selected.gfx["selected"], obj.maskrect)
+                else:
+                    if obj in self.game.clicker.click_pending:
+                        self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
+
     def make_button(self, button):
-        # print "make button"
+        """Button generator.
+        Creates button attributes needed for rendering and mouse interaction.
+
+        :param Button button: Button to be created
+        """
         button.gfx = {}
         button.gfx["default"] = self.pics["button"].copy()
         button.gfx["highlighted"] = self.pics["button_high"].copy()
@@ -324,7 +380,7 @@ class Renderer:
                 gfx = pygame.image.load("res/button_" + button.name + ".png")
                 button.gfx[pic].blit(gfx, gfx.get_rect())
             except pygame.error:
-                print "Failed to load image for " + button.name + " button."
+                print _("Failed to load image for %s button.") % button.name
             button.gfx[pic] = pygame.transform.rotozoom(button.gfx[pic], 0.0, button.scale)
         button.mask = pygame.mask.from_surface(button.gfx["default"])
         button.maskrect = button.gfx["default"].get_rect()
@@ -332,6 +388,11 @@ class Renderer:
         self.objects.append(button)
 
     def make_board(self, grid):
+        """Board generator.
+        Creates game board attributes needed for rendering and mouse interaction.
+
+        :param Grid grid: Game board to be created
+        """
         cellpic = pygame.image.load("res/cell.png")
         cellpicrect = cellpic.get_rect()
         grid.gfx = pygame.Surface(((grid.radius * 2) * cellpicrect.width,
@@ -357,20 +418,12 @@ class Renderer:
                                          (grid.gfx_indent[1] + clickable.y * grid.gfx_multiplier[1]) * self.scale +
                                          grid.gfx_location[1])
 
-    def render_objects(self):
-        for obj in self.objects:
-            self.screen.blit(obj.gfx["default"], obj.maskrect)
-            if self.game.clicker.click_pending:
-                if self.game.clicker.click_selected is not None:
-                    if obj in self.game.clicker.click_pending[self.game.clicker.click_selected]:
-                        self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
-                    if obj is self.game.clicker.click_selected:
-                        self.screen.blit(self.game.clicker.click_selected.gfx["selected"], obj.maskrect)
-                else:
-                    if obj in self.game.clicker.click_pending:
-                        self.screen.blit(obj.gfx["highlighted"], obj.maskrect)
-
     def make_cell(self, cell):
+        """Cell generator.
+        Creates cell attributes needed for rendering and mouse interaction.
+
+        :param Grid grid: Game board to be created
+        """
         cell.gfx = {}
         cell.gfx["default"] = self.pics["cell"]
         cell.gfx["highlighted"] = self.pics["cell_high"]
