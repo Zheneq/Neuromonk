@@ -426,11 +426,11 @@ class Neuroshima(GameMode):
         """
         print '\t' + self.player.name, 'revokes his actions.'
         for cell, cell_save in zip(self.playground.cells, self.playground_save):
-            cell.tile = cell_save
+            cell.tile = copy(cell_save)
             if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
                 self.player.hq = cell.tile
         for cell, cell_save in zip(self.player.hand, self.player_hand_save):
-            cell.tile = cell_save
+            cell.tile = copy(cell_save)
         self.turn_init()
 
     def turn(self):
