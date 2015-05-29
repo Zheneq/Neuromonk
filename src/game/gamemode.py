@@ -426,6 +426,9 @@ class Neuroshima(GameMode):
             cell.tile = copy(cell_save)
             if cell.tile and isinstance(cell.tile.hex, Base) and cell.tile.hex.army_id == self.player.army:
                 self.player.hq = cell.tile
+            if cell.tile and isinstance(cell.tile.hex, DisposableModule) and cell.tile.hex.army_id == self.player.army:
+                # reset disposable module usages
+                cell.tile.used = []
         for cell, cell_save in zip(self.player.hand, self.player_hand_save):
             cell.tile = copy(cell_save)
         self.turn_init()
@@ -513,7 +516,6 @@ class Neuroshima(GameMode):
         # if all battlefield is full begin the battle
         if not self.playground.get_free_cells():
             for cell in self.playground.cells:
-                # if 'cell' is netfighter disable enemies 'cell'
                 self.disable_units(cell)
             self.begin_battle()
             return
