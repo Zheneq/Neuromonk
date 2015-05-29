@@ -167,9 +167,10 @@ class Renderer:
     def __init__(self, game):
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
-        self.screen = pygame.display.set_mode((1200, 700))
+        self.screen = pygame.display.set_mode((1200, 800))
+        pygame.display.set_caption("Loading Neuroshima HEX! 3.0...")
         self.screenrect = self.screen.get_rect()
-        self.scale = 0.3
+        self.scale = 0.33
         self.boardbackbuffer = None
         #
         self.idle = False
@@ -213,7 +214,7 @@ class Renderer:
             # print "FPS: %d" % self.fps
             self.fps = 0
         if not self.idle:
-            self.screen.fill((240, 240, 240))
+            self.screen.fill((0, 0, 0))
             self.render_board(self.game.playground)
             self.render_status()
             self.render_players(self.game.players)
@@ -273,7 +274,7 @@ class Renderer:
         else:
             statusbar = self.game.player.army_dict.gfx_status  # .copy()
         rect = statusbar.get_rect()
-        rect.left, rect.top = (self.screenrect.width - rect.width, 0)
+        rect.left, rect.top = (self.screenrect.width - rect.width - 50, 0)
         self.screen.blit(statusbar, rect)
 
     def render_board(self, grid):
@@ -324,10 +325,10 @@ class Renderer:
     def make_board(self, grid):
         cellpic = pygame.image.load("res/cell.png")
         cellpicrect = cellpic.get_rect()
-        grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
+        grid.gfx = pygame.Surface(((grid.radius * 2) * cellpicrect.width,
                                    (grid.radius * 2 + 1) * cellpicrect.height))
         # positioning the board on screen
-        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale, 70)
+        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale - 40, 100)
         grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
         grid.gfx_indent = grid.gfx.get_rect().center
         # cell mask

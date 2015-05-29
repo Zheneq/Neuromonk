@@ -146,10 +146,10 @@ class Neuroshima(GameMode):
         self.action_types = {}
         self.orderhandler = OrderHandler(self)
         # DEBUG
-        self.buttons = {'remove': Button(self, self.remove_tile_from_hand, 0, 515, .25, 'remove'),
-                        'apply': Button(self, self.orderhandler.resolve_order, 120, 515, .25, 'apply'),
-                        'revoke': Button(self, self.load, 240, 515, .25, 'revoke'),
-                        'confirm': Button(self, self.new_turn, 360, 515, .25, 'confirm')}
+        self.buttons = {'remove': Button(self, self.remove_tile_from_hand, 75, 450, .3, 'remove'),
+                        'apply': Button(self, self.orderhandler.resolve_order, 275, 450, .3, 'apply'),
+                        'revoke': Button(self, self.load, 75, 615, .3, 'revoke'),
+                        'confirm': Button(self, self.new_turn, 275, 615, .3, 'confirm')}
 
     def start_game(self, start, args, kwargs, test_actions=None):
         if test_actions:
