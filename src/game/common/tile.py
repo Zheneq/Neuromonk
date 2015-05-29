@@ -2,6 +2,12 @@ __author__ = 'dandelion'
 
 
 class Hex(object):
+    """Abstract game entity class.
+    Contains attributes common to all entities players can manipulate.
+
+    :param int id: ID of army this entity belongs to
+    :param string name: Name of entity
+    """
     def __init__(self, id, name):
         self.army_id = id
         self.name = name
@@ -12,10 +18,19 @@ class Hex(object):
         self.gfx = {}
 
     def initialize_wrapper(self, wrapper):
+        """Adds temporary data to :py:class:`TileOnBoard()`
+        Abstract method. Must be overridden in particular tile.
+        """
         pass
 
 
 class Order(Hex):
+    """Action type class.
+    It's used when player performes actions during game.
+
+    :param int id: ID of army this Order belongs to
+    :param string type: Type of Order
+    """
     def __init__(self, id, type):
         Hex.__init__(self, id, type)
         self.type = type
@@ -23,21 +38,17 @@ class Order(Hex):
 
 
 class Tile(Hex):
-    """
-    Basic tile class. Has common to all tiles attributes: army id, HP and injuries, taken in battle,
-    is unit under the net or not. Also stores support battle info such as damage taken in battle phase and medics
-    healing unit.
+    """Basic tile class.
+    Tile is entity that can be placed onto the board. Has common to all tiles constant attributes: HP, default mobility, etc.
+
+    :param int id: ID of army this tile belongs to
+    :param int hp: Hitpoints of tile
+    :param string name: Name of tile
+    :param int mobility: Amount of times tile can perform Move action during single turn
+    :param bool immovable: Whether tile can move on board or not
     """
 
     def __init__(self, id, hp, name, mobility=0, immovable=False):
-        """
-        Tile constructor.
-        :param id: id of army this unit belongs to.
-        :param hp: HP of unit.
-        :param name: name of tile.
-        :param mobility: ability to move without special order.
-        :return: nothing is returned.
-        """
         Hex.__init__(self, id, name)
         self.hp = hp
         self.default_mobility = mobility
@@ -45,36 +56,33 @@ class Tile(Hex):
 
 
 class Unit(Tile):
-    """
-    Standard unit class. Besides of common tile info stores initiative, attack, armor and using nets.
+    """Standard unit class.
+    This is :py:class:`Tile()' that can perform different actions. Besides of common tile info stores initiative, attack, armor and using nets.
+
+    :param int id: ID of army this tile belongs to
+    :param int hp: Hitpoints of tile
+    :param string name: Name of tile
+    :param list melee: List of melee damage unit can deal. Every item of list is wounds in one direction.
+    ``None`` if unit can't attack in melee
+    :param list range: List of range damage unit can deal. Similar to `melee` parameter.
+    ``None`` if unit can't attack in range
+    :param list armor: List of armor unit has. Similar to `melee` and `range` parameters.
+    ``None`` if unit hasn't armor
+    :param list nets: List of directions unit can throw a net. Item of list is ``1`` if unit can throw and ``0`` otherwise.
+    ``None`` if unit can't use nets
+    :param list initiative: List of initiative phases unit can action in battle. Every item of list is pair
+    `(number, used)`, where `number` is phase number and `used` is a boolean flag reset when unit action in this phase.
+    ``None`` if unit is passive during battle
+    :param bool row_attack: Whether unit can attack in range all enemies in it's line of sight or not
+    :param bool melee_buff: Whether unit can be influenced by melee damage modificators or not
+    :param bool range_buff: Whether unit can be influenced by range damage modificators or not
+    :param int mobility: Amount of times tile can perform Move action during single turn
+    :param function unique_action: Unique action unit can perform during his turn in battle
+    :param bool immovable: Whether tile can move on board or not
     """
 
     def __init__(self, id, hp, name, melee, range, armor, nets, initiative,
                  row_attack=False, melee_buff=True, range_buff=True, mobility=0, unique_action=None, immovable=False):
-        """
-        Unit constructor.
-        :param id: id of army this unit belongs to.
-        :param hp: HP of unit.
-        :param name: name of unit.
-        :param melee: list of melee damage unit can deal. Every item of list is wounds in one direction.
-        None if unit can't attack in melee.
-        :param range: list of range damage unit can deal. Similar to 'melee' parameter.
-        None if unit can't attack in range.
-        :param armor: list of armor unit has. Similar to 'melee' and 'range' parameters.
-        None if unit hasn't armor.
-        :param nets: list of directions unit can throw a net. Item of list is 1 if unit can throw and 0 otherwise.
-        None if unit can't use nets.
-        :param initiative: list of initiative phases unit can action in battle. Every item of list is pair
-        (number, used), where 'number' is phase number and 'used' is a boolean flag reset when unit action in this phase.
-        None if unit is passive during battle.
-        :param row_attack: boolean flag set when ranged attacks of unit deal damage to all enemies in a row of attack.
-        :param melee_buff: boolean flag set when unit can be influenced by melee damage modificators.
-        :param range_buff: boolean flag set when unit can be influenced by range damage modificators.
-        :param mobility: boolean flag set when unit is mobile.
-        :param unique_action: unique action unit can do.
-        :param immovable: boolean flag set when unit can't move.
-        :return: nothing is returned.
-        """
         Tile.__init__(self, id, hp, name, mobility=mobility, immovable=immovable)
         self.initiative = initiative
         self.melee = melee
@@ -87,6 +95,12 @@ class Unit(Tile):
         self.unique_attack = unique_action
 
     def initialize_wrapper(self, wrapper):
+        """Initializes temporary info of unit
+        Overridden base method :py:meth:`Hex.initialize_wrapper()`. Initializes current mobility of unit, additional atacks
+        unit has used in battle, table of attack type converts.
+
+        :param TileOnBoard wrapper: Wrapper containing all temporary info of unit that is used in battle
+        """
         wrapper.attack = self.usual_attack
         wrapper.add_attacks_used = 0
         wrapper.convert = [None, None, None, None, None, None]
@@ -95,10 +109,11 @@ class Unit(Tile):
                 wrapper.convert[ind] = 'able'
 
     def damage(self, convert, direction):
-        """
-        Gets damage of unit in 'direction'
-        :param direction: direction of attack.
-        :return: returns dictionary with two keys: 'melee' and 'range'. Values are wounds.
+        """Gets damage of unit in `direction`
+
+        :param list convert: Table of current convertions of attack type of unit
+        :param int direction: Direction of attack
+        :return dict: Dicttionary of damage by different type attacks performed in given `direction`
         """
         result = {}
         if convert[direction % 6] is 'melee':
@@ -131,21 +146,20 @@ class Unit(Tile):
         return result
 
     def get_armor(self, direction):
-        """
-        Gets armor unit has in 'direction'
-        :param direction: direction of armor.
-        :return: returns value of armor strength.
+        """Gets armor unit has in `direction`.
+
+        :param int direction: Direction of armor
+        :return int: Value of armor strength.
         """
         if self.armor:
             return self.armor[(direction + 3) % 6]
         return 0
 
     def usual_attack(self, cell, damage_modificator):
-        """
-        Performs unit's action during battle.
-        :param cell: cell where unit is on the battlefield.
-        :param damage_modificator: all bonuses influence unit.
-        :return: nothing is returned.
+        """Performs usual unit's action during battle
+
+        :param Cell cell: Cell where unit is on the battlefield
+        :param dict damage_modificator: all bonuses influence unit
         """
         for ind in xrange(len(cell.neighbours)):
             damage = self.damage(cell.tile.convert, ind - cell.tile.turn)
@@ -176,8 +190,8 @@ class Unit(Tile):
 
 
 class Module(Tile):
-    """
-    Standard module class. Modules buff allies and debuff enemies
+    """Standard module class.
+    Modules buff allies and debuff enemies.
     """
 
     def __init__(self, id, hp, name, buff, debuff, mobility=0, immovable=False):
