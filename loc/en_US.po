@@ -1,0 +1,26 @@
+# English translations for PACKAGE package.
+# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Dandelion <dandelion@dandelion-k50id>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-05-29 13:17+0300\n"
+"PO-Revision-Date: 2015-05-29 13:12+0300\n"
+"Last-Translator: Dandelion <dandelion@dandelion-k50id>\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../src/game/common/armies.py:26
+msgid "en"
+msgstr "en"
+
+#: ../src/game/common/renderer.py:172
+msgid "Loading Neuroshima HEX! 3.0..."
+msgstr "Loading Neuroshima HEX! 3.0..."
