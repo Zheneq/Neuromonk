@@ -179,13 +179,17 @@ class Renderer:
         self.objects = []
         #
         self.pics = {}
-        self.pics["button"] = pygame.image.load("res/button.png")
         self.tile_gen = TileRenderer()
-        self.pics["cell"] = pygame.image.load("res/cell.png")
-        self.pics["cellmask"] = pygame.mask.from_surface(self.pics["cell"])
+        self.pics["button"]       = pygame.image.load("res/button.png")
+        self.pics["cell"]         = pygame.image.load("res/cell.png")
+        self.pics["cellmask"]     = pygame.mask.from_surface(self.pics["cell"])
         self.pics["cellmaskrect"] = self.pics["cell"].get_rect()
-        self.pics["button_high"] = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
-        self.pics["button_sel"]  = self.pics["cell_sel"] = self.tile_gen.generate_cell_fx(selected = True)
+        self.pics["button_high"]  = self.pics["cell_high"] = self.tile_gen.generate_cell_fx(highlighted = True)
+        self.pics["button_sel"]   = self.pics["cell_sel"] = self.tile_gen.generate_cell_fx(selected = True)
+
+        for i in xrange(6):
+            self.pics["status_battle_phase_" + str(i)] =\
+                pygame.image.load("res/localized/ru/status_battle_phase_" + str(i) + ".png")
 
     def tick(self, deltatime):
         """
@@ -211,6 +215,7 @@ class Renderer:
         if not self.idle:
             self.screen.fill((240, 240, 240))
             self.render_board(self.game.playground)
+            self.render_status()
             self.render_players(self.game.players)
             self.render_objects()
             pygame.display.flip()
@@ -261,6 +266,15 @@ class Renderer:
         rect.center = (container.gfx_indent[0] + cell.x * container.gfx_multiplier[0],
                        container.gfx_indent[1] + cell.y * container.gfx_multiplier[1])
         target.blit(cell.gfx[type], rect)
+
+    def render_status(self):
+        if self.game.battle and self.game.battle.active:
+            statusbar = self.pics["status_battle_phase_" + max((str(self.game.battle.initiative_phase), 5))]  # .copy()
+        else:
+            statusbar = self.game.player.army_dict.gfx_status  # .copy()
+        rect = statusbar.get_rect()
+        rect.left, rect.top = (self.screenrect.width - rect.width, 0)
+        self.screen.blit(statusbar, rect)
 
     def render_board(self, grid):
         self.boardbackbuffer = grid.gfx.copy()
@@ -313,7 +327,7 @@ class Renderer:
         grid.gfx = pygame.Surface(((grid.radius * 2 + 1) * cellpicrect.width,
                                    (grid.radius * 2 + 1) * cellpicrect.height))
         # positioning the board on screen
-        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale, 0)
+        grid.gfx_location = (self.screenrect.width - grid.gfx.get_rect().width * self.scale, 70)
         grid.gfx_multiplier = (cellpicrect.width, cellpicrect.height)
         grid.gfx_indent = grid.gfx.get_rect().center
         # cell mask

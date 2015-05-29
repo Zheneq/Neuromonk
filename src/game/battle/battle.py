@@ -38,6 +38,7 @@ class Battle(object):
         :param init_phase: phase of battle in special cases (such as airstrike, sniper, grenade, etc.).
         """
         self.battlefield = playground
+        self.active = True
 
         self.pend_click = pend_click
         self.buttons = buttons
@@ -93,6 +94,7 @@ class Battle(object):
         Finishes battle and continues game.
         :return: nothing is returned.
         """
+        self.active = False
         self.event(self.continue_game)
 
 #-------------------------------resolving-converters-------------------------------------------
@@ -317,6 +319,6 @@ class Battle(object):
         self.initiative_phase -= 1
         print ' '
         if self.initiative_phase < 0:
-            self.event(self.end_battle)
+            self.end_battle()
         else:
             self.set_timer(self.period, self.battle_phase)

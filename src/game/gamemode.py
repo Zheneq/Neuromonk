@@ -138,6 +138,7 @@ class Neuroshima(GameMode):
         self.playground = Grid(self, grid_radius)
         self.turn_num = 0
         self.over = False
+        self.battle = None
 
         self.playground_save = []
         self.player_hand_save = []
@@ -159,12 +160,10 @@ class Neuroshima(GameMode):
 
     def begin_play(self, start, args, kwargs):
         GameMode.begin_play(self, start, args, kwargs)
-        # DEBUG
-        Zq = Player('Player1', 1, 0, self)
-        Zq.army_shuffle()
-        Dand = Player('Player2', 3, 1, self)
-        Dand.army_shuffle()
-        self.players = [Zq, Dand]
+
+        self.players = [Player('Moloch', 1, 0, self), Player('Hegemony', 3, 1, self)]
+        for p in self.players:
+            p.army_shuffle()
         self.players[0].next = self.players[1]
         self.players[1].next = self.players[0]
         self.player = self.players[0]
@@ -208,15 +207,15 @@ class Neuroshima(GameMode):
         # battle
         if continuer is 'default':
             continuer = self.new_turn
-        battle = Battle(self.playground,
-                        self.clicker.pend_click,
-                        self.buttons,
-                        self.release_disable_units,
-                        self.event,
-                        self.set_timer,
-                        period,
-                        continuer)
-        self.set_timer(period, battle.battle_phase)
+        self.battle = Battle(self.playground,
+                             self.clicker.pend_click,
+                             self.buttons,
+                             self.release_disable_units,
+                             self.event,
+                             self.set_timer,
+                             period,
+                             continuer)
+        self.set_timer(period, self.battle.battle_phase)
 
     def release_disable_units(self, cell):
         if isinstance(cell.tile.hex, Unit) and cell.tile.hex.nets:
