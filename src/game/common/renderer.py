@@ -225,7 +225,7 @@ class Renderer:
             player.gfx_indent = gfx_indent = player.gfx.get_rect().center
             player.gfx_multiplier = self.game.playground.gfx_multiplier
             #
-            pic = self.clone_pic(player.gfx)
+            pic = player.gfx.copy()
             for cell in player.hand:
                 #
                 cell.mask = self.game.playground.cellmask
@@ -263,7 +263,7 @@ class Renderer:
         target.blit(cell.gfx[type], rect)
 
     def render_board(self, grid):
-        self.boardbackbuffer = self.clone_pic(grid.gfx)
+        self.boardbackbuffer = grid.gfx.copy()
         rect = grid.gfx.get_rect()
         # rendering cell fx
         for cell in grid.cells:
@@ -292,9 +292,9 @@ class Renderer:
     def make_button(self, button):
         # print "make button"
         button.gfx = {}
-        button.gfx["default"] = self.clone_pic(self.pics["button"])
-        button.gfx["highlighted"] = self.clone_pic(self.pics["button_high"])
-        button.gfx["selected"] = self.clone_pic(self.pics["button_sel"])
+        button.gfx["default"] = self.pics["button"].copy()
+        button.gfx["highlighted"] = self.pics["button_high"].copy()
+        button.gfx["selected"] = self.pics["button_sel"].copy()
         for pic in button.gfx:
             try:
                 gfx = pygame.image.load("res/button_" + button.name + ".png")
@@ -351,7 +351,3 @@ class Renderer:
         cell.gfx["selected"] = self.pics["cell_sel"]
         cell.mask = self.pics["cellmask"]
         cell.maskrect = self.pics["cellmaskrect"]
-
-    # TODO: Remove this
-    def clone_pic(self, surface):
-        return surface.copy()
