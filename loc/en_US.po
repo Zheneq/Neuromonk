@@ -1,13 +1,13 @@
-# English translations for PACKAGE package.
-# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# Dandelion <dandelion@dandelion-k50id>, 2015.
+# English translations for Neuroshima package.
+# Copyright (C) 2015 Zheneq & Dandelion
+# This file is distributed under the same license as the Neuroshima package.
+# Zheneq, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-29 15:19+0300\n"
+"POT-Creation-Date: 2015-05-29 16:08+0300\n"
 "PO-Revision-Date: 2015-05-29 13:12+0300\n"
 "Last-Translator: Dandelion <dandelion@dandelion-k50id>\n"
 "Language-Team: English\n"
@@ -17,39 +17,108 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: ../src/game/gamemode.py:257
+#, fuzzy, python-format
+msgid "\t %(player)s places %(hex)s to cell %(index)d"
+msgstr "%(army)s %(hex)s (cell %(index)d) damaged:"
+
+#: ../src/game/gamemode.py:263
+#, fuzzy, python-format
+msgid "\t %(player)s moves %(hex)s to cell %(index)d"
+msgstr "%(army)s %(hex)s (cell %(index)d) damaged:"
+
+#: ../src/game/gamemode.py:348
+#, python-format
+msgid "\t %(player)s removes %(hex)s from his hand"
+msgstr ""
+
+#: ../src/game/gamemode.py:378
+#, python-format
+msgid "\t %(player)s refreshes his hand."
+msgstr ""
+
+#: ../src/game/gamemode.py:424
+#, python-format
+msgid "\t %(player)s , please, place your HQ."
+msgstr ""
+
+#: ../src/game/gamemode.py:441
+#, python-format
+msgid "\t %(player)s revokes his actions."
+msgstr ""
+
+#: ../src/game/gamemode.py:460
+#, python-format
+msgid "\t %(player)s's HQ is destroyed."
+msgstr ""
+
+#: ../src/game/gamemode.py:461 ../src/game/gamemode.py:473
+#: ../src/game/gamemode.py:478
+#, python-format
+msgid "\t Congratulations, %(player)s!"
+msgstr ""
+
+#: ../src/game/gamemode.py:465 ../src/game/gamemode.py:468
+#, python-format
+msgid "\t %(player)s's HQ: %(hp)d hp."
+msgstr ""
+
+#: ../src/game/gamemode.py:472 ../src/game/gamemode.py:477
+#, python-format
+msgid "\t %(player)s's HQ is more damaged."
+msgstr ""
+
+#: ../src/game/gamemode.py:483
+msgid " HQs are equally damaged."
+msgstr ""
+
+#: ../src/game/gamemode.py:484
+msgid "That's a draw("
+msgstr ""
+
+#: ../src/game/gamemode.py:488
+#, fuzzy
+msgid "The Final Battle begins!"
+msgstr "Let the Battle Begin!!!"
+
+#: ../src/game/gamemode.py:492
+#, python-format
+msgid "%s's turn!"
+msgstr ""
+
 #: ../src/game/battle/battle.py:55
 msgid "Let the Battle Begin!!!"
-msgstr ""
+msgstr "Let the Battle Begin!!!"
 
 #: ../src/game/battle/battle.py:71
 #, python-format
 msgid "Maximum initiative is %d"
-msgstr ""
+msgstr "Maximum initiative is %d"
 
 #: ../src/game/battle/battle.py:88
 #, python-format
 msgid "Battle phase %d begins."
-msgstr ""
+msgstr "Battle phase %d begins."
 
 #: ../src/game/battle/battle.py:174
 #, python-format
 msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to melee"
-msgstr ""
+msgstr "%(army)s %(hex)s converted his attack of direction %(dir)d to melee"
 
 #: ../src/game/battle/battle.py:180
 #, python-format
 msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to range"
-msgstr ""
+msgstr "%(army)s %(hex)s converted his attack of direction %(dir)d to range"
 
 #: ../src/game/battle/battle.py:288
 #, python-format
 msgid "%(army)s %(hex)s (cell %(index)d) damaged:"
-msgstr ""
+msgstr "%(army)s %(hex)s (cell %(index)d) damaged:"
 
 #: ../src/game/battle/battle.py:293
 #, python-format
 msgid "\t%(army)s %(hex)s (cell %(index)d) (%(type)s, %(value)d wounds)"
-msgstr ""
+msgstr "\t%(army)s %(hex)s (cell %(index)d) (%(type)s, %(value)d wounds)"
 
 #: ../src/game/battle/battle.py:317
 #, python-format
@@ -57,11 +126,13 @@ msgid ""
 "%s died because of natural causes.\n"
 "Indeed, he was scattered by explosion. It's just natural he died"
 msgstr ""
+"%s died because of natural causes.\n"
+"Indeed, he was scattered by explosion. It's just natural he died"
 
 #: ../src/game/battle/battle.py:320
 #, python-format
 msgid "%s died."
-msgstr ""
+msgstr "%s died."
 
 #: ../src/game/battle/medics.py:92
 #, python-format
@@ -69,10 +140,12 @@ msgid ""
 "%(army)s %(hex)s (cell %(index)d) saves %(other_hex)s (cell %(other_index)d "
 "from %(damage)d wounds.)"
 msgstr ""
+"%(army)s %(hex)s (cell %(index)d) saves %(other_hex)s (cell %(other_index)d "
+"from %(damage)d wounds.)"
 
 #: ../src/game/battle/medics.py:94
 msgid "Medic"
-msgstr ""
+msgstr "Medic"
 
 #: ../src/game/common/armies.py:26
 msgid "en"
@@ -81,7 +154,7 @@ msgstr "en"
 #: ../src/game/common/clicker.py:88
 #, python-format
 msgid "\twith turn %d"
-msgstr ""
+msgstr "\twith turn %d"
 
 #: ../src/game/common/renderer.py:172
 msgid "Loading Neuroshima HEX! 3.0..."
@@ -90,4 +163,4 @@ msgstr "Loading Neuroshima HEX! 3.0..."
 #: ../src/game/common/renderer.py:327
 #, python-format
 msgid "Failed to load image for %s button."
-msgstr ""
+msgstr "Failed to load image for %s button."

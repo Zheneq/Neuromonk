@@ -1,16 +1,16 @@
-# Russian translations for PACKAGE package
-# Английские переводы для пакета PACKAGE.
-# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# Dandelion <dandelion@dandelion-k50id>, 2015.
+# Russian translations for Neuroshima
+# Русский перевод для пакета Neuroshima.
+# Copyright (C) 2015 Zheneq & Dandelion
+# This file is distributed under the same license as the Neuroshima package.
+# Zheneq, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-05-29 15:19+0300\n"
+"POT-Creation-Date: 2015-05-29 16:08+0300\n"
 "PO-Revision-Date: 2015-05-29 12:38+0300\n"
-"Last-Translator: Dandelion <dandelion@dandelion-k50id>\n"
+"Last-Translator: Zheneq\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -19,39 +19,110 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: ../src/game/gamemode.py:257
+#, python-format
+msgid "\t %(player)s places %(hex)s to cell %(index)d"
+msgstr "\t %(player)s располагает %(hex)s в клетке %(index)d"
+
+#: ../src/game/gamemode.py:263
+#, python-format
+msgid "\t %(player)s moves %(hex)s to cell %(index)d"
+msgstr "\t %(player)s передвигает %(hex)s в клетк %(index)d"
+
+#: ../src/game/gamemode.py:348
+#, python-format
+msgid "\t %(player)s removes %(hex)s from his hand"
+msgstr "\t %(player)s выкинул %(hex)s с руки"
+
+#: ../src/game/gamemode.py:378
+#, python-format
+msgid "\t %(player)s refreshes his hand."
+msgstr "\t %(player)s сбросил всю руку."
+
+#: ../src/game/gamemode.py:424
+#, python-format
+msgid "\t %(player)s , please, place your HQ."
+msgstr "\t %(player)s, расположите свой штаб."
+
+#: ../src/game/gamemode.py:441
+#, python-format
+msgid "\t %(player)s revokes his actions."
+msgstr "\t %(player)s отменил свои действия."
+
+#: ../src/game/gamemode.py:460
+#, python-format
+msgid "\t %(player)s's HQ is destroyed."
+msgstr "\t Штаб %(player)s уничтожен."
+
+#: ../src/game/gamemode.py:461 ../src/game/gamemode.py:473
+#: ../src/game/gamemode.py:478
+#, python-format
+msgid "\t Congratulations, %(player)s!"
+msgstr "\t Поздравляем с победой, %(player)s!"
+
+#: ../src/game/gamemode.py:465 ../src/game/gamemode.py:468
+#, python-format
+msgid "\t %(player)s's HQ: %(hp)d hp."
+msgstr "\t Штаб %(player)s: %(hp)d хп."
+
+#: ../src/game/gamemode.py:472 ../src/game/gamemode.py:477
+#, python-format
+msgid "\t %(player)s's HQ is more damaged."
+msgstr "\t Штаб %(player)s получил больше повреждений."
+
+#: ../src/game/gamemode.py:483
+msgid " HQs are equally damaged."
+msgstr "Штабы повреждены одинаково."
+
+#: ../src/game/gamemode.py:484
+msgid "That's a draw("
+msgstr "Ничья."
+
+#: ../src/game/gamemode.py:488
+msgid "The Final Battle begins!"
+msgstr "Да начнётся последняя битва!"
+
+#: ../src/game/gamemode.py:492
+#, python-format
+msgid "%s's turn!"
+msgstr "Ход %s"
+
 #: ../src/game/battle/battle.py:55
 msgid "Let the Battle Begin!!!"
-msgstr ""
+msgstr "Да начнётся битва!"
 
 #: ../src/game/battle/battle.py:71
 #, python-format
 msgid "Maximum initiative is %d"
-msgstr ""
+msgstr "Максимальная инициатива: %d"
 
 #: ../src/game/battle/battle.py:88
 #, python-format
 msgid "Battle phase %d begins."
-msgstr ""
+msgstr "Начинается %d фаза битвы."
 
 #: ../src/game/battle/battle.py:174
 #, python-format
 msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to melee"
 msgstr ""
+"%(hex)s армии %(army)s преобразовал атаку по направлению %(dir)d в "
+"рукопашную."
 
 #: ../src/game/battle/battle.py:180
 #, python-format
 msgid "%(army)s %(hex)s converted his attack of direction %(dir)d to range"
 msgstr ""
+"%(hex)s армии %(army)s преобразовал атаку по направлению %(dir)d в выстрел."
 
 #: ../src/game/battle/battle.py:288
 #, python-format
 msgid "%(army)s %(hex)s (cell %(index)d) damaged:"
-msgstr ""
+msgstr "%(hex)s армии %(army)s (клетка %(index)d) атаковал:"
 
 #: ../src/game/battle/battle.py:293
 #, python-format
 msgid "\t%(army)s %(hex)s (cell %(index)d) (%(type)s, %(value)d wounds)"
-msgstr ""
+msgstr "\t%(hex)s армии %(army)s (клетка %(index)d) (%(type)s, -%(value)d хп)"
 
 #: ../src/game/battle/battle.py:317
 #, python-format
@@ -59,11 +130,13 @@ msgid ""
 "%s died because of natural causes.\n"
 "Indeed, he was scattered by explosion. It's just natural he died"
 msgstr ""
+"%s скончался от естественных причин.\n"
+"Его разорвало на части. Естественно, он умер."
 
 #: ../src/game/battle/battle.py:320
 #, python-format
 msgid "%s died."
-msgstr ""
+msgstr "%s умер."
 
 #: ../src/game/battle/medics.py:92
 #, python-format
@@ -71,10 +144,12 @@ msgid ""
 "%(army)s %(hex)s (cell %(index)d) saves %(other_hex)s (cell %(other_index)d "
 "from %(damage)d wounds.)"
 msgstr ""
+"%(hex)s армии %(army)s (клетка %(index)d) спас %(other_hex)s (клетка "
+"%(other_index)d от атаки силы %(damage)d.)"
 
 #: ../src/game/battle/medics.py:94
 msgid "Medic"
-msgstr ""
+msgstr "Медик"
 
 #: ../src/game/common/armies.py:26
 msgid "en"
@@ -83,7 +158,7 @@ msgstr "ru"
 #: ../src/game/common/clicker.py:88
 #, python-format
 msgid "\twith turn %d"
-msgstr ""
+msgstr "\tс поворотом %d"
 
 #: ../src/game/common/renderer.py:172
 msgid "Loading Neuroshima HEX! 3.0..."
@@ -92,4 +167,7 @@ msgstr "Загрузка игры Neuroshima HEX! 3.0..."
 #: ../src/game/common/renderer.py:327
 #, python-format
 msgid "Failed to load image for %s button."
-msgstr ""
+msgstr "Изображение для кнопки %s не найдено."
+
+#~ msgid "HQ"
+#~ msgstr "Штаб"
