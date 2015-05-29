@@ -2,6 +2,9 @@ __author__ = 'zheneq & dandelion'
 
 import pygame
 from copy import copy
+import os
+import sys
+import gettext
 
 from src.game.common.clicker import Clicker
 from src.game.common.grid import Grid, Cell, Button
@@ -27,6 +30,14 @@ class GameMode(object):
     def __init__(self, renderer):
         self.active = False
         self.timers = {}
+
+        bindir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        for localedir in os.path.join(bindir, 'loc'), None:
+            localefile = gettext.find('game', localedir)
+            if localefile:
+                break
+        gettext.install('game', localedir, names=("ngettext",))
+
         self.clicker = Clicker(self)
         self.renderer = renderer(self)
 

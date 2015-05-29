@@ -1,6 +1,7 @@
 __author__ = 'Zheneq'
 
 import pygame
+import gettext
 
 from src.game.common.tile import *
 
@@ -168,7 +169,7 @@ class Renderer:
         self.game = game
         # self.screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
         self.screen = pygame.display.set_mode((1200, 800))
-        pygame.display.set_caption("Loading Neuroshima HEX! 3.0...")
+        pygame.display.set_caption(_("Loading Neuroshima HEX! 3.0..."))
         self.screenrect = self.screen.get_rect()
         self.scale = 0.33
         self.boardbackbuffer = None
@@ -323,7 +324,7 @@ class Renderer:
                 gfx = pygame.image.load("res/button_" + button.name + ".png")
                 button.gfx[pic].blit(gfx, gfx.get_rect())
             except pygame.error:
-                print "Failed to load image for " + button.name + " button."
+                print _("Failed to load image for %s button.") % button.name
             button.gfx[pic] = pygame.transform.rotozoom(button.gfx[pic], 0.0, button.scale)
         button.mask = pygame.mask.from_surface(button.gfx["default"])
         button.maskrect = button.gfx["default"].get_rect()
